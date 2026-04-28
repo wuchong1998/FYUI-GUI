@@ -31,6 +31,8 @@ namespace FYUI
 		void SetRich(bool bRich = true);
 		bool IsReadOnly();
 		void SetReadOnly(bool bReadOnly = true);
+		bool IsPasswordMode() const;
+		void SetPasswordMode(bool bPasswordMode = true);
 		bool IsWordWrap();
 		void SetWordWrap(bool bWordWrap = true);
 		int GetFont();
@@ -188,6 +190,7 @@ namespace FYUI
 		RECT GetEditRect() const;
 		RECT GetViewRect() const;
 		int GetLineHeight() const;
+		std::wstring GetDisplayText() const;
 		int MeasureTextWidth(std::wstring_view text) const;
 		size_t HitTest(CDuiPoint pt) const;
 		CDuiPoint CharPos(size_t index) const;
@@ -201,6 +204,7 @@ namespace FYUI
 		void DrawTextLines(CPaintRenderContext& renderContext, const RECT& rcView);
 		void DrawCaret(CPaintRenderContext& renderContext, const RECT& rcView);
 		void DrawTipText(CPaintRenderContext& renderContext, const RECT& rcView);
+		void ShowContextMenu(CDuiPoint pt);
 		std::wstring GetClipboardText() const;
 		void SetClipboardText(std::wstring_view text) const;
 		void HandleKeyDown(TEventUI& event);
@@ -214,6 +218,7 @@ namespace FYUI
 		bool m_bTransparent;
 		bool m_bRich;
 		bool m_bReadOnly;
+		bool m_bPasswordMode;
 		bool m_bWordWrap;
 		bool m_bHideSelection;
 		bool m_bAutoURLDetect;

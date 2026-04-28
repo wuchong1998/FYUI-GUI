@@ -15,6 +15,13 @@ namespace FYUI
 		const LONG kDefaultTextMax = (32 * 1024) - 1;
 		const DWORD kSelectionColor = 0x663399FF;
 		const DWORD kCaretColor = 0xFF1F2937;
+		const UINT kRichEditMenuUndo = 51001;
+		const UINT kRichEditMenuRedo = 51002;
+		const UINT kRichEditMenuCut = 51003;
+		const UINT kRichEditMenuCopy = 51004;
+		const UINT kRichEditMenuPaste = 51005;
+		const UINT kRichEditMenuDelete = 51006;
+		const UINT kRichEditMenuSelectAll = 51007;
 
 		size_t ClampIndex(long value, size_t length)
 		{
@@ -40,6 +47,7 @@ namespace FYUI
 		m_bTransparent(true),
 		m_bRich(true),
 		m_bReadOnly(false),
+		m_bPasswordMode(false),
 		m_bWordWrap(false),
 		m_bHideSelection(false),
 		m_bAutoURLDetect(false),
@@ -138,6 +146,17 @@ namespace FYUI
 	void CRichEditUI::SetRich(bool bRich) { m_bRich = bRich; }
 	bool CRichEditUI::IsReadOnly() { return m_bReadOnly; }
 	void CRichEditUI::SetReadOnly(bool bReadOnly) { m_bReadOnly = bReadOnly; }
+	bool CRichEditUI::IsPasswordMode() const { return m_bPasswordMode; }
+	void CRichEditUI::SetPasswordMode(bool bPasswordMode)
+	{
+		if (m_bPasswordMode == bPasswordMode) return;
+		m_bPasswordMode = bPasswordMode;
+		if (m_bPasswordMode) m_lTwhStyle |= ES_PASSWORD;
+		else m_lTwhStyle &= ~ES_PASSWORD;
+		InvalidateLayout();
+		UpdateScrollBars();
+		Invalidate();
+	}
 	bool CRichEditUI::IsWordWrap() { return m_bWordWrap; }
 	void CRichEditUI::SetWordWrap(bool bWordWrap)
 	{
@@ -167,6 +186,7 @@ namespace FYUI
 	{
 		m_lTwhStyle = lStyle;
 		m_bReadOnly = (m_lTwhStyle & ES_READONLY) != 0;
+		m_bPasswordMode = (m_lTwhStyle & ES_PASSWORD) != 0;
 		EnableScrollBar((m_lTwhStyle & WS_VSCROLL) != 0 || IsMultiLine(), (m_lTwhStyle & WS_HSCROLL) != 0);
 		InvalidateLayout();
 		UpdateScrollBars();
@@ -520,6 +540,11 @@ namespace FYUI
 			if (m_pManager) m_pManager->ReleaseCapture();
 			return;
 		}
+		if (event.Type == UIEVENT_CONTEXTMENU) {
+			SetFocus();
+			ShowContextMenu(event.ptMouse);
+			return;
+		}
 		if (event.Type == UIEVENT_SCROLLWHEEL) {
 			CContainerUI::DoEvent(event);
 			Invalidate();
@@ -601,6 +626,7 @@ namespace FYUI
 		else if (StringUtil::EqualsNoCase(name, L"transparent")) SetTransparent(StringUtil::ParseBool(pstrValue));
 		else if (StringUtil::EqualsNoCase(name, L"rich")) SetRich(StringUtil::ParseBool(pstrValue));
 		else if (StringUtil::EqualsNoCase(name, L"readonly")) SetReadOnly(StringUtil::ParseBool(pstrValue));
+		else if (StringUtil::EqualsNoCase(name, L"password")) SetPasswordMode(StringUtil::ParseBool(pstrValue));
 		else if (StringUtil::EqualsNoCase(name, L"wordwrap")) SetWordWrap(StringUtil::ParseBool(pstrValue));
 		else if (StringUtil::EqualsNoCase(name, L"font")) { int value = 0; if (StringUtil::TryParseInt(pstrValue, value)) SetFont(value); }
 		else if (StringUtil::EqualsNoCase(name, L"textcolor")) { DWORD color = 0; if (StringUtil::TryParseColor(pstrValue, color)) SetTextColor(color); }
@@ -655,6 +681,7 @@ namespace FYUI
 		SetTransparent(pControl->IsTransparent());
 		SetRich(pControl->IsRich());
 		SetReadOnly(pControl->IsReadOnly());
+		SetPasswordMode(pControl->IsPasswordMode());
 		SetWordWrap(pControl->IsWordWrap());
 		SetTextColor(pControl->GetTextColor());
 		SetFont(pControl->GetFont());
@@ -785,7 +812,7 @@ namespace FYUI
 		m_lines.clear();
 		m_nLayoutWidth = viewWidth;
 		m_nContentWidth = 0;
-		const std::wstring text = GetText();
+		const std::wstring text = GetDisplayText();
 		const int maxWidth = m_bWordWrap ? viewWidth : INT_MAX / 4;
 		size_t paragraphStart = 0;
 		while (paragraphStart <= text.size()) {
@@ -867,6 +894,16 @@ namespace FYUI
 		return (std::max<int>)(font != NULL ? static_cast<int>(font->tm.tmHeight) : 16, 16);
 	}
 
+	std::wstring CRichEditUI::GetDisplayText() const
+	{
+		std::wstring text = GetText();
+		if (!m_bPasswordMode) return text;
+		for (wchar_t& ch : text) {
+			if (ch != L'\n') ch = L'*';
+		}
+		return text;
+	}
+
 	int CRichEditUI::MeasureTextWidth(std::wstring_view text) const
 	{
 		if (text.empty() || m_pManager == NULL) return 0;
@@ -890,7 +927,7 @@ namespace FYUI
 		const int localX = pt.x - rcView.left + scroll.cx;
 		size_t best = line.start;
 		int bestDelta = INT_MAX;
-		const std::wstring text = GetText();
+		const std::wstring text = GetDisplayText();
 		for (size_t i = 0; i <= line.length; ++i) {
 			const int width = MeasureTextWidth(std::wstring_view(text).substr(line.start, i));
 			const int delta = std::abs(width - localX);
@@ -907,7 +944,7 @@ namespace FYUI
 		EnsureLayout();
 		const RECT rcView = GetViewRect();
 		const SIZE scroll = GetScrollPos();
-		const std::wstring text = GetText();
+		const std::wstring text = GetDisplayText();
 		for (size_t i = 0; i < m_lines.size(); ++i) {
 			const TextLine& line = m_lines[i];
 			if (index >= line.start && index <= line.start + line.length) {
@@ -1019,7 +1056,7 @@ namespace FYUI
 		if (rcView.bottom < rcView.top) rcView.bottom = rcView.top;
 
 		const SIZE scroll = GetScrollPos();
-		const std::wstring text = GetText();
+		const std::wstring text = GetDisplayText();
 		const size_t caret = (std::min)(m_nCaret, text.size());
 		const int lineHeight = GetLineHeight();
 		for (size_t i = 0; i < m_lines.size(); ++i) {
@@ -1079,6 +1116,8 @@ namespace FYUI
 		size_t selEnd = m_nCaret;
 		NormalizeRange(selStart, selEnd);
 		const std::wstring text = GetText();
+		const std::wstring displayText = GetDisplayText();
+		const SIZE scroll = GetScrollPos();
 		const int lineHeight = GetLineHeight();
 		const int blankWidth = (std::max)(MeasureTextWidth(L" "), 4);
 		for (size_t i = 0; i < m_lines.size(); ++i) {
@@ -1089,13 +1128,18 @@ namespace FYUI
 			const size_t logicalEnd = hasNewline ? lineEnd + 1 : lineEnd;
 			if (selEnd <= lineStart || selStart >= logicalEnd) continue;
 
-			const CDuiPoint linePoint = CharPos(lineStart);
-			LONG left = linePoint.x;
-			LONG right = linePoint.x;
-			if (selStart > lineStart && selStart <= lineEnd) left = CharPos(selStart).x;
-			if (selEnd <= lineEnd) right = CharPos(selEnd).x;
+			const LONG lineLeft = rcView.left - scroll.cx;
+			const LONG lineTop = rcView.top - scroll.cy + static_cast<LONG>(i) * lineHeight;
+			LONG left = lineLeft;
+			LONG right = lineLeft;
+			if (selStart > lineStart && selStart <= lineEnd) {
+				left += MeasureTextWidth(std::wstring_view(displayText).substr(lineStart, selStart - lineStart));
+			}
+			if (selEnd <= lineEnd) {
+				right += MeasureTextWidth(std::wstring_view(displayText).substr(lineStart, selEnd - lineStart));
+			}
 			else {
-				right = CharPos(lineEnd).x;
+				right += line.width;
 				if (hasNewline && selEnd >= logicalEnd) right += blankWidth;
 			}
 			if (line.length == 0) {
@@ -1103,7 +1147,7 @@ namespace FYUI
 			}
 			if (right <= left) right = left + blankWidth;
 
-			RECT rcSel = { left, linePoint.y, right, linePoint.y + lineHeight };
+			RECT rcSel = { left, lineTop, right, lineTop + lineHeight };
 			RECT rcClipped = {};
 			if (::IntersectRect(&rcClipped, &rcSel, &rcView)) {
 				CRenderEngine::DrawRoundColor(renderContext, rcClipped, 0, 0, kSelectionColor);
@@ -1119,7 +1163,7 @@ namespace FYUI
 		const DWORD color = IsEnabled()
 			? (m_dwTextColor != 0 ? m_dwTextColor : (m_pManager ? m_pManager->GetDefaultFontColor() : 0xFF000000))
 			: (m_pManager ? m_pManager->GetDefaultDisabledColor() : 0xFF999999);
-		const std::wstring text = GetText();
+		const std::wstring text = GetDisplayText();
 		for (size_t i = 0; i < m_lines.size(); ++i) {
 			RECT rcLine = {
 				rcView.left - scroll.cx,
@@ -1155,6 +1199,59 @@ namespace FYUI
 		rc.top += padding.top;
 		rc.bottom -= padding.bottom;
 		CRenderEngine::DrawText(renderContext, rc, m_sTipValue, m_dwTipValueColor, m_iFont, m_uTipValueAlign);
+	}
+
+	void CRichEditUI::ShowContextMenu(CDuiPoint pt)
+	{
+		if (m_pManager == NULL || !IsEnabled()) return;
+		HWND hWnd = m_pManager->GetPaintWindow();
+		if (hWnd == NULL) return;
+
+		if (pt.x < m_rcItem.left || pt.x > m_rcItem.right || pt.y < m_rcItem.top || pt.y > m_rcItem.bottom) {
+			const CDuiPoint caret = CharPos(m_nCaret);
+			pt.x = caret.x;
+			pt.y = caret.y + GetLineHeight();
+		}
+
+		HMENU hMenu = ::CreatePopupMenu();
+		if (hMenu == NULL) return;
+
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuUndo, L"Undo\tCtrl+Z");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuRedo, L"Redo\tCtrl+Y");
+		::AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuCut, L"Cut\tCtrl+X");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuCopy, L"Copy\tCtrl+C");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuPaste, L"Paste\tCtrl+V");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuDelete, L"Delete");
+		::AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuSelectAll, L"Select All\tCtrl+A");
+
+		const UINT hasSelection = GetSelectionType() != SEL_EMPTY ? MF_ENABLED : MF_GRAYED;
+		const UINT canEdit = !m_bReadOnly ? MF_ENABLED : MF_GRAYED;
+		::EnableMenuItem(hMenu, kRichEditMenuUndo, MF_BYCOMMAND | (CanUndo() ? MF_ENABLED : MF_GRAYED));
+		::EnableMenuItem(hMenu, kRichEditMenuRedo, MF_BYCOMMAND | (CanRedo() ? MF_ENABLED : MF_GRAYED));
+		::EnableMenuItem(hMenu, kRichEditMenuCut, MF_BYCOMMAND | hasSelection | canEdit);
+		::EnableMenuItem(hMenu, kRichEditMenuCopy, MF_BYCOMMAND | hasSelection);
+		::EnableMenuItem(hMenu, kRichEditMenuPaste, MF_BYCOMMAND | (CanPaste() ? MF_ENABLED : MF_GRAYED));
+		::EnableMenuItem(hMenu, kRichEditMenuDelete, MF_BYCOMMAND | hasSelection | canEdit);
+		::EnableMenuItem(hMenu, kRichEditMenuSelectAll, MF_BYCOMMAND | (GetText().empty() ? MF_GRAYED : MF_ENABLED));
+
+		POINT screenPt = { pt.x, pt.y };
+		::ClientToScreen(hWnd, &screenPt);
+		::SetForegroundWindow(hWnd);
+		const UINT cmd = ::TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_NONOTIFY, screenPt.x, screenPt.y, 0, hWnd, NULL);
+		::DestroyMenu(hMenu);
+
+		switch (cmd) {
+		case kRichEditMenuUndo: Undo(); break;
+		case kRichEditMenuRedo: Redo(); break;
+		case kRichEditMenuCut: Cut(); break;
+		case kRichEditMenuCopy: Copy(); break;
+		case kRichEditMenuPaste: Paste(); break;
+		case kRichEditMenuDelete: Clear(); break;
+		case kRichEditMenuSelectAll: SetSelAll(); break;
+		default: break;
+		}
 	}
 
 	std::wstring CRichEditUI::GetClipboardText() const

@@ -195,6 +195,7 @@ namespace FYUI
 		void UpdateScrollBars();
 		void ApplyScrollBarStyle(CScrollBarUI* pScrollBar, std::wstring_view styleName, std::wstring_view defaultName);
 		void ScrollToCaret();
+		bool TryGetCachedCaretPoint(POINT& ptCaret) const;
 		void UpdateImeCompositionWindow();
 		void DrawSelection(CPaintRenderContext& renderContext, const RECT& rcView);
 		void DrawTextLines(CPaintRenderContext& renderContext, const RECT& rcView);

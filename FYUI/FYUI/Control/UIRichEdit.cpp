@@ -490,6 +490,7 @@ namespace FYUI
 		if (event.Type == UIEVENT_SETFOCUS) {
 			CControlUI::DoEvent(event);
 			ResetCaretBlink();
+			UpdateImeCompositionWindow();
 			return;
 		}
 		if (event.Type == UIEVENT_KILLFOCUS) {
@@ -627,10 +628,6 @@ namespace FYUI
 	{
 		bHandled = false;
 		if (!IsFocused() || !IsVisible() || !IsEnabled()) return 0;
-		if (uMsg == WM_IME_STARTCOMPOSITION || uMsg == WM_IME_COMPOSITION || uMsg == WM_IME_NOTIFY) {
-			UpdateImeCompositionWindow();
-			return 0;
-		}
 		if (uMsg == WM_KEYDOWN && wParam == VK_TAB && m_bWantTab && !m_bReadOnly) {
 			ReplaceSel(L"\t", true);
 			bHandled = true;
@@ -1006,6 +1003,40 @@ namespace FYUI
 		pScrollBar->SetShow(m_bShowScrollbar);
 	}
 
+	bool CRichEditUI::TryGetCachedCaretPoint(POINT& ptCaret) const
+	{
+		ptCaret = {};
+		if (m_bLayoutDirty || m_lines.empty()) return false;
+
+		RECT rcView = m_rcItem;
+		rcView.left += m_rcTextPadding.left;
+		rcView.top += m_rcTextPadding.top;
+		rcView.right -= m_rcTextPadding.right;
+		rcView.bottom -= m_rcTextPadding.bottom;
+		if (m_pVerticalScrollBar != NULL && m_pVerticalScrollBar->IsVisible()) rcView.right -= m_pVerticalScrollBar->GetFixedWidth();
+		if (m_pHorizontalScrollBar != NULL && m_pHorizontalScrollBar->IsVisible()) rcView.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+		if (rcView.right < rcView.left) rcView.right = rcView.left;
+		if (rcView.bottom < rcView.top) rcView.bottom = rcView.top;
+
+		const SIZE scroll = GetScrollPos();
+		const std::wstring text = GetText();
+		const size_t caret = (std::min)(m_nCaret, text.size());
+		const int lineHeight = GetLineHeight();
+		for (size_t i = 0; i < m_lines.size(); ++i) {
+			const TextLine& line = m_lines[i];
+			if (caret >= line.start && caret <= line.start + line.length) {
+				const size_t count = (std::min)(caret - line.start, line.length);
+				ptCaret.x = rcView.left - scroll.cx + MeasureTextWidth(std::wstring_view(text).substr(line.start, count));
+				ptCaret.y = rcView.top - scroll.cy + static_cast<LONG>(i) * lineHeight;
+				return true;
+			}
+		}
+
+		ptCaret.x = rcView.left;
+		ptCaret.y = rcView.top;
+		return true;
+	}
+
 	void CRichEditUI::UpdateImeCompositionWindow()
 	{
 		if (m_pManager == NULL || !IsFocused() || !IsVisible() || !IsEnabled()) return;
@@ -1014,9 +1045,12 @@ namespace FYUI
 		HIMC hImc = ::ImmGetContext(hWnd);
 		if (hImc == NULL) return;
 
-		const CDuiPoint caret = CharPos(m_nCaret);
+		POINT pt = {};
+		if (!TryGetCachedCaretPoint(pt)) {
+			::ImmReleaseContext(hWnd, hImc);
+			return;
+		}
 		const int lineHeight = GetLineHeight();
-		POINT pt = { caret.x, caret.y };
 
 		COMPOSITIONFORM composition = {};
 		composition.dwStyle = CFS_FORCE_POSITION;

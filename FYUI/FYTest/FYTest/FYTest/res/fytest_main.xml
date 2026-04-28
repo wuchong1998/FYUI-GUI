@@ -144,8 +144,8 @@
                 <TreeNode text="TileBox" itemattr="height=&quot;26&quot;" />
               </TreeNode>
             </TreeView>
-            <VirtualList name="virtual_list_demo" height="80" header="hidden" itembkcolor="#FFFFFFFF" itemhotbkcolor="#FFEAF2FA" bordercolor="#FFE0E7EF" bordersize="1" />
-            <Label text="VirtualList is instantiated for provider hookup testing." height="24" font="2" textcolor="#FF667789" />
+            <VirtualList name="virtual_list_demo" height="80" itemcount="10000000" itemheight="24" overscan="6" bordercolor="#FFE0E7EF" bordersize="1" />
+            <Label text="VirtualList fixed-height demo: 10,000,000 rows rendered through a small visible item pool." height="24" font="2" textcolor="#FF667789" />
           </VBox>
         </HBox>
         <HBox height="240" childpadding="12">

@@ -1,163 +1,130 @@
 #pragma once
-#include "IVirtualDataProvider.h"
-#include "VirListBodyUI.h"
-#include <list>
 
-namespace FYUI {
+#include <cstdint>
+#include <functional>
+#include <vector>
 
-	class CListUI;
-	class CVirtualListUI;
-
-	class FYUI_API CVirtualListUI : public CListUI
+namespace FYUI
+{
+	class FYUI_API CVirtualListUI : public CContainerUI
 	{
 		DECLARE_DUICONTROL(CVirtualListUI)
+
 	public:
+		using ItemIndex = std::uint64_t;
+		using CreateItemCallback = std::function<CControlUI*(CVirtualListUI*)>;
+		using BindItemCallback = std::function<void(CVirtualListUI*, CControlUI*, ItemIndex)>;
+		using PaintItemCallback = std::function<void(CVirtualListUI*, CPaintRenderContext&, ItemIndex, const RECT&)>;
+		using ItemEventCallback = std::function<void(CVirtualListUI*, ItemIndex, TEventUI&)>;
+
 		CVirtualListUI();
-		~CVirtualListUI();
+		~CVirtualListUI() override;
 
-		std::wstring_view GetClass() const;
-		LPVOID GetInterface(std::wstring_view pstrName);
+		std::wstring_view GetClass() const override;
+		LPVOID GetInterface(std::wstring_view pstrName) override;
 
-		virtual void DoEvent(TEventUI& event);
+		void SetItemCount(ItemIndex count);
+		ItemIndex GetItemCount() const;
 
-		void SetItemCount(int nCount);
+		void SetFixedItemHeight(int height);
+		int GetFixedItemHeight() const;
+		bool IsFixedHeightMode() const;
 
-		/**
-		* @brief 设置数据代理对象
-		* @param[in] pProvider 开发者需要重写 IVirtualDataProvider 的接口来作为数据代理对象
-		* @return 无
-		*/
-		virtual void SetDataProvider(IVirtualDataProvider * pDataProvider);
+		void SetItemHeights(std::vector<int> heights);
+		void SetItemHeights(const int* heights, size_t count);
+		void ClearItemHeights();
+		bool IsVariableHeightMode() const;
+		int GetItemHeight(ItemIndex index) const;
 
-		virtual IVirtualDataProvider * GetDataProvider();
+		void SetOverscanItemCount(int count);
+		int GetOverscanItemCount() const;
 
-		/**
-		* @brief 设置子项高度
-		* @param[in] nHeight 高度值
-		* @return 无
-		*/
-		virtual void SetElementHeight(int nHeight);
+		void SetCreateItemCallback(CreateItemCallback callback);
+		void SetBindItemCallback(BindItemCallback callback);
+		void SetPaintItemCallback(PaintItemCallback callback);
+		void SetItemClickCallback(ItemEventCallback callback);
+		void SetItemDoubleClickCallback(ItemEventCallback callback);
 
-		/**
-		* @brief 初始化子项
-		* @param[in] nMaxItemCount 初始化数量，默认 50
-		* @return 无
-		*/
-		virtual void InitElement(int nMaxItemCount = 50);
+		void Refresh();
+		void RefreshItem(ItemIndex index);
+		void EnsureVisible(ItemIndex index, bool alignTop = false);
 
-		/**
-		* @brief 删除所有子项
-		* @return 无
-		*/
-		virtual void RemoveAll(bool bChildDelayed =true) override;
+		void GetDisplayCollection(std::vector<ItemIndex>& collection) const;
+		void GetDisplayCollection(std::vector<int>& collection) const;
 
-		bool Remove(CControlUI* pControl);
-		bool RemoveAt(int iIndex);
+		bool SelectItem(ItemIndex index, bool takeFocus = false, bool notify = true);
+		void ClearSelection(bool notify = true);
+		bool HasSelection() const;
+		ItemIndex GetSelectedIndex() const;
+		bool IsItemSelected(ItemIndex index) const;
 
-		void SetReArrangeChild(bool bForce);
+		long long GetScrollOffset() const;
+		void SetScrollOffset(long long offset, bool notify = true);
+		SIZE GetScrollPos() const override;
+		SIZE GetScrollRange() const override;
+		void SetScrollPos(SIZE szPos, bool bMsg = true, bool bScroolVisible = true) override;
+		void LineUp(bool bScroolVisible = true) override;
+		void LineDown(bool bScroolVisible = true) override;
+		void PageUp() override;
+		void PageDown() override;
+		void HomeUp() override;
+		void EndDown() override;
 
-		/**
-		* @brief 设置是否强制重新布局
-		* @param[in] bForce 设置为 true 为强制，否则为不强制
-		* @return 无
-		*/
-		void SetForceArrange(bool bForce);
-
-		/**
-		* @brief 获取当前所有可见控件的索引
-		* @param[out] collection 索引列表
-		* @return 无
-		*/
-		void GetDisplayCollection(std::vector<int>& collection);
-
-
-		/**
-		* @brief 获取选中的索引 (通过IVirtualDataProvider * 获取数据)
-		* @return std::vector<int> 选中索引
-		*/
-		void GetSelectIndex(std::vector<int>& vec);
-
-		bool SelectItem(int iIndex,bool bTakeFocus = false,bool bIsClick = false);
-		void UnSelectAllItems();
-
-
-
-	protected:
-		/// 重写父类接口，提供个性化功能
-
-		virtual void SetPos(RECT rc, bool bNeedInvalidate = true);
+		void SetPos(RECT rc, bool bNeedInvalidate = true) override;
+		void DoEvent(TEventUI& event) override;
+		bool DoPaint(CPaintRenderContext& renderContext, CControlUI* pStopControl) override;
+		void SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue) override;
+		void RemoveAll(bool bChildDelayed = true) override;
 
 	private:
-		enum ScrollDirection
+		struct RealizedItem
 		{
-			kScrollUp = -1,
-			kScrollDown = 1
+			CControlUI* control = nullptr;
+			ItemIndex index = 0;
+			RECT rect = {};
+			bool active = false;
 		};
 
-		/**
-		* @brief 创建一个子项
-		* @return 返回创建后的子项指针
-		*/
-		CControlUI* CreateElement();
+		RECT GetViewRect() const;
+		long long GetViewportHeight() const;
+		long long GetContentHeight() const;
+		long long GetMaxScrollOffset() const;
+		long long ClampScrollOffset(long long offset) const;
+		int GetScrollbarRange() const;
+		int OffsetToScrollbarPos(long long offset) const;
+		long long ScrollbarPosToOffset(int pos) const;
 
-		/**
-		* @brief 填充指定子项
-		* @param[in] control 子项控件指针
-		* @param[in] index 索引
-		* @return 返回创建后的子项指针
-		*/
-		void FillElement(CControlUI* pControl,int iIndex,bool bIsFirst);
-
-		/**
-		* @brief 获取元素总数
-		* @return 返回元素总指数
-		*/
-		int GetElementCount();
-
+		void RebuildPrefixHeights();
+		ItemIndex FindItemByOffset(long long offset) const;
+		long long GetItemTop(ItemIndex index) const;
+		long long GetItemBottom(ItemIndex index) const;
+		void UpdateScrollBar();
+		void RealizeVisibleItems();
+		void EnsurePoolSize(size_t count);
+		CControlUI* CreatePoolItem();
+		void BindRealizedItem(RealizedItem& item);
+		int HitTestRealizedItem(POINT pt) const;
+		void DispatchItemEvent(int realizedIndex, TEventUI& event, const ItemEventCallback& callback);
 
 	private:
-
-
-		CScrollBarUI * GetVerticalScrollBar() const;
-		void EnableScrollBar(bool bEnableVertical = true,bool bEnableHorizontal = true);
-		CScrollBarUI * GetHorizontalScrollBar() const;
-
-
-	protected:
-		//bool SelectItem(int iIndex, bool bTakeFocus = false);
-		// 	bool SelectItemActivate(int iIndex);    // 双击选中
-		// 
-		bool SelectMultiItem(int iIndex, bool bTakeFocus = false);
-		// 	void SetMultiSelect(bool bMultiSel);
-		// 	bool IsMultiSelect() const;
-		// 	bool UnSelectItem(int iIndex, bool bOthers = false);
-		void SelectAllItems();
-		//void UnSelectAllItems();
-		// 	//支持范围选择 
-		virtual bool SelectRange(int iIndex, bool bTakeFocus = false);
-
-	protected:
-		bool m_bIsStartBoxSel = false;//是否开始框选
-
-		int m_iStartBoxIndex = -1; //开始框选索引
-		int m_iEndBoxIndex = -1;//结束框选索引
-		POINT m_BoxStartPt;//框选开始起点
-
-
-		IVirtualDataProvider*  m_pDataProvider;//OwnerData
-
-		CVirListBodyUI* m_pList;
-
-		int m_nOwnerElementHeight;	// 每个项的高度	
-		int m_nOwnerItemCount;	// 列表真实控件数量上限  
-		int m_nOldYScrollPos;
-		bool m_bArrangedOnce;
-		bool m_bForceArrange;	// 强制布局标记
-
-		int m_iCurlShowBeginIndex = 0;
-		int m_iCurlShowEndIndex = 0;
-
-		bool m_bScrollProcess = false;//防止SetPos 重复调用, 导致死循环
+		ItemIndex m_itemCount;
+		int m_fixedItemHeight;
+		int m_overscanItemCount;
+		bool m_useVariableHeights;
+		std::vector<int> m_itemHeights;
+		std::vector<long long> m_prefixHeights;
+		long long m_contentHeight;
+		long long m_scrollOffset;
+		ItemIndex m_firstVisibleIndex;
+		ItemIndex m_lastVisibleIndex;
+		ItemIndex m_selectedIndex;
+		bool m_hasSelection;
+		bool m_updatingScrollBar;
+		std::vector<RealizedItem> m_realizedItems;
+		CreateItemCallback m_createItemCallback;
+		BindItemCallback m_bindItemCallback;
+		PaintItemCallback m_paintItemCallback;
+		ItemEventCallback m_itemClickCallback;
+		ItemEventCallback m_itemDoubleClickCallback;
 	};
-
 }

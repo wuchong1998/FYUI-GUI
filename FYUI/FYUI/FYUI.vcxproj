@@ -147,7 +147,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Control\IVirtualDataProvider.h" />
     <ClInclude Include="Control\UIAnimation.h" />
     <ClInclude Include="Control\UIButton.h" />
     <ClInclude Include="Control\UIButtonEx.h" />
@@ -169,7 +168,6 @@
     <ClInclude Include="Control\UIScrollBar.h" />
     <ClInclude Include="Control\UISlider.h" />
     <ClInclude Include="Control\UITreeView.h" />
-    <ClInclude Include="Control\VirListBodyUI.h" />
     <ClInclude Include="Control\VirtualListUI.h" />
     <ClInclude Include="Core\ControlFactory.h" />
     <ClInclude Include="Core\UIBase.h" />
@@ -246,7 +244,6 @@
     <ClCompile Include="Control\UIScrollBar.cpp" />
     <ClCompile Include="Control\UISlider.cpp" />
     <ClCompile Include="Control\UITreeView.cpp" />
-    <ClCompile Include="Control\VirListBodyUI.cpp" />
     <ClCompile Include="Control\VirtualListUI.cpp" />
     <ClCompile Include="Core\ControlFactory.cpp" />
     <ClCompile Include="Core\UIBase.cpp" />

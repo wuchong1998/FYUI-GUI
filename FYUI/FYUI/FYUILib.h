@@ -81,7 +81,6 @@
 #include "Control/UIFadeButton.h"
 #include "Control/UIRing.h"
 #include "Control/UIButtonEx.h"
-#include "Control/IVirtualDataProvider.h"
 #include "Control/UICountdown.h"
 
 //

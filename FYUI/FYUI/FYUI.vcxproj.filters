@@ -192,9 +192,6 @@
     <ClInclude Include="Control\UIAnimation.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
-    <ClInclude Include="Control\IVirtualDataProvider.h">
-      <Filter>头文件\Control</Filter>
-    </ClInclude>
     <ClInclude Include="Utils\WinimplBase.h">
       <Filter>头文件\Utils</Filter>
     </ClInclude>
@@ -250,9 +247,6 @@
       <Filter>头文件\Control</Filter>
     </ClInclude>
     <ClInclude Include="Control\UITreeView.h">
-      <Filter>头文件\Control</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\VirListBodyUI.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
     <ClInclude Include="Control\VirtualListUI.h">
@@ -477,9 +471,6 @@
       <Filter>源文件\Control</Filter>
     </ClCompile>
     <ClCompile Include="Control\UITreeView.cpp">
-      <Filter>源文件\Control</Filter>
-    </ClCompile>
-    <ClCompile Include="Control\VirListBodyUI.cpp">
       <Filter>源文件\Control</Filter>
     </ClCompile>
     <ClCompile Include="Control\UIList.cpp">

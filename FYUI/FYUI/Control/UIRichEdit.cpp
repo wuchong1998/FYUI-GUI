@@ -2,6 +2,9 @@
 #include "UIRichEdit.h"
 
 #include <algorithm>
+#include <imm.h>
+
+#pragma comment(lib, "imm32.lib")
 
 namespace FYUI
 {
@@ -415,6 +418,8 @@ namespace FYUI
 		if (m_pManager != NULL) {
 			m_pManager->AddPreMessageFilter(this);
 			m_pManager->AddMessageFilter(this);
+			ApplyScrollBarStyle(m_pVerticalScrollBar, m_sVerticalScrollBarStyle, L"VScrollBar");
+			ApplyScrollBarStyle(m_pHorizontalScrollBar, m_sHorizontalScrollBarStyle, L"HScrollBar");
 		}
 		m_bInited = true;
 		UpdateScrollBars();
@@ -444,6 +449,7 @@ namespace FYUI
 		UpdateScrollBars();
 		if (m_pVerticalScrollBar != NULL) m_pVerticalScrollBar->SetScrollPos(static_cast<int>((std::max<LONG>)(0L, szPos.cy)));
 		if (m_pHorizontalScrollBar != NULL) m_pHorizontalScrollBar->SetScrollPos(static_cast<int>((std::max<LONG>)(0L, szPos.cx)));
+		UpdateImeCompositionWindow();
 		Invalidate();
 	}
 	void CRichEditUI::LineUp(bool) { SIZE pos = GetScrollPos(); pos.cy -= GetLineHeight(); SetScrollPos(pos); }
@@ -566,10 +572,26 @@ namespace FYUI
 	{
 		const std::wstring_view name = StringUtil::TrimView(pstrName);
 		if (StringUtil::EqualsNoCase(name, L"vscrollbar")) {
-			if (StringUtil::ParseBool(pstrValue)) EnableScrollBar(true, m_pHorizontalScrollBar != NULL);
+			EnableScrollBar(StringUtil::ParseBool(pstrValue), m_pHorizontalScrollBar != NULL);
+			ApplyScrollBarStyle(m_pVerticalScrollBar, m_sVerticalScrollBarStyle, L"VScrollBar");
+			UpdateScrollBars();
 		}
 		else if (StringUtil::EqualsNoCase(name, L"hscrollbar")) {
 			EnableScrollBar(m_pVerticalScrollBar != NULL, StringUtil::ParseBool(pstrValue));
+			ApplyScrollBarStyle(m_pHorizontalScrollBar, m_sHorizontalScrollBarStyle, L"HScrollBar");
+			UpdateScrollBars();
+		}
+		else if (StringUtil::EqualsNoCase(name, L"vscrollbarstyle")) {
+			m_sVerticalScrollBarStyle.assign(pstrValue);
+			EnableScrollBar(true, m_pHorizontalScrollBar != NULL);
+			ApplyScrollBarStyle(m_pVerticalScrollBar, m_sVerticalScrollBarStyle, L"VScrollBar");
+			UpdateScrollBars();
+		}
+		else if (StringUtil::EqualsNoCase(name, L"hscrollbarstyle")) {
+			m_sHorizontalScrollBarStyle.assign(pstrValue);
+			EnableScrollBar(m_pVerticalScrollBar != NULL, true);
+			ApplyScrollBarStyle(m_pHorizontalScrollBar, m_sHorizontalScrollBarStyle, L"HScrollBar");
+			UpdateScrollBars();
 		}
 		else if (StringUtil::EqualsNoCase(name, L"multiline")) SetMultiLine(StringUtil::ParseBool(pstrValue));
 		else if (StringUtil::EqualsNoCase(name, L"wanttab")) SetWantTab(StringUtil::ParseBool(pstrValue));
@@ -605,6 +627,10 @@ namespace FYUI
 	{
 		bHandled = false;
 		if (!IsFocused() || !IsVisible() || !IsEnabled()) return 0;
+		if (uMsg == WM_IME_STARTCOMPOSITION || uMsg == WM_IME_COMPOSITION || uMsg == WM_IME_NOTIFY) {
+			UpdateImeCompositionWindow();
+			return 0;
+		}
 		if (uMsg == WM_KEYDOWN && wParam == VK_TAB && m_bWantTab && !m_bReadOnly) {
 			ReplaceSel(L"\t", true);
 			bHandled = true;
@@ -705,6 +731,7 @@ namespace FYUI
 		m_nCaret = m_nAnchor = start + insert.size();
 		m_nPreferredCaretX = -1;
 		MarkTextChanged(bCanUndo);
+		UpdateImeCompositionWindow();
 		ResetCaretBlink();
 	}
 
@@ -721,6 +748,7 @@ namespace FYUI
 		m_nCaret = pos;
 		m_nPreferredCaretX = -1;
 		ScrollToCaret();
+		UpdateImeCompositionWindow();
 		ResetCaretBlink();
 	}
 
@@ -747,6 +775,7 @@ namespace FYUI
 		if (!bKeepAnchor) m_nAnchor = best;
 		m_nCaret = best;
 		ScrollToCaret();
+		UpdateImeCompositionWindow();
 		ResetCaretBlink();
 	}
 
@@ -929,6 +958,7 @@ namespace FYUI
 		if (m_pVerticalScrollBar != NULL) {
 			const int barWidth = m_pVerticalScrollBar->GetFixedWidth();
 			const int range = (std::max)(0, m_nContentHeight - viewHeight);
+			m_pVerticalScrollBar->SetVisible(range > 0 && m_bShowScrollbar);
 			m_pVerticalScrollBar->SetScrollRange(range);
 			m_pVerticalScrollBar->SetLineSize(GetLineHeight());
 			RECT rcBar = { rcEdit.right - barWidth, rcEdit.top, rcEdit.right, rcEdit.bottom };
@@ -938,6 +968,7 @@ namespace FYUI
 		if (m_pHorizontalScrollBar != NULL) {
 			const int barHeight = m_pHorizontalScrollBar->GetFixedHeight();
 			const int range = (std::max)(0, m_nContentWidth - viewWidth);
+			m_pHorizontalScrollBar->SetVisible(range > 0 && m_bShowScrollbar && !m_bWordWrap);
 			m_pHorizontalScrollBar->SetScrollRange(range);
 			m_pHorizontalScrollBar->SetLineSize(MeasureTextWidth(L"M"));
 			RECT rcBar = { rcEdit.left, rcEdit.bottom - barHeight, rcEdit.right, rcEdit.bottom };
@@ -960,24 +991,91 @@ namespace FYUI
 		SetScrollPos(pos);
 	}
 
+	void CRichEditUI::ApplyScrollBarStyle(CScrollBarUI* pScrollBar, std::wstring_view styleName, std::wstring_view defaultName)
+	{
+		if (pScrollBar == NULL || m_pManager == NULL) return;
+		if (!styleName.empty()) {
+			const std::wstring_view style = m_pManager->GetStyle(styleName);
+			pScrollBar->ApplyAttributeList(style.empty() ? styleName : style);
+		}
+		else {
+			const std::wstring_view defaultStyle = m_pManager->GetDefaultAttributeList(defaultName);
+			const std::wstring_view commonStyle = defaultStyle.empty() ? m_pManager->GetDefaultAttributeList(L"ScrollBar") : defaultStyle;
+			if (!commonStyle.empty()) pScrollBar->ApplyAttributeList(commonStyle);
+		}
+		pScrollBar->SetShow(m_bShowScrollbar);
+	}
+
+	void CRichEditUI::UpdateImeCompositionWindow()
+	{
+		if (m_pManager == NULL || !IsFocused() || !IsVisible() || !IsEnabled()) return;
+		HWND hWnd = m_pManager->GetPaintWindow();
+		if (hWnd == NULL) return;
+		HIMC hImc = ::ImmGetContext(hWnd);
+		if (hImc == NULL) return;
+
+		const CDuiPoint caret = CharPos(m_nCaret);
+		const int lineHeight = GetLineHeight();
+		POINT pt = { caret.x, caret.y };
+
+		COMPOSITIONFORM composition = {};
+		composition.dwStyle = CFS_FORCE_POSITION;
+		composition.ptCurrentPos = pt;
+		::ImmSetCompositionWindow(hImc, &composition);
+
+		CANDIDATEFORM candidate = {};
+		candidate.dwIndex = 0;
+		candidate.dwStyle = CFS_CANDIDATEPOS;
+		candidate.ptCurrentPos = { pt.x, pt.y + lineHeight };
+		::ImmSetCandidateWindow(hImc, &candidate);
+
+		HFONT hFont = m_pManager->GetFont(m_iFont);
+		LOGFONT lf = {};
+		if (hFont != NULL && ::GetObject(hFont, sizeof(LOGFONT), &lf) == sizeof(LOGFONT)) {
+			::ImmSetCompositionFont(hImc, &lf);
+		}
+		::ImmReleaseContext(hWnd, hImc);
+	}
+
 	void CRichEditUI::DrawSelection(CPaintRenderContext& renderContext, const RECT& rcView)
 	{
 		if (m_nCaret == m_nAnchor || (m_bHideSelection && !IsFocused())) return;
+		EnsureLayout();
 		size_t selStart = m_nAnchor;
 		size_t selEnd = m_nCaret;
 		NormalizeRange(selStart, selEnd);
 		const std::wstring text = GetText();
+		const int lineHeight = GetLineHeight();
+		const int blankWidth = (std::max)(MeasureTextWidth(L" "), 4);
 		for (size_t i = 0; i < m_lines.size(); ++i) {
 			const TextLine& line = m_lines[i];
 			const size_t lineStart = line.start;
 			const size_t lineEnd = line.start + line.length;
-			const size_t start = (std::max)(selStart, lineStart);
-			const size_t end = (std::min)(selEnd, lineEnd);
-			if (start >= end) continue;
-			const CDuiPoint p1 = CharPos(start);
-			const CDuiPoint p2 = CharPos(end);
-			RECT rcSel = { p1.x, p1.y, p2.x, p1.y + GetLineHeight() };
-			CRenderEngine::DrawRoundColor(renderContext, rcSel, 0, 0, kSelectionColor);
+			const bool hasNewline = lineEnd < text.size() && text[lineEnd] == L'\n';
+			const size_t logicalEnd = hasNewline ? lineEnd + 1 : lineEnd;
+			if (selEnd <= lineStart || selStart >= logicalEnd) continue;
+
+			const CDuiPoint linePoint = CharPos(lineStart);
+			LONG left = linePoint.x;
+			LONG right = linePoint.x;
+			if (selStart > lineStart && selStart <= lineEnd) left = CharPos(selStart).x;
+			if (selEnd < lineEnd) right = CharPos(selEnd).x;
+			else {
+				right = CharPos(lineEnd).x;
+				if (selEnd > lineEnd || (hasNewline && selEnd == logicalEnd)) {
+					right = (std::max<LONG>)(right + blankWidth, rcView.right);
+				}
+			}
+			if (line.length == 0) {
+				right = left + blankWidth;
+			}
+			if (right <= left) right = left + blankWidth;
+
+			RECT rcSel = { left, linePoint.y, right, linePoint.y + lineHeight };
+			RECT rcClipped = {};
+			if (::IntersectRect(&rcClipped, &rcSel, &rcView)) {
+				CRenderEngine::DrawRoundColor(renderContext, rcClipped, 0, 0, kSelectionColor);
+			}
 		}
 	}
 

@@ -193,7 +193,9 @@ namespace FYUI
 		CDuiPoint CharPos(size_t index) const;
 		size_t CurrentLineIndex() const;
 		void UpdateScrollBars();
+		void ApplyScrollBarStyle(CScrollBarUI* pScrollBar, std::wstring_view styleName, std::wstring_view defaultName);
 		void ScrollToCaret();
+		void UpdateImeCompositionWindow();
 		void DrawSelection(CPaintRenderContext& renderContext, const RECT& rcView);
 		void DrawTextLines(CPaintRenderContext& renderContext, const RECT& rcView);
 		void DrawCaret(CPaintRenderContext& renderContext, const RECT& rcView);

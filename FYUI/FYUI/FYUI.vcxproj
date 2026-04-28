@@ -152,6 +152,7 @@
     <ClInclude Include="Control\UIButton.h" />
     <ClInclude Include="Control\UIButtonEx.h" />
     <ClInclude Include="Control\UIFrameTest.h" />
+    <ClInclude Include="Control\UIRichEdit.h" />
     <ClInclude Include="Control\UIColorPalette.h" />
     <ClInclude Include="Control\UICombo.h" />
     <ClInclude Include="Control\UIComboBox.h" />
@@ -228,6 +229,7 @@
     <ClCompile Include="Control\UIButton.cpp" />
     <ClCompile Include="Control\UIButtonEx.cpp" />
     <ClCompile Include="Control\UIFrameTest.cpp" />
+    <ClCompile Include="Control\UIRichEdit.cpp" />
     <ClCompile Include="Control\UIColorPalette.cpp" />
     <ClCompile Include="Control\UICombo.cpp" />
     <ClCompile Include="Control\UIComboBox.cpp" />

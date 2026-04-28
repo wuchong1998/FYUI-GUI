@@ -225,6 +225,9 @@
     <ClInclude Include="Control\UIFrameTest.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
+    <ClInclude Include="Control\UIRichEdit.h">
+      <Filter>头文件\Control</Filter>
+    </ClInclude>
     <ClInclude Include="Control\UIColorPalette.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
@@ -447,6 +450,9 @@
       <Filter>源文件\Control</Filter>
     </ClCompile>
     <ClCompile Include="Control\UIFrameTest.cpp">
+      <Filter>源文件\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\UIRichEdit.cpp">
       <Filter>源文件\Control</Filter>
     </ClCompile>
     <ClCompile Include="Control\UIColorPalette.cpp">

@@ -322,6 +322,7 @@ protected:                                                                \
 #define  DUI_CTR_BOX							 (_T("Box")) //
 
 #define  DUI_CTR_EDIT                            (_T("Edit"))
+#define  DUI_CTR_RICHEDIT                        (_T("RichEdit"))
 #define  DUI_CTR_LIST                            (_T("List"))
 #define  DUI_CTR_TEXT                            (_T("Text"))
 #define  DUI_CTR_HBOX                            (_T("HBox"))

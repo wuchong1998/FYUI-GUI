@@ -1093,12 +1093,10 @@ namespace FYUI
 			LONG left = linePoint.x;
 			LONG right = linePoint.x;
 			if (selStart > lineStart && selStart <= lineEnd) left = CharPos(selStart).x;
-			if (selEnd < lineEnd) right = CharPos(selEnd).x;
+			if (selEnd <= lineEnd) right = CharPos(selEnd).x;
 			else {
 				right = CharPos(lineEnd).x;
-				if (selEnd > lineEnd || (hasNewline && selEnd == logicalEnd)) {
-					right = (std::max<LONG>)(right + blankWidth, rcView.right);
-				}
+				if (hasNewline && selEnd >= logicalEnd) right += blankWidth;
 			}
 			if (line.length == 0) {
 				right = left + blankWidth;

@@ -1216,15 +1216,15 @@ namespace FYUI
 		HMENU hMenu = ::CreatePopupMenu();
 		if (hMenu == NULL) return;
 
-		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuUndo, L"Undo\tCtrl+Z");
-		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuRedo, L"Redo\tCtrl+Y");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuUndo, L"撤销\tCtrl+Z");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuRedo, L"恢复\tCtrl+Y");
 		::AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
-		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuCut, L"Cut\tCtrl+X");
-		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuCopy, L"Copy\tCtrl+C");
-		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuPaste, L"Paste\tCtrl+V");
-		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuDelete, L"Delete");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuCut, L"剪切\tCtrl+X");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuCopy, L"复制\tCtrl+C");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuPaste, L"粘贴\tCtrl+V");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuDelete, L"删除");
 		::AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
-		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuSelectAll, L"Select All\tCtrl+A");
+		::AppendMenuW(hMenu, MF_STRING, kRichEditMenuSelectAll, L"全选\tCtrl+A");
 
 		const UINT hasSelection = GetSelectionType() != SEL_EMPTY ? MF_ENABLED : MF_GRAYED;
 		const UINT canEdit = !m_bReadOnly ? MF_ENABLED : MF_GRAYED;

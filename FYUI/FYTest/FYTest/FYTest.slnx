@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="../../FYUI/FYUI/FYUI.vcxproj" Id="c2487f4c-04b6-4c15-8eca-39811895cffb" />
+  <Project Path="FYTest/FYTest.vcxproj" Id="208e440c-34c6-4a2d-8aa2-bec0010f35ee" />
+</Solution>

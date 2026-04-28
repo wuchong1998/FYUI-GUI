@@ -267,13 +267,7 @@ namespace FYTestApp
         FYUI::TRenderDiagnostics diagnostics = {};
         m_pm.GetRenderDiagnostics(diagnostics);
 
-        std::wstring backend = L"auto";
-        if (diagnostics.activeBackend == FYUI::RenderBackendDirect2D) {
-            backend = L"direct2d";
-        }
-        else if (diagnostics.activeBackend == FYUI::RenderBackendGDI) {
-            backend = L"gdi";
-        }
+        std::wstring backend = L"direct2d";
 
         std::wstring mode = L"auto";
         if (diagnostics.activeDirect2DMode == FYUI::Direct2DRenderModeHardware) {

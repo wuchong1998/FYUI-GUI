@@ -6,7 +6,6 @@
 
 namespace Gdiplus
 {
-	class Graphics;
 	class Image;
 }
 
@@ -16,7 +15,6 @@ namespace FYUI
 	struct tagTDrawInfo;
 	typedef tagTDrawInfo TDrawInfo;
 
-	void ConfigureImageFallbackGdiplusGraphicsInternal(Gdiplus::Graphics& graphics);
 	void DrawImageInternal(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, const RECT& rcPaint, const RECT& rcBmpPart, const RECT& rcCorners, bool bAlpha, UINT uFade = 255, bool hole = false, bool xtiled = false, bool ytiled = false);
 	void DrawRotateImageInternal(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, const RECT& rcPaint, const RECT& rcBmpPart, bool bAlpha, UINT uFade = 255, UINT uRotate = 0);
 	bool DrawImageInfoInternal(CPaintRenderContext& renderContext, const RECT& rcItem, TDrawInfo* pDrawInfo, HINSTANCE instance = NULL);

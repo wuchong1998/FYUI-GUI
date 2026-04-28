@@ -103,8 +103,6 @@ namespace FYUI {
 		// 鐎涙ぞ缍嬬紒妯哄煑
 		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, int iFont, UINT uStyle, DWORD dwTextBKColor);
 		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, int iFont, UINT uStyle);
-		[[deprecated("FYUI text rendering is DirectWrite-based; remove the legacy GDI+ text flag.")]]
-		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, int iFont, UINT uStyle, bool bGDIPlusDrawText);
 
 		// DrawHtmlText 的 text 不是浏览器完整 HTML，而是 FYUI 内置的轻量富文本标记。
 		// text 是 UTF-16 std::wstring_view：可传 std::wstring、std::wstring_view 或 L"..."。

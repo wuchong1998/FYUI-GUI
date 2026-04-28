@@ -182,16 +182,16 @@ else {
         }
     }
 
-    $nonRichEditControlHdcPattern = '(?i)\bHDC\b|\.GetDC\s*\(|\b(CreateCompatibleDC|CreateDIBSection|SaveDC|RestoreDC|StretchBlt|SetStretchBltMode|SelectObject)\b'
+    $controlHdcPattern = '(?i)\bHDC\b|\.GetDC\s*\(|\b(CreateCompatibleDC|CreateDIBSection|SaveDC|RestoreDC|StretchBlt|SetStretchBltMode|SelectObject)\b'
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Control\\' -or $item.Include -match '(?i)^Control\\UIRichEdit\.') {
+        if ($item.Include -notmatch '(?i)^Control\\') {
             continue
         }
 
         $text = Get-Content -LiteralPath $item.Path -Raw
-        $match = [regex]::Match($text, $nonRichEditControlHdcPattern)
+        $match = [regex]::Match($text, $controlHdcPattern)
         if ($match.Success) {
-            Add-Failure "Non-RichEdit built controls must not access HDC/DC directly; use CPaintRenderContext/CPaintRenderSurface. ($($item.Include):$((Get-LineNumber $text $match.Index)))"
+            Add-Failure "Built controls must not access HDC/DC directly; use CPaintRenderContext/CPaintRenderSurface. ($($item.Include):$((Get-LineNumber $text $match.Index)))"
         }
     }
 
@@ -256,7 +256,7 @@ else {
         @{
             IncludePattern = '(?i)^Core\\UIRenderImageRuntime\.cpp$'
             Pattern = '(?i)\bHDC\b'
-            Message = 'Image runtime cpp must stay D2D/context-only; non-RichEdit image HDC fallback is blocked.'
+            Message = 'Image runtime cpp must stay D2D/context-only; image HDC fallback is blocked.'
         },
         @{
             IncludePattern = '(?i)^Core\\UIRenderHtmlLegacy\.cpp$'
@@ -345,7 +345,7 @@ else {
 
         $text = Get-Content -LiteralPath $item.Path -Raw
         $primitiveCppBans = @(
-            @{ Pattern = '(?i)\bHDC\b|\.GetDC\s*\('; Message = 'Primitive runtime cpp must stay D2D/context-only; non-RichEdit primitive HDC drawing is blocked.' },
+            @{ Pattern = '(?i)\bHDC\b|\.GetDC\s*\('; Message = 'Primitive runtime cpp must stay D2D/context-only; primitive HDC drawing is blocked.' },
             @{ Pattern = '(?i)\bDraw(?:Color|Gradient|Line|Rect|RoundRect)Fallback\b'; Message = 'Primitive GDI/GDI+ fallback helpers must not return; primitives draw through D2D only.' },
             @{ Pattern = '(?i)\b(GdiplusDrawRoundRectInternal|GradientFill|MoveToEx|LineTo|::\s*Rectangle|::\s*RoundRect)\b'; Message = 'Primitive HDC/GDI drawing calls must not return.' }
         )

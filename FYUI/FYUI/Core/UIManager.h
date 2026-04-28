@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <string>
 #include <string_view>
+#include <objidl.h>
+#include <olectl.h>
 #include <gdiplus.h>
 #include "UIRenderTypes.h"
 #include "UIRenderSurface.h"
@@ -11,7 +13,6 @@
 namespace FYUI
 {
 	class CControlUI;
-	class CRichEditUI;
 	class CIDropTarget;
 	class CPaintManagerUI;
 
@@ -374,11 +375,6 @@ namespace FYUI
 		void GetRenderDiagnostics(TRenderDiagnostics& diagnostics);
 		void NotifyImageScaleCacheHit();
 		void NotifyImageScaleCacheRefresh();
-
-		void SetUseGdiplusText(bool bUse);
-		bool IsUseGdiplusText() const;
-		void SetGdiplusTextRenderingHint(int trh);
-		int GetGdiplusTextRenderingHint() const;
 
 		static HINSTANCE GetInstance();
 		static std::wstring GetInstancePath();
@@ -792,8 +788,6 @@ namespace FYUI
 		UINT m_nSampleHtmlDirectWriteParseFailures;
 		UINT m_nSampleHtmlDirectWriteLayoutFailures;
 		UINT m_nSampleHtmlDirectWriteRenderFailures;
-		bool m_bUseGdiplusText;
-		int m_trh;
 		ULONG_PTR m_gdiplusToken;
 		Gdiplus::GdiplusStartupInput *m_pGdiplusStartupInput;
 

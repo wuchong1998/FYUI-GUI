@@ -163,7 +163,6 @@
     <ClInclude Include="Control\UIMenu.h" />
     <ClInclude Include="Control\UIOption.h" />
     <ClInclude Include="Control\UIProgress.h" />
-    <ClInclude Include="Control\UIRichEdit.h" />
     <ClInclude Include="Control\UIRing.h" />
     <ClInclude Include="Control\UIScrollBar.h" />
     <ClInclude Include="Control\UISlider.h" />
@@ -239,7 +238,6 @@
     <ClCompile Include="Control\UIMenu.cpp" />
     <ClCompile Include="Control\UIOption.cpp" />
     <ClCompile Include="Control\UIProgress.cpp" />
-    <ClCompile Include="Control\UIRichEdit.cpp" />
     <ClCompile Include="Control\UIRing.cpp" />
     <ClCompile Include="Control\UIScrollBar.cpp" />
     <ClCompile Include="Control\UISlider.cpp" />
@@ -270,7 +268,6 @@
     <ClCompile Include="Core\UIRenderImageScale.cpp" />
     <ClCompile Include="Core\UIRenderImageSpec.cpp" />
     <ClCompile Include="Core\UIRenderBatchInternal.cpp" />
-    <ClCompile Include="Core\UIRenderFallbackSharedInternal.cpp" />
     <ClCompile Include="Core\UIRenderTextSharedInternal.cpp" />
     <ClCompile Include="Core\UIRenderPrimitive.cpp" />
     <ClCompile Include="Core\UIRender.cpp" />

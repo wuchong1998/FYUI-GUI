@@ -47,12 +47,6 @@ namespace FYUI
 
 		RenderBackendType ParseRenderBackend(std::wstring_view pstrValue)
 		{
-			if (pstrValue.empty()) {
-				return RenderBackendAuto;
-			}
-			if (EqualsNoCase(pstrValue, L"gdi")) {
-				return RenderBackendGDI;
-			}
 			if (EqualsNoCase(pstrValue, L"direct2d") || EqualsNoCase(pstrValue, L"d2d")) {
 				return RenderBackendDirect2D;
 			}
@@ -345,9 +339,6 @@ namespace FYUI
 						else if( EqualsNoCase(pstrName, L"showshadow") ) {
 							pManager->GetShadow()->ShowShadow(EqualsNoCase(pstrValue, L"true"));
 						} 
-						else if( EqualsNoCase(pstrName, L"gdiplustext") ) {
-							pManager->SetUseGdiplusText(EqualsNoCase(pstrValue, L"true"));
-						} 
 						else if( EqualsNoCase(pstrName, L"renderbackend") ) {
 							pManager->SetRenderBackend(ParseRenderBackend(pstrValue));
 						}
@@ -361,9 +352,6 @@ namespace FYUI
 							const bool bTrace = EqualsNoCase(pstrValue, L"true");
 							pManager->SetRenderDiagnosticsEnabled(pManager->IsRenderDiagnosticsEnabled() || bTrace, bTrace);
 						}
-						else if( EqualsNoCase(pstrName, L"textrenderinghint") ) {
-							pManager->SetGdiplusTextRenderingHint(ParseInt(pstrValue));
-						} 
 						else if( EqualsNoCase(pstrName, L"tooltiphovertime") ) {
 							pManager->SetHoverTime(ParseInt(pstrValue));
 						} 

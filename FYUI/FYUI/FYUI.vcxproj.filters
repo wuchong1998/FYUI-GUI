@@ -171,9 +171,6 @@
     <ClInclude Include="Control\UIScrollBar.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
-    <ClInclude Include="Control\UIRichEdit.h">
-      <Filter>头文件\Control</Filter>
-    </ClInclude>
     <ClInclude Include="Layout\UIHorizontalLayout.h">
       <Filter>头文件\Layout</Filter>
     </ClInclude>
@@ -353,9 +350,6 @@
     <ClCompile Include="Core\UIRenderBatchInternal.cpp">
       <Filter>源文件\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UIRenderFallbackSharedInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Core\UIRenderTextSharedInternal.cpp">
       <Filter>源文件\Core</Filter>
     </ClCompile>
@@ -427,9 +421,6 @@
     </ClCompile>
     <ClCompile Include="Utils\sdk_util.cpp">
       <Filter>源文件\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Control\UIRichEdit.cpp">
-      <Filter>源文件\Control</Filter>
     </ClCompile>
     <ClCompile Include="Control\UIButton.cpp">
       <Filter>源文件\Control</Filter>

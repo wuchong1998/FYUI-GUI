@@ -504,14 +504,10 @@ namespace FYUI
 			FlushDirect2DBatchForNativeDC(NULL);
 		}
 
-		bool CanUseDirect2D()
-		{
-			D2DRenderState& state = GetD2DRenderState();
-			if (state.preferredBackend == RenderBackendGDI) {
-				return false;
-			}
-			return SUCCEEDED(EnsureD2DFactory());
-		}
+	bool CanUseDirect2D()
+	{
+		return SUCCEEDED(EnsureD2DFactory());
+	}
 
 		bool CanUseDirect2DRenderContext(const CPaintRenderContext& renderContext)
 		{
@@ -2753,13 +2749,16 @@ namespace FYUI
 	void CRenderEngine::SetPreferredRenderBackend(RenderBackendType backend)
 	{
 		D2DRenderState& state = GetD2DRenderState();
-		state.preferredBackend = backend;
-		if (backend == RenderBackendGDI) {
-			FlushActiveDirect2DBatch();
-			ResetD2DRenderTargetResources(state);
-			ClearHtmlRuntimeCaches(state);
-			ResetDirect2DBatchState(state);
+		const RenderBackendType resolvedBackend =
+			backend == RenderBackendAuto ? RenderBackendAuto : RenderBackendDirect2D;
+		if (state.preferredBackend == resolvedBackend) {
+			return;
 		}
+		state.preferredBackend = resolvedBackend;
+		FlushActiveDirect2DBatch();
+		ResetD2DRenderTargetResources(state);
+		ClearHtmlRuntimeCaches(state);
+		ResetDirect2DBatchState(state);
 	}
 
 	RenderBackendType CRenderEngine::GetPreferredRenderBackend()
@@ -2769,7 +2768,7 @@ namespace FYUI
 
 	RenderBackendType CRenderEngine::GetActiveRenderBackend()
 	{
-		return CanUseDirect2D() ? RenderBackendDirect2D : RenderBackendGDI;
+		return RenderBackendDirect2D;
 	}
 
 	void CRenderEngine::SetPreferredDirect2DRenderMode(Direct2DRenderMode mode)
@@ -2794,9 +2793,6 @@ namespace FYUI
 	Direct2DRenderMode CRenderEngine::GetActiveDirect2DRenderMode()
 	{
 		D2DRenderState& state = GetD2DRenderState();
-		if (state.preferredBackend == RenderBackendGDI) {
-			return Direct2DRenderModeAuto;
-		}
 		if (!state.dcRenderTarget && CanUseDirect2D()) {
 			EnsureDCRenderTarget();
 		}
@@ -3116,12 +3112,6 @@ namespace FYUI
 
 	void CRenderEngine::DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, int iFont, UINT uStyle)
 	{
-		DrawTextInternal(renderContext, rc, text, dwTextColor, iFont, uStyle);
-	}
-
-	void CRenderEngine::DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, int iFont, UINT uStyle, bool bGDIPlusDrawText)
-	{
-		(void)bGDIPlusDrawText;
 		DrawTextInternal(renderContext, rc, text, dwTextColor, iFont, uStyle);
 	}
 

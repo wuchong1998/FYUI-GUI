@@ -7,7 +7,6 @@ namespace FYUI {
 	enum RenderBackendType
 	{
 		RenderBackendAuto = 0,
-		RenderBackendGDI,
 		RenderBackendDirect2D,
 	};
 

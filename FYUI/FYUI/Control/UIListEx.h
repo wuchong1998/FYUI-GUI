@@ -37,12 +37,10 @@ namespace FYUI {
 			void RemoveAll();
 
 		protected:
-			CRichEditUI*		m_pEditUI;
 			CComboBoxUI*	m_pComboBoxUI;
 
 	public:
 		virtual BOOL CheckColumEditable(int nColum);
-		virtual CRichEditUI* GetEditUI();
 
 		virtual BOOL CheckColumComboBoxable(int nColum);
 		virtual CComboBoxUI* GetComboBoxUI();
@@ -74,15 +72,11 @@ namespace FYUI {
 		CListTextExtElementUI* GetTextExtItemAt(int nIndex) const;
 		void HandleHeaderCheckedNotify(const TNotifyUI& msg);
 		void HandleItemCheckedNotify(const TNotifyUI& msg);
-		bool HandleInlineEditNotify(const TNotifyUI& msg);
 		bool HandleInlineComboNotify(const TNotifyUI& msg);
 		bool HandleInlineScrollNotify(const TNotifyUI& msg);
-		void HideInlineEditControl();
 		void HideInlineComboControl();
 		void HideEditAndComboCtrl();
-		void CommitInlineEditText();
 		void CommitInlineComboSelection();
-			void ShowInlineEdit(int nIndex, int nColum, const RECT& rcColumn, std::wstring_view lpstrText);
 			void ShowInlineCombo(int nIndex, int nColum, const RECT& rcColumn, std::wstring_view lpstrText);
 			void ActivateInlineCellEditor(int nIndex, int nColum, const RECT& rcColumn, std::wstring_view lpstrText);
 			void SyncHeaderCheckState(int nColum, BOOL bChecked);

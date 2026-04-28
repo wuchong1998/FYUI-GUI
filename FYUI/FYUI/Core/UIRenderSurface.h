@@ -20,7 +20,6 @@ namespace FYUI
 		bool Ensure(CPaintRenderContext& renderContext, LONG cx, LONG cy);
 		bool Ensure(CPaintManagerUI* pManager, LONG cx, LONG cy);
 		bool ClearTransparent();
-		bool DrawGdiplusImage(Gdiplus::Image* image, LONG cx, LONG cy);
 		bool PresentLayeredWindow(HWND hWnd, const POINT& ptDst, BYTE alpha = 255) const;
 		CPaintRenderContext CreateRenderContext(
 			CPaintManagerUI* pManager,

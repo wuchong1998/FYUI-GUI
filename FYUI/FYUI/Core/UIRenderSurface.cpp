@@ -224,19 +224,6 @@ namespace FYUI
 		return true;
 	}
 
-	bool CPaintRenderSurface::DrawGdiplusImage(Gdiplus::Image* image, LONG cx, LONG cy)
-	{
-		if (!IsReady() || image == NULL || cx <= 0 || cy <= 0) {
-			return false;
-		}
-
-		ClearTransparent();
-		Gdiplus::Graphics graphics(m_state->hNativeDC);
-		ConfigureImageFallbackGdiplusGraphicsInternal(graphics);
-		graphics.Clear(Gdiplus::Color(0, 0, 0, 0));
-		return graphics.DrawImage(image, 0, 0, static_cast<INT>(cx), static_cast<INT>(cy)) == Gdiplus::Ok;
-	}
-
 	bool CPaintRenderSurface::PresentLayeredWindow(HWND hWnd, const POINT& ptDst, BYTE alpha) const
 	{
 		if (!IsReady() || hWnd == NULL) {

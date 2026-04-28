@@ -210,10 +210,6 @@ namespace FYUI
         for (int it = 0; m_bAutoDestroy && it < m_items.GetSize(); it++)
         {
             CControlUI* pItem = static_cast<CControlUI*>(m_items[it]);
-            //鐠恒劎鐛ラ崣锝嗗珛閹疯姤妞傞崐?婵″倹鐏夐弰鐥砳chedit 閹貉傛闁库偓濮ｄ椒绱板畷鈺傜皾
-            std::wstring strClass(pItem->GetClass());
-            if (strClass == L"RichEditUI")
-                continue;
             if (pItem->IsContainerControl())
             {
                 pItem->RemoveAll(bChildDelayed);

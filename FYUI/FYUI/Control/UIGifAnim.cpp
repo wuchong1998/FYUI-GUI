@@ -118,7 +118,7 @@ namespace FYUI
 
 	bool CGifAnimUI::HasGifImage() const
 	{
-		return m_pGifImageInfo != NULL && m_pGifImageInfo->pImage != NULL;
+		return m_pGifImageInfo != NULL && m_pGifImageInfo->hBitmap != NULL;
 	}
 
 	bool CGifAnimUI::EnsureGifImageLoaded()
@@ -131,7 +131,7 @@ namespace FYUI
 
 	bool CGifAnimUI::HasPlayableGifFrames() const
 	{
-		return HasGifImage() && m_nFrameCount > 1;
+		return false;
 	}
 
 	bool CGifAnimUI::ShouldAutoPlayGif()
@@ -212,36 +212,25 @@ namespace FYUI
 
 	bool CGifAnimUI::AttachGifImageInfo(TImageInfo* pImageInfo)
 	{
-		if (pImageInfo == NULL || pImageInfo->pImage == NULL) {
+		if (pImageInfo == NULL || pImageInfo->hBitmap == NULL) {
 			return false;
 		}
 
 		Gdiplus::Image* pGifImage = pImageInfo->pImage;
-		UINT nCount = pGifImage->GetFrameDimensionsCount();
-		if (nCount == 0) {
-			return false;
-		}
-
-		GUID* pDimensionIDs = new GUID[nCount];
-		pGifImage->GetFrameDimensionsList(pDimensionIDs, nCount);
-		m_nFrameCount = pGifImage->GetFrameCount(&pDimensionIDs[0]);
-		if (m_nFrameCount > 1) {
-			int nSize = pGifImage->GetPropertyItemSize(PropertyTagFrameDelay);
-			if (nSize > 0) {
-				m_pPropertyItem = (Gdiplus::PropertyItem*) malloc(nSize);
-				if (m_pPropertyItem != NULL &&
-					pGifImage->GetPropertyItem(PropertyTagFrameDelay, nSize, m_pPropertyItem) != Gdiplus::Ok) {
-					free(m_pPropertyItem);
-					m_pPropertyItem = NULL;
-				}
+		if (pGifImage != NULL) {
+			UINT nCount = pGifImage->GetFrameDimensionsCount();
+			if (nCount > 0) {
+				GUID* pDimensionIDs = new GUID[nCount];
+				pGifImage->GetFrameDimensionsList(pDimensionIDs, nCount);
+				m_nFrameCount = pGifImage->GetFrameCount(&pDimensionIDs[0]);
+				delete[] pDimensionIDs;
 			}
 		}
-		delete[] pDimensionIDs;
 
 		m_pGifImageInfo = pImageInfo;
 		if (m_bIsAutoSize) {
-			SetFixedWidth(pGifImage->GetWidth());
-			SetFixedHeight(pGifImage->GetHeight());
+			SetFixedWidth(pImageInfo->nX);
+			SetFixedHeight(pImageInfo->nY);
 		}
 		SyncGifPlaybackState();
 		return true;
@@ -410,53 +399,23 @@ namespace FYUI
 
 	bool CGifAnimUI::EnsureFrameCache(CPaintRenderContext& renderContext, LONG cx, LONG cy)
 	{
-		if (m_pGifImageInfo == NULL || m_pGifImageInfo->pImage == NULL || cx <= 0 || cy <= 0) {
-			return false;
-		}
-
-		if (m_bFrameCacheValid && m_frameSurface.GetBitmap() != NULL &&
-			m_nCachedFramePosition == m_nFramePosition &&
-			m_szFrameBitmap.cx == cx && m_szFrameBitmap.cy == cy) {
-			return true;
-		}
-
-		InvalidateFrameCache();
-
-		if (!m_frameSurface.Ensure(renderContext, cx, cy)) {
-			return false;
-		}
-
-		Gdiplus::Image* pGifImage = m_pGifImageInfo->pImage;
-		if (!SelectActiveGifFrame()) {
-			return false;
-		}
-
-		if (!m_frameSurface.DrawGdiplusImage(pGifImage, cx, cy)) {
-			return false;
-		}
-
-		m_szFrameBitmap.cx = cx;
-		m_szFrameBitmap.cy = cy;
-		m_nCachedFramePosition = m_nFramePosition;
-		m_bFrameCacheValid = true;
-		return true;
+		(void)renderContext;
+		(void)cx;
+		(void)cy;
+		return false;
 	}
 
 	void CGifAnimUI::DrawFrame(CPaintRenderContext& renderContext)
 	{
-		if (m_pGifImageInfo == NULL || m_pGifImageInfo->pImage == NULL) return;
+		if (m_pGifImageInfo == NULL || m_pGifImageInfo->hBitmap == NULL) return;
 
 		const LONG cx = m_rcItem.right - m_rcItem.left;
 		const LONG cy = m_rcItem.bottom - m_rcItem.top;
 		if (cx <= 0 || cy <= 0) return;
 
-		if (EnsureFrameCache(renderContext, cx, cy) && m_frameSurface.GetBitmap() != NULL) {
-			RECT rcBitmap = { 0, 0, m_szFrameBitmap.cx, m_szFrameBitmap.cy };
-			RECT rcEmptyCorners = { 0, 0, 0, 0 };
-			CRenderEngine::DrawImage(renderContext, m_frameSurface.GetBitmap(), m_rcItem, rcBitmap, rcEmptyCorners, true, 255);
-			return;
-		}
-
+		RECT rcBitmap = { 0, 0, m_pGifImageInfo->nX, m_pGifImageInfo->nY };
+		RECT rcEmptyCorners = { 0, 0, 0, 0 };
+		CRenderEngine::DrawImage(renderContext, m_pGifImageInfo->hBitmap, m_rcItem, rcBitmap, rcEmptyCorners, true, 255);
 	}
 }
 

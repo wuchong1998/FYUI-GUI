@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{c2487f4c-04b6-4c15-8eca-39811895cffb}</ProjectGuid>
+    <RootNamespace>FYUI</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;FYUI_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;FYUI_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <Optimization>Full</Optimization>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;FYUI_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;FYUI_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Control\IVirtualDataProvider.h" />
+    <ClInclude Include="Control\UIAnimation.h" />
+    <ClInclude Include="Control\UIButton.h" />
+    <ClInclude Include="Control\UIButtonEx.h" />
+    <ClInclude Include="Control\UIColorPalette.h" />
+    <ClInclude Include="Control\UICombo.h" />
+    <ClInclude Include="Control\UIComboBox.h" />
+    <ClInclude Include="Control\UICountdown.h" />
+    <ClInclude Include="Control\UIFadeButton.h" />
+    <ClInclude Include="Control\UIGifAnim.h" />
+    <ClInclude Include="Control\UILabel.h" />
+    <ClInclude Include="Control\UIList.h" />
+    <ClInclude Include="Control\UIListEx.h" />
+    <ClInclude Include="Control\UIMenu.h" />
+    <ClInclude Include="Control\UIOption.h" />
+    <ClInclude Include="Control\UIProgress.h" />
+    <ClInclude Include="Control\UIRichEdit.h" />
+    <ClInclude Include="Control\UIRing.h" />
+    <ClInclude Include="Control\UIScrollBar.h" />
+    <ClInclude Include="Control\UISlider.h" />
+    <ClInclude Include="Control\UITreeView.h" />
+    <ClInclude Include="Control\VirListBodyUI.h" />
+    <ClInclude Include="Control\VirtualListUI.h" />
+    <ClInclude Include="Core\ControlFactory.h" />
+    <ClInclude Include="Core\UIBase.h" />
+    <ClInclude Include="Core\UIContainer.h" />
+    <ClInclude Include="Core\UIControl.h" />
+    <ClInclude Include="Core\UIDefine.h" />
+    <ClInclude Include="Core\UIDlgBuilder.h" />
+    <ClInclude Include="Core\UIMakup.h" />
+    <ClInclude Include="Core\UIManager.h" />
+    <ClInclude Include="Core\UIRender.h" />
+    <ClInclude Include="Core\UIRenderBatchInternal.h" />
+    <ClInclude Include="Core\UIRenderD2DCacheTypesInternal.h" />
+    <ClInclude Include="Core\UIRenderD2DFrameMetricsInternal.h" />
+    <ClInclude Include="Core\UIRenderD2DResourceInternal.h" />
+    <ClInclude Include="Core\UIRenderD2DSharedInternal.h" />
+    <ClInclude Include="Core\UIRenderDirectWriteTextInternal.h" />
+    <ClInclude Include="Core\UIRenderHtmlMetricsInternal.h" />
+    <ClInclude Include="Core\UIRenderHtmlParseInternal.h" />
+    <ClInclude Include="Core\UIRenderImageD2DInternal.h" />
+    <ClInclude Include="Core\UIRenderImageDispatchInternal.h" />
+    <ClInclude Include="Core\UIRenderImageLegacyInternal.h" />
+    <ClInclude Include="Core\UIRenderImageRuntimeInternal.h" />
+    <ClInclude Include="Core\UIRenderPrimitiveInternal.h" />
+    <ClInclude Include="Core\UIRenderSurfaceInternal.h" />
+    <ClInclude Include="Core\UIRenderTextSharedInternal.h" />
+    <ClInclude Include="Core\UIRenderContext.h" />
+    <ClInclude Include="Core\UIRenderSurface.h" />
+    <ClInclude Include="Core\UIRenderTypes.h" />
+    <ClInclude Include="Core\UIResourceData.h" />
+    <ClInclude Include="Core\UIResourceManager.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="FYUILib.h" />
+    <ClInclude Include="Layout\UIAnimationTabLayout.h" />
+    <ClInclude Include="Layout\UIChildLayout.h" />
+    <ClInclude Include="Layout\UIHorizontalLayout.h" />
+    <ClInclude Include="Layout\UITabLayout.h" />
+    <ClInclude Include="Layout\UITileLayout.h" />
+    <ClInclude Include="Layout\UILayoutContentUtil.h" />
+    <ClInclude Include="Layout\UILayoutLinearUtil.h" />
+    <ClInclude Include="Layout\UIVerticalLayout.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="TooltipWnd.h" />
+    <ClInclude Include="Utils\DPI.h" />
+    <ClInclude Include="Utils\DragDropImpl.h" />
+    <ClInclude Include="Utils\observer_impl_base.h" />
+    <ClInclude Include="Utils\sdk_util.h" />
+    <ClInclude Include="Utils\stb_image.h" />
+    <ClInclude Include="Utils\TrayIcon.h" />
+    <ClInclude Include="Utils\UIDelegate.h" />
+    <ClInclude Include="Utils\UIShadow.h" />
+    <ClInclude Include="Utils\unzip.h" />
+    <ClInclude Include="Utils\Utils.h" />
+    <ClInclude Include="Utils\WinimplBase.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Control\UIAnimation.cpp" />
+    <ClCompile Include="Control\UIButton.cpp" />
+    <ClCompile Include="Control\UIButtonEx.cpp" />
+    <ClCompile Include="Control\UIColorPalette.cpp" />
+    <ClCompile Include="Control\UICombo.cpp" />
+    <ClCompile Include="Control\UIComboBox.cpp" />
+    <ClCompile Include="Control\UICountdown.cpp" />
+    <ClCompile Include="Control\UIFadeButton.cpp" />
+    <ClCompile Include="Control\UIGifAnim.cpp" />
+    <ClCompile Include="Control\UILabel.cpp" />
+    <ClCompile Include="Control\UIList.cpp" />
+    <ClCompile Include="Control\UIListEx.cpp" />
+    <ClCompile Include="Control\UIMenu.cpp" />
+    <ClCompile Include="Control\UIOption.cpp" />
+    <ClCompile Include="Control\UIProgress.cpp" />
+    <ClCompile Include="Control\UIRichEdit.cpp" />
+    <ClCompile Include="Control\UIRing.cpp" />
+    <ClCompile Include="Control\UIScrollBar.cpp" />
+    <ClCompile Include="Control\UISlider.cpp" />
+    <ClCompile Include="Control\UITreeView.cpp" />
+    <ClCompile Include="Control\VirListBodyUI.cpp" />
+    <ClCompile Include="Control\VirtualListUI.cpp" />
+    <ClCompile Include="Core\ControlFactory.cpp" />
+    <ClCompile Include="Core\UIBase.cpp" />
+    <ClCompile Include="Core\UIContainer.cpp" />
+    <ClCompile Include="Core\UIControl.cpp" />
+    <ClCompile Include="Core\UIDlgBuilder.cpp" />
+    <ClCompile Include="Core\UIMakup.cpp" />
+    <ClCompile Include="Core\UIManager.cpp" />
+    <ClCompile Include="Core\UIRenderBitmapUtil.cpp" />
+    <ClCompile Include="Core\UIRenderClip.cpp" />
+    <ClCompile Include="Core\UIRenderContext.cpp" />
+    <ClCompile Include="Core\UIRenderD2DFrameMetricsInternal.cpp" />
+    <ClCompile Include="Core\UIRenderD2DResourceInternal.cpp" />
+    <ClCompile Include="Core\UIRenderD2DSharedInternal.cpp" />
+    <ClCompile Include="Core\UIRenderDirectWriteTextInternal.cpp" />
+    <ClCompile Include="Core\UIRenderHtmlMetricsInternal.cpp" />
+    <ClCompile Include="Core\UIRenderHtmlParseInternal.cpp" />
+    <ClCompile Include="Core\UIRenderImageD2DInternal.cpp" />
+    <ClCompile Include="Core\UIRenderImageCodec.cpp" />
+    <ClCompile Include="Core\UIRenderImageEntry.cpp" />
+    <ClCompile Include="Core\UIRenderImageLegacy.cpp" />
+    <ClCompile Include="Core\UIRenderImageRuntime.cpp" />
+    <ClCompile Include="Core\UIRenderImageScale.cpp" />
+    <ClCompile Include="Core\UIRenderImageSpec.cpp" />
+    <ClCompile Include="Core\UIRenderBatchInternal.cpp" />
+    <ClCompile Include="Core\UIRenderFallbackSharedInternal.cpp" />
+    <ClCompile Include="Core\UIRenderTextSharedInternal.cpp" />
+    <ClCompile Include="Core\UIRenderPrimitive.cpp" />
+    <ClCompile Include="Core\UIRender.cpp" />
+    <ClCompile Include="Core\UIRenderSurface.cpp" />
+    <ClCompile Include="Core\UIResourceData.cpp" />
+    <ClCompile Include="Core\UIResourceManager.cpp" />
+    <ClCompile Include="FYUI.cpp" />
+    <ClCompile Include="FYUILib.cpp" />
+    <ClCompile Include="Layout\UIAnimationTabLayout.cpp" />
+    <ClCompile Include="Layout\UIChildLayout.cpp" />
+    <ClCompile Include="Layout\UIHorizontalLayout.cpp" />
+    <ClCompile Include="Layout\UITabLayout.cpp" />
+    <ClCompile Include="Layout\UITileLayout.cpp" />
+    <ClCompile Include="Layout\UIVerticalLayout.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="TooltipWnd.cpp" />
+    <ClCompile Include="Utils\DPI.cpp" />
+    <ClCompile Include="Utils\DragDropImpl.cpp" />
+    <ClCompile Include="Utils\observer_impl_base.cpp" />
+    <ClCompile Include="Utils\sdk_util.cpp" />
+    <ClCompile Include="Utils\TrayIcon.cpp" />
+    <ClCompile Include="Utils\UIDelegate.cpp" />
+    <ClCompile Include="Utils\UIShadow.cpp" />
+    <ClCompile Include="Utils\unzip.cpp" />
+    <ClCompile Include="Utils\Utils.cpp" />
+    <ClCompile Include="Utils\WinimplBase.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FYUI_D2D_EXECUTION_BATCH_PLAN.md" />
+    <None Include="FYUI_ADAPTIVE_LAYOUT_ROADMAP.md" />
+    <None Include="FYUI_D2D_UIRENDER_BOUNDARY_NOTES_2026_04.md" />
+    <None Include="FYUI_D2D_STAGE_ARCHITECTURE_ROADMAP.md" />
+    <None Include="FYUI_D2D_UIRENDER_BOUNDARY_GUIDE.md" />
+    <None Include="FYUI_FRAMEWORK_ROADMAP.md" />
+    <None Include="FYUI_HDC_BOUNDARY_POLICY.md" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <Target Name="CheckRenderRegressionGuards" BeforeTargets="ClCompile">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\check_render_regressions.ps1&quot; -ProjectFile &quot;$(ProjectPath)&quot; -ProjectRoot &quot;$(MSBuildProjectDirectory)&quot;" />
+  </Target>
+</Project>

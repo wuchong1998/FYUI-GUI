@@ -1,0 +1,28 @@
+		if (_tcsicmp(strName, _T("ListEx_Edit")) == 0 && m_pEditUI && m_nRow >= 0 && m_nColum >= 0)
+		{
+			if(_tcsicmp(msg.sType, DUI_MSGTYPE_SETFOCUS) == 0)
+			{
+
+			}
+			else if(_tcsicmp(msg.sType, DUI_MSGTYPE_KILLFOCUS) == 0)
+			{
+				CDuiString sText = m_pEditUI->GetText();
+				CListTextExtElementUI* pRowCtrl = (CListTextExtElementUI*)GetItemAt(m_nRow);
+				if (pRowCtrl)
+				{
+					pRowCtrl->SetText(m_nColum, sText);
+				}
+
+				//重置当前行列
+				SetEditRowAndColum(-1, -1);
+
+				//隐藏编辑�?
+				RECT rc = {0,0,0,0};
+				m_pEditUI->SetPos(rc);
+				m_pEditUI->SetVisible(false);
+			}
+		}
+		else if (_tcsicmp(strName, _T("ListEx_Combo")) == 0 && m_pComboBoxUI && m_nRow >= 0 && m_nColum >= 0)
+		{
+			int  iCurSel, iOldSel;
+			iCurSel = static_cast<int>(msg.wParam);

@@ -1,0 +1,72 @@
+UIManager.cpp
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x450 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x4b3 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x518 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x562 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x5a8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x1c8a 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x1dce 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x215b 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x2b04 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1369 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x13d0 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1b32 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1b77 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1c0f 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1c54 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x2963 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x29a8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x2a40 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x2a85 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(444,21): error C2601: “FYUI::tagTDrawInfo::Clear”: 本地函数定义是非法的
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(316,2): note: 此行有一个“{”没有匹配项
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(478,29): error C2655: “FYUI::CPaintManagerUI::m_hResourceInstance”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(812,20): note: 参见“FYUI::CPaintManagerUI::m_hResourceInstance”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(478,29): error C2205: “m_hResourceInstance”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(479,32): error C2655: “FYUI::CPaintManagerUI::m_pStrResourcePath”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(813,23): note: 参见“FYUI::CPaintManagerUI::m_pStrResourcePath”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(480,32): error C2655: “FYUI::CPaintManagerUI::m_pStrResourceZip”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(814,23): note: 参见“FYUI::CPaintManagerUI::m_pStrResourceZip”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(481,32): error C2655: “FYUI::CPaintManagerUI::m_pStrResourceZipPwd”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(815,23): note: 参见“FYUI::CPaintManagerUI::m_pStrResourceZipPwd”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(482,26): error C2655: “FYUI::CPaintManagerUI::m_hResourceZip”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(816,17): note: 参见“FYUI::CPaintManagerUI::m_hResourceZip”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(482,26): error C2205: “m_hResourceZip”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(483,24): error C2655: “FYUI::CPaintManagerUI::m_bCachedResourceZip”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(819,15): note: 参见“FYUI::CPaintManagerUI::m_bCachedResourceZip”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(483,24): error C2205: “m_bCachedResourceZip”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(484,25): error C2655: “FYUI::CPaintManagerUI::m_cbZipBuf”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(817,16): note: 参见“FYUI::CPaintManagerUI::m_cbZipBuf”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(484,25): error C2205: “m_cbZipBuf”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(485,23): error C2655: “FYUI::CPaintManagerUI::m_nResType”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(820,14): note: 参见“FYUI::CPaintManagerUI::m_nResType”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(485,23): error C2205: “m_nResType”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(486,28): error C2655: “FYUI::CPaintManagerUI::m_SharedResInfo”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(821,19): note: 参见“FYUI::CPaintManagerUI::m_SharedResInfo”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(488,29): error C2655: “FYUI::CPaintManagerUI::m_hInstance”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(811,20): note: 参见“FYUI::CPaintManagerUI::m_hInstance”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(488,29): error C2205: “m_hInstance”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(489,24): error C2655: “FYUI::CPaintManagerUI::m_bUseHSL”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(822,15): note: 参见“FYUI::CPaintManagerUI::m_bUseHSL”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(489,24): error C2205: “m_bUseHSL”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(490,25): error C2655: “FYUI::CPaintManagerUI::m_H”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(823,16): note: 参见“FYUI::CPaintManagerUI::m_H”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(490,25): error C2205: “m_H”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(491,25): error C2655: “FYUI::CPaintManagerUI::m_S”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(824,16): note: 参见“FYUI::CPaintManagerUI::m_S”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(491,25): error C2205: “m_S”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(492,25): error C2655: “FYUI::CPaintManagerUI::m_L”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(825,16): note: 参见“FYUI::CPaintManagerUI::m_L”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(492,25): error C2205: “m_L”: 不能对带有块范围的外部变量进行初始化
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(493,32): error C2655: “FYUI::CPaintManagerUI::m_aPreMessages”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(826,23): note: 参见“FYUI::CPaintManagerUI::m_aPreMessages”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(494,32): error C2655: “FYUI::CPaintManagerUI::m_aPlugins”: 当前范围内的定义或重新声明非法
+D:\work\FYUI\FYUI\FYUI\Core/UIManager.h(827,23): note: 参见“FYUI::CPaintManagerUI::m_aPlugins”的声明
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(497,2): error C2870: “<未知>”: 命名空间定义必须出现在文件范围内或紧接着出现在另一命名空间定义内
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(498,10): error C2601: “FYUI::`anonymous-namespace'::QpcDeltaToMilliseconds”: 本地函数定义是非法的
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(497,2): note: 此行有一个“{”没有匹配项
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(1289,51): error C2065: “m_hUpdateRectPen”: 未声明的标识符
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(1463,37): error C2143: 语法错误: 缺少“;”(在“:”的前面)
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(1463,37): error C2059: 语法错误:“:”
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(1528,2): error C2143: 语法错误: 缺少“;”(在“{”的前面)
+D:\work\FYUI\FYUI\FYUI\Core\UIManager.cpp(1528,2): fatal error C1903: 无法从以前的错误中恢复；正在停止编译

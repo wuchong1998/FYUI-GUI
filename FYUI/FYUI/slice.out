@@ -1,0 +1,99 @@
+UIManager_slice.cpp
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x450 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x4b3 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x518 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x562 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x5a8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x1c8a 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x1dce 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x215b 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIMenu.h(1,1): warning C4828: 文件包含在偏移 0x2b04 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1369 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x13d0 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1b32 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1b77 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1c0f 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x1c54 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x2963 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x29a8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x2a40 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\FYUI\Control/UIListEx.h(1,1): warning C4828: 文件包含在偏移 0x2a85 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3154,4): error C2065: “pControl”: 未声明的标识符
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3158,20): error C2065: “pControl”: 未声明的标识符
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3161,20): error C2065: “pt”: 未声明的标识符
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3164,4): error C2065: “pControl”: 未声明的标识符
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3167,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3189,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3209,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3231,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3251,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3273,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3292,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3313,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3337,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3353,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3370,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3387,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3418,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3432,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3437,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3445,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3453,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3454,3): error C2046: 非法的 case
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3464,3): error C2047: 非法的 default
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3166,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3174,26): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3175,40): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3188,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3193,31): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3208,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3215,26): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3216,40): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3230,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3238,32): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3250,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3257,26): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3258,40): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3272,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3279,31): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3291,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3294,25): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3298,32): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3312,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3315,25): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3320,26): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3321,40): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3336,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3339,25): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3340,26): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3352,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3355,25): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3356,26): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3369,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3372,25): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3373,29): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3386,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3390,25): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3391,36): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3398,26): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3403,5): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3430,4): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3435,4): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3439,21): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3444,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3447,21): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3452,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3458,21): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3463,3): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3465,4): error C2043: 非法 break
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3467,3): error C2059: 语法错误:“return”
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3468,2): error C2059: 语法错误:“}”
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3468,2): error C2143: 语法错误: 缺少“;”(在“}”的前面)
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3471,2): error C2143: 语法错误: 缺少“;”(在“{”的前面)
+D:\work\FYUI\FYUI\UIManager_slice.cpp(3471,2): error C2447: “{”: 缺少函数标题(是否是老式的形式表?)
+D:\work\FYUI\FYUI\UIManager_slice.cpp(5455,2): error C2447: “{”: 缺少函数标题(是否是老式的形式表?)
+D:\work\FYUI\FYUI\UIManager_slice.cpp(5773,1): error C2059: 语法错误:“}”
+D:\work\FYUI\FYUI\UIManager_slice.cpp(5773,1): error C2143: 语法错误: 缺少“;”(在“}”的前面)
+D:\work\FYUI\FYUI\UIManager_slice.cpp(5778,1): error C2143: 语法错误: 缺少“;”(在“}”的前面)
+D:\work\FYUI\FYUI\UIManager_slice.cpp(5778,1): error C2059: 语法错误:“}”
+D:\work\FYUI\FYUI\UIManager_slice.cpp(5780,17): warning C4193: #pragma warning(pop): 没有匹配的“#pragma warning(push)”

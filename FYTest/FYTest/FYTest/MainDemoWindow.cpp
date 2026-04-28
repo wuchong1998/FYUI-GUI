@@ -218,7 +218,7 @@ namespace FYTestApp
         }
         ::ClientToScreen(m_pm.GetPaintWindow(), &pt);
 
-        FYUI::CMenuWnd::CreateMenu(
+        m_pMenu = FYUI::CMenuWnd::CreateMenu(
             nullptr,
             kMenuSkin,
             pt,

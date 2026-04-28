@@ -39,5 +39,7 @@ namespace FYTestApp
         std::chrono::steady_clock::time_point last_active_scroll_sample_time_;
         std::chrono::steady_clock::time_point last_fps_ui_update_time_;
         bool has_fps_sample_ = false;
+
+        FYUI::CMenuWnd* m_pMenu = nullptr;
     };
 }

@@ -1833,8 +1833,9 @@ namespace FYUI {
 		m_bMouseTracking(false),
 		m_bMouseCapture(false),
 		m_bIsPainting(false),
-		m_bAsyncNotifyPosted(false),
 		m_bUsedVirtualWnd(false),
+		m_bAsyncNotifyPosted(false),
+		m_bAnimationFramePosted(false),
 		m_bForceUseSharedRes(false),
 		m_nOpacity(0xFF),
 		m_bLayered(false),
@@ -3043,6 +3044,14 @@ namespace FYUI {
 			}
 		}
 		break;
+		case UIMSG_ANIMATION_FRAME:
+		{
+			m_bAnimationFramePosted = false;
+			if (::GetUpdateRect(m_hWndPaint, NULL, FALSE)) {
+				::UpdateWindow(m_hWndPaint);
+			}
+		}
+		return true;
 		
 		case WM_CLOSE:
 		{
@@ -3841,7 +3850,9 @@ namespace FYUI {
 		if (m_hWndPaint == NULL || !::IsWindow(m_hWndPaint)) return;
 		RECT rcClient = { 0 };
 		if (!::GetClientRect(m_hWndPaint, &rcClient)) return;
-		AccumulateLayeredUpdateRect(rcClient);
+		if (m_bLayered) {
+			AccumulateLayeredUpdateRect(rcClient);
+		}
 		::InvalidateRect(m_hWndPaint, NULL, FALSE);
 	}
 
@@ -3852,8 +3863,29 @@ namespace FYUI {
 		if (rcItem.top < 0) rcItem.top = 0;
 		if (rcItem.right < rcItem.left) rcItem.right = rcItem.left;
 		if (rcItem.bottom < rcItem.top) rcItem.bottom = rcItem.top;
-		AccumulateLayeredUpdateRect(rcItem);
+		if (m_bLayered) {
+			AccumulateLayeredUpdateRect(rcItem);
+		}
 		::InvalidateRect(m_hWndPaint, &rcItem, FALSE);
+	}
+
+	void CPaintManagerUI::RequestAnimationFrame(CControlUI* pControl)
+	{
+		if (m_hWndPaint == NULL || !::IsWindow(m_hWndPaint)) {
+			return;
+		}
+
+		if (pControl != NULL && pControl->GetManager() == this && pControl->IsVisible()) {
+			RECT rcFrame = pControl->GetPos();
+			Invalidate(rcFrame);
+		}
+		else {
+			Invalidate();
+		}
+
+		if (!m_bAnimationFramePosted) {
+			m_bAnimationFramePosted = ::PostMessage(m_hWndPaint, UIMSG_ANIMATION_FRAME, 0, 0) != FALSE;
+		}
 	}
 
 	bool CPaintManagerUI::ScrollRenderCacheRect(const RECT& rcScrollInput, int dx, int dy)

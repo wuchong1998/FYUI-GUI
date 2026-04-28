@@ -69,6 +69,7 @@
 #include "Control/UIAnimation.h"
 #include "Layout/UIAnimationTabLayout.h"
 #include "Control/UIButton.h"
+#include "Control/UIFrameTest.h"
 #include "Control/UIOption.h"
 #include "Control/UIProgress.h"
 #include "Control/UISlider.h"

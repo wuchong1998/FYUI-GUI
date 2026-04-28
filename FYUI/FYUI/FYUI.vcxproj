@@ -151,6 +151,7 @@
     <ClInclude Include="Control\UIAnimation.h" />
     <ClInclude Include="Control\UIButton.h" />
     <ClInclude Include="Control\UIButtonEx.h" />
+    <ClInclude Include="Control\UIFrameTest.h" />
     <ClInclude Include="Control\UIColorPalette.h" />
     <ClInclude Include="Control\UICombo.h" />
     <ClInclude Include="Control\UIComboBox.h" />
@@ -226,6 +227,7 @@
     <ClCompile Include="Control\UIAnimation.cpp" />
     <ClCompile Include="Control\UIButton.cpp" />
     <ClCompile Include="Control\UIButtonEx.cpp" />
+    <ClCompile Include="Control\UIFrameTest.cpp" />
     <ClCompile Include="Control\UIColorPalette.cpp" />
     <ClCompile Include="Control\UICombo.cpp" />
     <ClCompile Include="Control\UIComboBox.cpp" />

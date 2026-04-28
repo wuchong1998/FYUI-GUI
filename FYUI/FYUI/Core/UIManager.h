@@ -68,6 +68,7 @@ namespace FYUI
 		UIMSG_SET_DPI,				 // DPI
 		WM_MENUCLICK,				 // 鑿滃崟娑堟伅
 		UIMSG_SCROLL_ANIMATE = WM_APP + 2,
+		UIMSG_ANIMATION_FRAME = WM_APP + 3,
 		UIMSG_USER = WM_USER + 100,	 // 绋嬪簭鑷畾涔夋秷鎭?
 	};
 
@@ -306,6 +307,7 @@ namespace FYUI
 		void NeedUpdate();
 		void Invalidate();
 		void Invalidate(RECT& rcItem);
+		void RequestAnimationFrame(CControlUI* pControl);
 		bool ScrollRenderCacheRect(const RECT& rcScroll, int dx, int dy);
 
 		const std::wstring& GetName() const;
@@ -687,6 +689,7 @@ namespace FYUI
 		bool m_bIsPainting;
 		bool m_bUsedVirtualWnd;
 		bool m_bAsyncNotifyPosted;
+		bool m_bAnimationFramePosted;
 
 
 		//

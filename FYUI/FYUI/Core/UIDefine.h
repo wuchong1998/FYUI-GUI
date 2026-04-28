@@ -334,6 +334,7 @@ protected:                                                                \
 
 #define  DUI_CTR_BUTTON                          (_T("Button"))
 #define  DUI_CTR_BUTTONEX                        (_T("ButtonEx"))
+#define  DUI_CTR_FRAMETEST                       (_T("FrameTest"))
 #define  DUI_CTR_OPTION                          (_T("Option"))
 #define  DUI_CTR_SLIDER                          (_T("Slider"))
 #define  DUI_CTR_TAB_BOX					     (_T("TabBox")) //

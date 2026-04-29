@@ -17,150 +17,369 @@ namespace FYUI
 		using PaintItemCallback = std::function<void(CVirtualListUI*, CPaintRenderContext&, ItemIndex, const RECT&)>;
 		using ItemEventCallback = std::function<void(CVirtualListUI*, ItemIndex, TEventUI&)>;
 
-		/// Creates an empty virtual list and initializes the internal vertical scrollbar.
+		/**
+		 * @brief 创建一个空的虚拟列表控件
+		 * @details 初始化虚拟列表的内部状态，并默认创建和启用内部竖向滚动条。
+		 */
 		CVirtualListUI();
 		~CVirtualListUI() override;
 
-		/// Returns the XML class name used by the dialog builder.
+		/**
+		 * @brief 获取控件的 XML 类名
+		 * @return std::wstring_view 返回 XML 构建器使用的类名 VirtualList
+		 */
 		std::wstring_view GetClass() const override;
-		/// Returns the requested interface pointer when the caller asks for VirtualList/VirtualListUI.
+		/**
+		 * @brief 获取控件接口
+		 * @details 当外部请求 VirtualList 或 VirtualListUI 接口时，返回当前对象指针。
+		 * @param pstrName [in] 接口名称
+		 * @return LPVOID 返回匹配的接口指针，未匹配时返回基类接口
+		 */
 		LPVOID GetInterface(std::wstring_view pstrName) override;
 
-		/// Sets the logical item count in fixed-height mode or resizes the variable-height table in variable-height mode.
-		/// This method clamps selection, hot state and scroll offset automatically after the data size changes.
+		/**
+		 * @brief 设置虚拟列表的逻辑子项数量
+		 * @details 固定高度模式下直接修改子项数量；可变高度模式下会同步调整内部高度表大小。
+		 * 数量变化后会自动校正当前选中项、hot 状态和滚动偏移，保证控件稳定运行。
+		 * @param count [in] 子项数量
+		 */
 		void SetItemCount(ItemIndex count);
-		/// Returns the current logical item count.
+		/**
+		 * @brief 获取当前虚拟列表的逻辑子项数量
+		 * @return ItemIndex 返回当前子项数量
+		 */
 		ItemIndex GetItemCount() const;
 
-		/// Switches the list into fixed-height mode and applies the same height to every item.
-		/// Any previously supplied per-item height table is cleared.
+		/**
+		 * @brief 设置固定高度模式下每个子项的高度
+		 * @details 调用后虚拟列表会切换为固定高度模式，并清空之前设置的逐项高度表。
+		 * @param height [in] 固定高度
+		 */
 		void SetFixedItemHeight(int height);
-		/// Returns the height used by fixed-height mode and also the fallback height for invalid per-item values.
+		/**
+		 * @brief 获取固定高度模式使用的子项高度
+		 * @details 该值同时也是逐项高度模式下非法高度值的回退高度。
+		 * @return int 返回固定高度值
+		 */
 		int GetFixedItemHeight() const;
-		/// Returns true when the list is using a single fixed height for all items.
+		/**
+		 * @brief 判断当前是否为固定高度模式
+		 * @return bool 固定高度模式返回 true，否则返回 false
+		 */
 		bool IsFixedHeightMode() const;
 
-		/// Copies a per-item height table and switches the list into variable-height mode.
-		/// The number of items becomes heights.size().
+		/**
+		 * @brief 按拷贝方式设置逐项高度表
+		 * @details 控件会切换到逐项高度模式，虚拟列表的子项数量会自动变为 heights.size()。
+		 * @param heights [in] 每个子项对应的高度数组
+		 */
 		void SetItemHeights(const std::vector<int>& heights);
-		/// Moves a per-item height table into the list and switches the list into variable-height mode.
-		/// Prefer this overload when the caller can transfer ownership to avoid an extra vector copy.
+		/**
+		 * @brief 按移动方式设置逐项高度表
+		 * @details 控件会切换到逐项高度模式，适用于外部可以转移 vector 所有权的场景，
+		 * 这样可以避免一次额外的拷贝，提高大数据量场景下的效率。
+		 * @param heights [in] 每个子项对应的高度数组
+		 */
 		void SetItemHeights(std::vector<int>&& heights);
-		/// Replaces the height of a single item.
-		/// If the list is currently in fixed-height mode it will first expand into variable-height mode using the fixed height as the default value.
+		/**
+		 * @brief 修改单个子项的高度
+		 * @details 如果当前仍处于固定高度模式，会先以固定高度为默认值扩展出内部高度表，
+		 * 然后再修改指定子项的高度。
+		 * @param index [in] 子项下标
+		 * @param height [in] 新的子项高度
+		 * @return bool 修改成功返回 true，index 越界时返回 false
+		 */
 		bool SetItemHeight(ItemIndex index, int height);
-		/// Copies a raw height array into the internal per-item height table and switches to variable-height mode.
+		/**
+		 * @brief 使用原始数组设置逐项高度表
+		 * @details 控件会将外部数组拷贝到内部高度表，并切换到逐项高度模式。
+		 * @param heights [in] 高度数组指针
+		 * @param count [in] 高度数组数量
+		 */
 		void SetItemHeights(const int* heights, size_t count);
-		/// Clears the per-item height table and returns the list to fixed-height mode while keeping the current item count.
+		/**
+		 * @brief 清空逐项高度表
+		 * @details 调用后控件会恢复为固定高度模式，但保持当前子项数量不变。
+		 */
 		void ClearItemHeights();
-		/// Returns true when the list is using a per-item height table.
+		/**
+		 * @brief 判断当前是否为逐项高度模式
+		 * @return bool 逐项高度模式返回 true，否则返回 false
+		 */
 		bool IsVariableHeightMode() const;
-		/// Returns the effective height of the specified item.
-		/// In fixed-height mode this is always GetFixedItemHeight().
+		/**
+		 * @brief 获取指定子项的实际高度
+		 * @details 固定高度模式下始终返回 GetFixedItemHeight()；
+		 * 逐项高度模式下返回对应子项的高度。
+		 * @param index [in] 子项下标
+		 * @return int 返回子项高度，越界时返回 0
+		 */
 		int GetItemHeight(ItemIndex index) const;
 
-		/// Sets how many extra rows the list realizes beyond the strictly visible range to reduce scroll pop-in.
+		/**
+		 * @brief 设置超前缓存的子项数量
+		 * @details 控件会在可视区域之外额外创建一部分前后子项，减少滚动时的闪烁和重建频率。
+		 * @param count [in] 额外缓存的子项数量
+		 */
 		void SetOverscanItemCount(int count);
-		/// Returns the current overscan row count.
+		/**
+		 * @brief 获取当前超前缓存的子项数量
+		 * @return int 返回当前 overscan 数量
+		 */
 		int GetOverscanItemCount() const;
 
-		/// Sets the default background color drawn behind each realized item before the child control paints.
+		/**
+		 * @brief 设置子项默认背景色
+		 * @details 在子项控件真正绘制内容前，由虚拟列表先绘制该背景色。
+		 * @param dwColor [in] 默认背景色
+		 */
 		void SetItemBkColor(DWORD dwColor);
-		/// Returns the default background color drawn for normal item state.
+		/**
+		 * @brief 获取子项默认背景色
+		 * @return DWORD 返回默认背景色
+		 */
 		DWORD GetItemBkColor() const;
-		/// Sets the background color drawn when the mouse is hovering an item.
+		/**
+		 * @brief 设置子项 hot 状态背景色
+		 * @param dwColor [in] hot 状态背景色
+		 */
 		void SetItemHotBkColor(DWORD dwColor);
-		/// Returns the hover background color.
+		/**
+		 * @brief 获取子项 hot 状态背景色
+		 * @return DWORD 返回 hot 状态背景色
+		 */
 		DWORD GetItemHotBkColor() const;
-		/// Sets the background color drawn for the selected item.
+		/**
+		 * @brief 设置子项选中状态背景色
+		 * @param dwColor [in] 选中状态背景色
+		 */
 		void SetItemSelectedBkColor(DWORD dwColor);
-		/// Returns the selected-item background color.
+		/**
+		 * @brief 获取子项选中状态背景色
+		 * @return DWORD 返回选中状态背景色
+		 */
 		DWORD GetItemSelectedBkColor() const;
 
-		/// Enables or disables click-to-cancel selection.
-		/// When enabled, clicking the already selected item again will clear the selection.
+		/**
+		 * @brief 设置是否允许再次点击已选中项时取消选择
+		 * @details 启用后，当用户点击当前已选中的子项时，会直接清空选中状态。
+		 * @param allow [in] 是否允许取消选择
+		 */
 		void SetAllowSelectionCancel(bool allow);
-		/// Returns whether click-to-cancel selection is enabled.
+		/**
+		 * @brief 获取是否允许点击取消选择
+		 * @return bool 允许返回 true，否则返回 false
+		 */
 		bool IsAllowSelectionCancel() const;
 
-		/// Sets the callback that creates pooled child controls for realized items.
-		/// Changing this callback recreates the current pool.
+		/**
+		 * @brief 设置创建可视子项控件的回调
+		 * @details 该回调用于生成池化的子控件。修改该回调后会重新创建当前池中的子项控件。
+		 * @param callback [in] 创建子项控件的回调
+		 */
 		void SetCreateItemCallback(CreateItemCallback callback);
-		/// Sets the callback that binds one realized child control to a logical item index.
+		/**
+		 * @brief 设置绑定子项数据的回调
+		 * @details 每次可视池中的某个子控件要绑定到新的逻辑子项时，都会调用该回调。
+		 * @param callback [in] 绑定回调
+		 */
 		void SetBindItemCallback(BindItemCallback callback);
-		/// Sets an optional paint callback invoked before each realized child control paints.
+		/**
+		 * @brief 设置子项绘制前的附加绘制回调
+		 * @details 在每个可视子项控件绘制前调用，适合绘制额外装饰内容。
+		 * @param callback [in] 绘制回调
+		 */
 		void SetPaintItemCallback(PaintItemCallback callback);
-		/// Sets the callback invoked when an item receives a click event.
+		/**
+		 * @brief 设置子项点击回调
+		 * @param callback [in] 点击回调
+		 */
 		void SetItemClickCallback(ItemEventCallback callback);
-		/// Sets the callback invoked when an item receives a double-click event.
+		/**
+		 * @brief 设置子项双击回调
+		 * @param callback [in] 双击回调
+		 */
 		void SetItemDoubleClickCallback(ItemEventCallback callback);
 
-		/// Recomputes scrollbar state, refreshes realized items and invalidates the control.
+		/**
+		 * @brief 刷新虚拟列表
+		 * @details 重新计算滚动条状态、更新当前可视子项池，并触发重绘。
+		 */
 		void Refresh();
-		/// Rebinds a single realized item if it is currently visible.
+		/**
+		 * @brief 刷新单个子项
+		 * @details 当指定子项当前处于可视池中时，会重新绑定该子项控件并触发重绘。
+		 * @param index [in] 子项下标
+		 */
 		void RefreshItem(ItemIndex index);
-		/// Scrolls the list until the target item becomes visible.
-		/// When alignTop is true the item is aligned to the top of the viewport when possible.
+		/**
+		 * @brief 确保指定子项滚动到可视区域内
+		 * @details 如果目标子项不在当前可视范围中，会自动滚动到可见位置。
+		 * 当 alignTop 为 true 时，优先将该子项对齐到视口顶部。
+		 * @param index [in] 子项下标
+		 * @param alignTop [in] 是否尽量顶对齐
+		 */
 		void EnsureVisible(ItemIndex index, bool alignTop = false);
 
-		/// Returns the logical item indices currently realized in the visible pool.
+		/**
+		 * @brief 获取当前已创建并显示在池中的逻辑子项下标集合
+		 * @param collection [out] 输出当前显示中的子项下标集合
+		 */
 		void GetDisplayCollection(std::vector<ItemIndex>& collection) const;
-		/// Returns the currently realized logical item indices converted to int values when they fit.
+		/**
+		 * @brief 获取当前已创建并显示在池中的逻辑子项下标集合
+		 * @details 当下标值能够放入 int 时，会转换后输出到 collection 中。
+		 * @param collection [out] 输出当前显示中的子项下标集合
+		 */
 		void GetDisplayCollection(std::vector<int>& collection) const;
 
-		/// Selects the specified logical item.
-		/// Selection automatically scrolls into view and can optionally move focus and send an itemselect notify.
+		/**
+		 * @brief 选中指定子项
+		 * @details 选中后会自动滚动到可见区域，可选择是否抢占焦点以及是否发送 itemselect 通知。
+		 * @param index [in] 子项下标
+		 * @param takeFocus [in] 是否设置输入焦点
+		 * @param notify [in] 是否发送通知
+		 * @return bool 选中成功返回 true，index 越界时返回 false
+		 */
 		bool SelectItem(ItemIndex index, bool takeFocus = false, bool notify = true);
-		/// Clears the current selection and optionally sends an itemselect notify with no active item.
+		/**
+		 * @brief 清空当前选中状态
+		 * @param notify [in] 是否发送 itemselect 通知
+		 */
 		void ClearSelection(bool notify = true);
-		/// Returns true when any item is currently selected.
+		/**
+		 * @brief 判断当前是否存在选中项
+		 * @return bool 存在选中项返回 true，否则返回 false
+		 */
 		bool HasSelection() const;
-		/// Clears the current selection only when the specified index is the selected item.
+		/**
+		 * @brief 取消指定子项的选中状态
+		 * @details 只有当 index 恰好等于当前选中项时才会真正取消选择。
+		 * @param index [in] 子项下标
+		 * @param notify [in] 是否发送通知
+		 * @return bool 取消成功返回 true，否则返回 false
+		 */
 		bool UnselectItem(ItemIndex index, bool notify = true);
-		/// Returns the logical index of the selected item, or an internal invalid marker when no item is selected.
+		/**
+		 * @brief 获取当前选中项下标
+		 * @return ItemIndex 返回当前选中项下标；无选中项时返回内部无效值
+		 */
 		ItemIndex GetSelectedIndex() const;
-		/// Returns true when the specified item is currently selected.
+		/**
+		 * @brief 判断指定子项是否被选中
+		 * @param index [in] 子项下标
+		 * @return bool 已选中返回 true，否则返回 false
+		 */
 		bool IsItemSelected(ItemIndex index) const;
-		/// Returns true when any realized or tracked item is currently in hot-hover state.
+		/**
+		 * @brief 判断当前是否存在 hot 状态子项
+		 * @return bool 存在 hot 状态子项返回 true，否则返回 false
+		 */
 		bool HasHotItem() const;
-		/// Returns the logical index currently in hot-hover state, or an internal invalid marker when no item is hot.
+		/**
+		 * @brief 获取当前 hot 状态子项下标
+		 * @return ItemIndex 返回当前 hot 状态子项下标；无 hot 项时返回内部无效值
+		 */
 		ItemIndex GetHotItemIndex() const;
 
-		/// Returns the current vertical scroll offset in logical pixels.
+		/**
+		 * @brief 获取当前垂直滚动偏移
+		 * @return long long 返回当前逻辑像素单位的滚动偏移
+		 */
 		long long GetScrollOffset() const;
-		/// Sets the current vertical scroll offset in logical pixels.
-		/// The value is always clamped to the valid content range.
+		/**
+		 * @brief 设置当前垂直滚动偏移
+		 * @details 偏移值会自动限制在有效内容范围内，避免越界。
+		 * @param offset [in] 目标滚动偏移
+		 * @param notify [in] 是否发送滚动通知
+		 */
 		void SetScrollOffset(long long offset, bool notify = true);
-		/// Returns the current scroll position using the framework SIZE contract.
+		/**
+		 * @brief 获取当前滚动位置
+		 * @details 按 FYUI 的 SIZE 约定返回滚动位置。
+		 * @return SIZE 返回当前滚动位置
+		 */
 		SIZE GetScrollPos() const override;
-		/// Returns the scrollable range using the framework SIZE contract.
+		/**
+		 * @brief 获取滚动范围
+		 * @details 按 FYUI 的 SIZE 约定返回滚动范围。
+		 * @return SIZE 返回当前滚动范围
+		 */
 		SIZE GetScrollRange() const override;
-		/// Sets the scroll position using the framework SIZE contract.
+		/**
+		 * @brief 设置滚动位置
+		 * @param szPos [in] 目标滚动位置
+		 * @param bMsg [in] 是否发送通知
+		 * @param bScroolVisible [in] 保留参数
+		 */
 		void SetScrollPos(SIZE szPos, bool bMsg = true, bool bScroolVisible = true) override;
-		/// Scrolls upward by one logical item.
+		/**
+		 * @brief 向上滚动一个逻辑子项
+		 * @param bScroolVisible [in] 保留参数
+		 */
 		void LineUp(bool bScroolVisible = true) override;
-		/// Scrolls downward by one logical item.
+		/**
+		 * @brief 向下滚动一个逻辑子项
+		 * @param bScroolVisible [in] 保留参数
+		 */
 		void LineDown(bool bScroolVisible = true) override;
-		/// Scrolls upward by one viewport.
+		/**
+		 * @brief 向上翻一页
+		 */
 		void PageUp() override;
-		/// Scrolls downward by one viewport.
+		/**
+		 * @brief 向下翻一页
+		 */
 		void PageDown() override;
-		/// Scrolls to the first item.
+		/**
+		 * @brief 滚动到第一个子项
+		 */
 		void HomeUp() override;
-		/// Scrolls to the last item.
+		/**
+		 * @brief 滚动到最后一个子项
+		 */
 		void EndDown() override;
 
-		/// Updates the control rectangle and re-realizes visible pooled items.
+		/**
+		 * @brief 设置控件位置
+		 * @details 更新控件矩形、滚动条位置以及当前可视池中的子项布局。
+		 * @param rc [in] 控件矩形
+		 * @param bNeedInvalidate [in] 是否触发重绘
+		 */
 		void SetPos(RECT rc, bool bNeedInvalidate = true) override;
-		/// Attaches the control to a paint manager and refreshes scrollbar and visible item state.
+		/**
+		 * @brief 设置控件所属管理器
+		 * @details 当控件挂接到管理器后，会同步刷新滚动条和当前可视子项状态。
+		 * @param pManager [in] 管理器指针
+		 * @param pParent [in] 父控件指针
+		 * @param bInit [in] 是否初始化
+		 */
 		void SetManager(CPaintManagerUI* pManager, CControlUI* pParent, bool bInit = true) override;
-		/// Handles mouse, keyboard and wheel events for selection, hot tracking and scrolling.
+		/**
+		 * @brief 处理控件事件
+		 * @details 处理鼠标移动、点击、双击、键盘和滚轮事件，用于实现 hot 跟踪、选择与滚动。
+		 * @param event [in] 事件参数
+		 */
 		void DoEvent(TEventUI& event) override;
-		/// Paints the control background, item state backgrounds, realized child controls and scrollbar.
+		/**
+		 * @brief 绘制控件内容
+		 * @details 负责绘制控件背景、子项状态背景、当前可视池中的子控件以及滚动条。
+		 * @param renderContext [in] 绘制上下文
+		 * @param pStopControl [in] 停止绘制控件
+		 * @return bool 绘制完成返回 true
+		 */
 		bool DoPaint(CPaintRenderContext& renderContext, CControlUI* pStopControl) override;
-		/// Parses XML attributes that configure item count, height mode, overscan, selection cancel and item state colors.
+		/**
+		 * @brief 解析 XML 属性
+		 * @details 支持解析子项数量、高度模式、overscan、是否允许取消选择以及子项状态背景色等属性。
+		 * @param pstrName [in] 属性名
+		 * @param pstrValue [in] 属性值
+		 */
 		void SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue) override;
-		/// Clears the realized item pool owned by the virtual list.
+		/**
+		 * @brief 清空当前可视池中的子项控件
+		 * @param bChildDelayed [in] 是否延迟删除子控件
+		 */
 		void RemoveAll(bool bChildDelayed = true) override;
 
 	private:

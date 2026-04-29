@@ -27,6 +27,7 @@ namespace FYUI {
 		void GetLastErrorLocation(wchar_t* pstrSource, SIZE_T cchMax) const;
 		void SetInstance(HINSTANCE instance){ m_instance = instance;};
 	private:
+		CControlUI* _ParseControlNode(CMarkupNode& node, CControlUI* pParent = NULL, CPaintManagerUI* pManager = NULL);
 		CControlUI* _Parse(CMarkupNode* parent, CControlUI* pParent = NULL, CPaintManagerUI* pManager = NULL);
 
 		CMarkup m_xml;

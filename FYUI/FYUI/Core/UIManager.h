@@ -6,8 +6,8 @@
 #include <objidl.h>
 #include <olectl.h>
 #include <gdiplus.h>
-#include "UIRenderTypes.h"
-#include "UIRenderSurface.h"
+#include "Render/UIRenderTypes.h"
+#include "Render/UIRenderSurface.h"
 #pragma comment( lib, "GdiPlus.lib" )
 
 namespace FYUI

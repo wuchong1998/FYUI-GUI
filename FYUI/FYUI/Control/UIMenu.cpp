@@ -102,8 +102,9 @@ namespace FYUI {
 
 	SIZE CMenuUI::EstimateSize(SIZE szAvailable)
 	{
-		int cxFixed = 0;
-		int cyFixed = 0;
+		SIZE szRootFixed = GetManager()->ScaleSize(m_cxyFixed);
+		int cxFixed = szRootFixed.cx;
+		int cyFixed = szRootFixed.cy;
 		for( int it = 0; it < GetCount(); it++ ) {
 			CControlUI* pControl = static_cast<CControlUI*>(GetItemAt(it));
 			if( !pControl->IsVisible() ) continue;
@@ -374,7 +375,7 @@ namespace FYUI {
 			}
 			CDialogBuilder builder;
 
-				CControlUI* pRoot = builder.Create(m_xml, {}, this, &m_pm);
+			CControlUI* pRoot = builder.Create(m_xml, {}, this, &m_pm);
 			bShowShadow = m_pm.GetShadow()->IsShowShadow();
 			m_pm.GetShadow()->ShowShadow(false);
 			m_pm.AttachDialog(pRoot);
@@ -396,6 +397,7 @@ namespace FYUI {
 	void CMenuWnd::ResizeMenu()
 	{
 		CControlUI* pRoot = m_pm.GetRoot();
+		CMenuUI* pMenuRoot = static_cast<CMenuUI*>(pRoot);
 
 #if defined(WIN32) && !defined(UNDER_CE)
 		MONITORINFO oMonitor = {}; 
@@ -411,7 +413,7 @@ namespace FYUI {
 		m_pm.SetInitSize(szAvailable.cx, szAvailable.cy);
 
 		//韫囧懘銆忛弰鐤nu閺嶅洨顒锋担婊€璐焫ml閻ㄥ嫭鐗撮懞鍌滃仯
-		CMenuUI *pMenuRoot = static_cast<CMenuUI*>(pRoot);
+		pMenuRoot = static_cast<CMenuUI*>(pRoot);
 		ASSERT(pMenuRoot);
 
 		SIZE szInit = m_pm.GetInitSize();

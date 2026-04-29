@@ -40,6 +40,12 @@
     <Filter Include="文档">
       <UniqueIdentifier>{8c9af64b-1e61-4cc2-a828-e7e5a5fbe3ec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Core\Render">
+      <UniqueIdentifier>{545edbd1-47d8-4461-87e2-6fe990166b5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Core\Render">
+      <UniqueIdentifier>{cd43e6fd-b254-40ca-8b0c-f98943b4a6c0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -91,60 +97,6 @@
       <Filter>头文件\Core</Filter>
     </ClInclude>
     <ClInclude Include="Core\UIRender.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderBatchInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderD2DCacheTypesInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderD2DFrameMetricsInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderD2DResourceInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderD2DSharedInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderDirectWriteTextInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderHtmlMetricsInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderHtmlParseInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderImageD2DInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderImageDispatchInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderImageLegacyInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderImageRuntimeInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderPrimitiveInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderSurfaceInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderTextSharedInternal.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderContext.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderSurface.h">
-      <Filter>头文件\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UIRenderTypes.h">
       <Filter>头文件\Core</Filter>
     </ClInclude>
     <ClInclude Include="Core\UIResourceData.h">
@@ -264,6 +216,60 @@
     <ClInclude Include="Layout\UILayoutContentUtil.h">
       <Filter>头文件\Layout</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderBatchInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderContext.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderD2DCacheTypesInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderD2DFrameMetricsInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderD2DResourceInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderD2DSharedInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderDirectWriteTextInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderHtmlMetricsInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderHtmlParseInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderImageD2DInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderImageDispatchInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderImageLegacyInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderImageRuntimeInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderPrimitiveInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderSurface.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderSurfaceInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderTextSharedInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderTypes.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FYUI.cpp">
@@ -297,66 +303,6 @@
       <Filter>源文件\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Core\UIManager.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderBitmapUtil.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderClip.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderContext.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderD2DFrameMetricsInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderD2DResourceInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderD2DSharedInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderDirectWriteTextInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderHtmlMetricsInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderHtmlParseInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderImageD2DInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderImageCodec.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderImageEntry.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderImageLegacy.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderImageRuntime.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderImageScale.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderImageSpec.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderBatchInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderTextSharedInternal.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderPrimitive.cpp">
-      <Filter>源文件\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UIRenderSurface.cpp">
       <Filter>源文件\Core</Filter>
     </ClCompile>
     <ClCompile Include="Core\UIResourceData.cpp">
@@ -481,6 +427,66 @@
     </ClCompile>
     <ClCompile Include="Control\UICombo.cpp">
       <Filter>源文件\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderBatchInternal.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderBitmapUtil.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderClip.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderContext.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderD2DFrameMetricsInternal.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderD2DResourceInternal.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderD2DSharedInternal.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderDirectWriteTextInternal.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderHtmlMetricsInternal.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderHtmlParseInternal.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageCodec.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageD2DInternal.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageEntry.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageLegacy.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageRuntime.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageScale.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageSpec.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderPrimitive.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderSurface.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderTextSharedInternal.cpp">
+      <Filter>源文件\Core\Render</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

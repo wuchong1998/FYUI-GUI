@@ -359,6 +359,12 @@ namespace FYUI
 				}
 			}
 		}
+		const std::wstring_view rootClass = root.GetName();
+		if (!EqualsNoCase(rootClass, L"Window")) {
+			CMarkupNode rootNode = root;
+			return _ParseControlNode(rootNode, pParent, pManager);
+		}
+
 		return _Parse(&root, pParent, pManager);
 	}
 
@@ -377,147 +383,140 @@ namespace FYUI
 		return m_xml.GetLastErrorLocation(pstrSource, cchMax);
 	}
 
-	CControlUI* CDialogBuilder::_Parse(CMarkupNode* pRoot, CControlUI* pParent, CPaintManagerUI* pManager)
+	CControlUI* CDialogBuilder::_ParseControlNode(CMarkupNode& node, CControlUI* pParent, CPaintManagerUI* pManager)
 	{
+		const std::wstring_view pstrClass = node.GetName();
+		if( EqualsNoCase(pstrClass, L"Image") || EqualsNoCase(pstrClass, L"Font")
+			|| EqualsNoCase(pstrClass, L"Default") || EqualsNoCase(pstrClass, L"Style")
+			|| EqualsNoCase(pstrClass, L"Import") ) {
+			return NULL;
+		}
 
-		IContainerUI* pContainer = NULL;
-		CControlUI* pReturn = NULL;
-		for( CMarkupNode node = pRoot->GetChild() ; node.IsValid(); node = node.GetSibling() ) {
-			const std::wstring_view pstrClass = node.GetName();
-			if( EqualsNoCase(pstrClass, L"Image") || EqualsNoCase(pstrClass, L"Font") \
-				|| EqualsNoCase(pstrClass, L"Default") || EqualsNoCase(pstrClass, L"Style") ) continue;
+		CControlUI* pControl = NULL;
+		if( EqualsNoCase(pstrClass, L"Include") ) {
+			if( !node.HasAttributes() ) return NULL;
+			int count = 1;
+			wchar_t szValue[500] = { 0 };
+			SIZE_T cchLen = lengthof(szValue) - 1;
+			if ( node.GetAttributeValue(L"count", szValue, cchLen) )
+				count = ParseInt(szValue);
+			cchLen = lengthof(szValue) - 1;
+			if ( !node.GetAttributeValue(L"source", szValue, cchLen) ) return NULL;
+			for ( int i = 0; i < count; i++ ) {
+				CDialogBuilder builder;
+				if( m_pstrtype != NULL ) {
+					WORD id = static_cast<WORD>(ParseInt(szValue));
+					pControl = builder.Create((UINT)id, m_pstrtype, m_pCallback, pManager, pParent);
+				}
+				else {
+					pControl = builder.Create(szValue, {}, m_pCallback, pManager, pParent);
+				}
+			}
+			return NULL;
+		}
 
-			CControlUI* pControl = NULL;
-			if (EqualsNoCase(pstrClass, L"Import")) continue;
-			if( EqualsNoCase(pstrClass, L"Include") ) {
-				if( !node.HasAttributes() ) continue;
-				int count = 1;
-				wchar_t szValue[500] = { 0 };
-				SIZE_T cchLen = lengthof(szValue) - 1;
-				if ( node.GetAttributeValue(L"count", szValue, cchLen) )
-					count = ParseInt(szValue);
-				cchLen = lengthof(szValue) - 1;
-				if ( !node.GetAttributeValue(L"source", szValue, cchLen) ) continue;
-				for ( int i = 0; i < count; i++ ) {
-					CDialogBuilder builder;
-					if( m_pstrtype != NULL ) { // 浣跨敤璧勬簮dll锛屼粠璧勬簮涓鍙?
-						WORD id = static_cast<WORD>(ParseInt(szValue)); 
-						pControl = builder.Create((UINT)id, m_pstrtype, m_pCallback, pManager, pParent);
-					}
-					else {
-						pControl = builder.Create(szValue, {}, m_pCallback, pManager, pParent);
+		std::wstring strClass = StringUtil::Format(L"C{}UI", pstrClass);
+		pControl = dynamic_cast<CControlUI*>(CControlFactory::GetInstance()->CreateControl(strClass));
+
+		if( pControl == NULL ) {
+			CStdPtrArray* pPlugins = CPaintManagerUI::GetPlugins();
+			LPCREATECONTROL lpCreateControl = NULL;
+			for( int i = 0; i < pPlugins->GetSize(); ++i ) {
+				lpCreateControl = (LPCREATECONTROL)pPlugins->GetAt(i);
+				if( lpCreateControl != NULL ) {
+					pControl = lpCreateControl(pstrClass.data());
+					if( pControl != NULL ) break;
+				}
+			}
+		}
+
+		if( pControl == NULL && m_pCallback != NULL ) {
+			pControl = m_pCallback->CreateControl(pstrClass);
+		}
+
+		if( pControl == NULL ) {
+#ifdef _DEBUG
+			DUITRACE(_T("鏈煡鎺т欢:%s"), pstrClass);
+#else
+			return NULL;
+#endif
+		}
+
+		if( node.HasChildren() ) {
+			_Parse(&node, pControl, pManager);
+		}
+
+		CTreeViewUI* pTreeView = NULL;
+		if( pParent != NULL && pControl != NULL ) {
+			CTreeNodeUI* pParentTreeNode = static_cast<CTreeNodeUI*>(pParent->GetInterface(_T("TreeNode")));
+			CTreeNodeUI* pTreeNode = static_cast<CTreeNodeUI*>(pControl->GetInterface(_T("TreeNode")));
+			pTreeView = static_cast<CTreeViewUI*>(pParent->GetInterface(_T("TreeView")));
+			if(pTreeNode != NULL) {
+				if(pParentTreeNode) {
+					pTreeView = pParentTreeNode->GetTreeView();
+					if(!pParentTreeNode->Add(pTreeNode)) {
+						delete pTreeNode;
+						return NULL;
 					}
 				}
-				continue;
+				else {
+					if(pTreeView != NULL) {
+						if(!pTreeView->Add(pTreeNode)) {
+							delete pTreeNode;
+							return NULL;
+						}
+					}
+				}
+			}
+			else if(pParentTreeNode != NULL) {
+				pParentTreeNode->GetTreeNodeHoriznotal()->Add(pControl);
 			}
 			else {
-				std::wstring strClass;
-				strClass = StringUtil::Format(L"C{}UI", pstrClass);
-				pControl = dynamic_cast<CControlUI*>(CControlFactory::GetInstance()->CreateControl(strClass));
+				IContainerUI* pContainer = static_cast<IContainerUI*>(pParent->GetInterface(_T("IContainer")));
+				if( pContainer == NULL ) return NULL;
+				if( !pContainer->Add(pControl) ) {
+					delete pControl;
+					return NULL;
+				}
+			}
+		}
 
-				// 妫€鏌ユ彃浠?
-				if( pControl == NULL ) {
-					CStdPtrArray* pPlugins = CPaintManagerUI::GetPlugins();
-					LPCREATECONTROL lpCreateControl = NULL;
-					for( int i = 0; i < pPlugins->GetSize(); ++i ) {
-						lpCreateControl = (LPCREATECONTROL)pPlugins->GetAt(i);
-						if( lpCreateControl != NULL ) {
-							pControl = lpCreateControl(pstrClass.data());
-							if( pControl != NULL ) break;
-						}
-					}
-				}
-				// 鍥炴帀鍒涘缓
-				if( pControl == NULL && m_pCallback != NULL ) {
-					pControl = m_pCallback->CreateControl(pstrClass);
-				}
-			}
+		if( pControl == NULL ) return NULL;
 
-			if( pControl == NULL ) {
-#ifdef _DEBUG
-				DUITRACE(_T("鏈煡鎺т欢:%s"), pstrClass);
-#else
-				continue;
-#endif
+		if( pManager ) {
+			if(pTreeView != NULL) {
+				pControl->SetManager(pManager, pTreeView, true);
 			}
+			else {
+				pControl->SetManager(pManager, NULL, false);
+			}
+			const std::wstring_view pDefaultAttributes = pManager->GetDefaultAttributeList(pstrClass);
+			if( !pDefaultAttributes.empty() ) {
+				pControl->ApplyAttributeList(pDefaultAttributes);
+			}
+		}
 
-			// Add children
-			if( node.HasChildren() ) {
-				_Parse(&node, pControl, pManager);
+		if( node.HasAttributes() ) {
+			int nAttributes = node.GetAttributeCount();
+			for( int i = 0; i < nAttributes; i++ ) {
+				pControl->SetAttribute(node.GetAttributeName(i), node.GetAttributeValue(i));
 			}
-			// Attach to parent
-			// 鍥犱负鏌愪簺灞炴€у拰鐖剁獥鍙ｇ浉鍏筹紝姣斿selected锛屽繀椤诲厛Add鍒扮埗绐楀彛
-			CTreeViewUI* pTreeView = NULL;
-			if( pParent != NULL && pControl != NULL ) {
-				CTreeNodeUI* pParentTreeNode = static_cast<CTreeNodeUI*>(pParent->GetInterface(_T("TreeNode")));
-				CTreeNodeUI* pTreeNode = static_cast<CTreeNodeUI*>(pControl->GetInterface(_T("TreeNode")));
-				pTreeView = static_cast<CTreeViewUI*>(pParent->GetInterface(_T("TreeView")));
-				// TreeNode瀛愯妭鐐?
-				if(pTreeNode != NULL) {
-					if(pParentTreeNode) {
-						pTreeView = pParentTreeNode->GetTreeView();
-						if(!pParentTreeNode->Add(pTreeNode)) {
-							delete pTreeNode;
-							pTreeNode = NULL;
-							continue;
-						}
-					}
-					else {
-						if(pTreeView != NULL) {
-							if(!pTreeView->Add(pTreeNode)) {
-								delete pTreeNode;
-								pTreeNode = NULL;
-								continue;
-							}
-						}
-					}
-				}
-				// TreeNode瀛愭帶浠?
-				else if(pParentTreeNode != NULL) {
-					pParentTreeNode->GetTreeNodeHoriznotal()->Add(pControl);
-				}
-				// 鏅€氭帶浠?
-				else {
-					if( pContainer == NULL ) pContainer = static_cast<IContainerUI*>(pParent->GetInterface(_T("IContainer")));
-					
-					if( pContainer == NULL ) return NULL;
-					if( !pContainer->Add(pControl) ) {
-						delete pControl;
-						continue;
-					}
-				}
+		}
+		if( pManager ) {
+			if(pTreeView == NULL) {
+				pControl->SetManager(NULL, NULL, false);
 			}
-			
-			
+		}
+
+		return pControl;
+	}
+
+	CControlUI* CDialogBuilder::_Parse(CMarkupNode* pRoot, CControlUI* pParent, CPaintManagerUI* pManager)
+	{
+		CControlUI* pReturn = NULL;
+		for( CMarkupNode node = pRoot->GetChild() ; node.IsValid(); node = node.GetSibling() ) {
+			CControlUI* pControl = _ParseControlNode(node, pParent, pManager);
 			if( pControl == NULL ) continue;
-
-			// Init default attributes
-			if( pManager ) {
-				if(pTreeView != NULL) {
-					pControl->SetManager(pManager, pTreeView, true);
-				}
-				else {
-					pControl->SetManager(pManager, NULL, false);
-				}
-				const std::wstring_view pDefaultAttributes = pManager->GetDefaultAttributeList(pstrClass);
-				if( !pDefaultAttributes.empty() ) {
-					pControl->ApplyAttributeList(pDefaultAttributes);
-				}
-			}
-			// Process attributes
-			if( node.HasAttributes() ) {
-				// Set ordinary attributes
-				int nAttributes = node.GetAttributeCount();
-				for( int i = 0; i < nAttributes; i++ ) {
-					pControl->SetAttribute(node.GetAttributeName(i), node.GetAttributeValue(i));
-				}
-			}
-			if( pManager ) {
-				if(pTreeView == NULL) {
-					pControl->SetManager(NULL, NULL, false);
-				}
-			}
-			// Return first item
 			if( pReturn == NULL ) pReturn = pControl;
 		}
 		return pReturn;

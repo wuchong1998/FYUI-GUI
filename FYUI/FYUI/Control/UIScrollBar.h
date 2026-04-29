@@ -25,6 +25,8 @@ namespace FYUI
 		void SetScrollPos(int nPos, bool bIsSetMax = true);
 		int GetLineSize() const;
 		void SetLineSize(int nSize);
+		int GetMinThumbSize() const;
+		void SetMinThumbSize(int nSize);
 
 		bool GetMouseDown() { return m_bMouseDown; }
 
@@ -111,6 +113,7 @@ namespace FYUI
 		__int64 m_nRange;
 		__int64 m_nScrollPos;
 		int m_nLineSize;
+		int m_nMinThumbSize;
 		CContainerUI* m_pOwner;
 		POINT m_ptLastMouse;
 		int m_nLastScrollPos;

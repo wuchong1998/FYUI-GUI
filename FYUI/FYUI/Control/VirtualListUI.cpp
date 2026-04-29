@@ -342,6 +342,15 @@ namespace FYUI
 	void CVirtualListUI::SetPos(RECT rc, bool bNeedInvalidate)
 	{
 		CControlUI::SetPos(rc, bNeedInvalidate);
+		ConfigureScrollBar();
+		UpdateScrollBar();
+		RealizeVisibleItems();
+	}
+
+	void CVirtualListUI::SetManager(CPaintManagerUI* pManager, CControlUI* pParent, bool bInit)
+	{
+		CContainerUI::SetManager(pManager, pParent, bInit);
+		ConfigureScrollBar();
 		UpdateScrollBar();
 		RealizeVisibleItems();
 	}
@@ -429,6 +438,7 @@ namespace FYUI
 		}
 		else if (StringUtil::EqualsNoCase(name, L"vscrollbar")) {
 			EnableScrollBar(StringUtil::ParseBool(pstrValue), false);
+			ConfigureScrollBar();
 			UpdateScrollBar();
 		}
 		else {
@@ -498,6 +508,35 @@ namespace FYUI
 		return ClampScrollOffset((static_cast<long long>(pos) * maxOffset) / kMaxScrollBarRange);
 	}
 
+	void CVirtualListUI::ConfigureScrollBar()
+	{
+		if (m_pVerticalScrollBar == nullptr) return;
+		m_pVerticalScrollBar->SetOwner(this);
+		m_pVerticalScrollBar->SetHorizontal(false);
+		m_pVerticalScrollBar->SetMinThumbSize(24);
+		m_pVerticalScrollBar->SetShowButton1(false);
+		m_pVerticalScrollBar->SetShowButton2(false);
+		if (m_pManager != nullptr) {
+			std::wstring_view style = m_sVerticalScrollBarStyle;
+			if (!style.empty()) {
+				const std::wstring_view namedStyle = m_pManager->GetStyle(style);
+				m_pVerticalScrollBar->ApplyAttributeList(namedStyle.empty() ? style : namedStyle);
+			}
+			else {
+				const std::wstring_view defaultStyle = m_pManager->GetDefaultAttributeList(L"VScrollBar");
+				style = defaultStyle.empty() ? m_pManager->GetDefaultAttributeList(L"ScrollBar") : defaultStyle;
+				if (!style.empty()) {
+					const std::wstring_view namedStyle = m_pManager->GetStyle(style);
+					m_pVerticalScrollBar->ApplyAttributeList(namedStyle.empty() ? style : namedStyle);
+				}
+			}
+			m_pVerticalScrollBar->SetMinThumbSize(24);
+			m_pVerticalScrollBar->SetShowButton1(false);
+			m_pVerticalScrollBar->SetShowButton2(false);
+			m_pVerticalScrollBar->SetShow(m_bShowScrollbar);
+		}
+	}
+
 	void CVirtualListUI::RebuildPrefixHeights()
 	{
 		m_prefixHeights.assign(m_itemHeights.size() + 1, 0);
@@ -547,7 +586,11 @@ namespace FYUI
 		m_pVerticalScrollBar->SetLineSize((std::max)(1, m_fixedItemHeight));
 		if (visible) {
 			RECT rcBar = m_rcItem;
-			rcBar.left = rcBar.right - m_pVerticalScrollBar->GetFixedWidth();
+			RECT inset = GetInset();
+			rcBar.left = rcBar.right - m_pVerticalScrollBar->GetFixedWidth() - inset.right;
+			rcBar.right -= inset.right;
+			rcBar.top += inset.top;
+			rcBar.bottom -= inset.bottom;
 			m_pVerticalScrollBar->SetPos(rcBar, false);
 		}
 		m_updatingScrollBar = false;

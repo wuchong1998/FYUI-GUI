@@ -71,6 +71,7 @@ namespace FYUI
 		void EndDown() override;
 
 		void SetPos(RECT rc, bool bNeedInvalidate = true) override;
+		void SetManager(CPaintManagerUI* pManager, CControlUI* pParent, bool bInit = true) override;
 		void DoEvent(TEventUI& event) override;
 		bool DoPaint(CPaintRenderContext& renderContext, CControlUI* pStopControl) override;
 		void SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue) override;
@@ -93,6 +94,7 @@ namespace FYUI
 		int GetScrollbarRange() const;
 		int OffsetToScrollbarPos(long long offset) const;
 		long long ScrollbarPosToOffset(int pos) const;
+		void ConfigureScrollBar();
 
 		void RebuildPrefixHeights();
 		ItemIndex FindItemByOffset(long long offset) const;

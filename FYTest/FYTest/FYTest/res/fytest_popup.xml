@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window size="640,470" mininfo="560,420" sizebox="5,5,5,5" caption="0,0,640,46" roundcorner="22,22" defaultfontcolor="#FF243042" disabledfontcolor="#FF8A98A8" renderbackend="direct2d" d2drendermode="software" renderdiagnostics="true">
+  <Font id="0" name="Segoe UI" size="13" default="true" />
+  <Font id="1" name="Segoe UI" size="17" bold="true" />
+  <Style name="PopupPanel" value="bkcolor=&quot;#FFFFFFFF&quot; bordercolor=&quot;#FFD9E1EA&quot; bordersize=&quot;1&quot; borderround=&quot;20,20&quot;" />
+  <Style name="PopupButton" value="height=&quot;34&quot; width=&quot;126&quot; bkcolor=&quot;#FFF4F8FC&quot; hotbkcolor=&quot;#FFE5EEF7&quot; pushedbkcolor=&quot;#FFD4E4F4&quot; bordercolor=&quot;#FFC8D5E2&quot; bordersize=&quot;1&quot; borderround=&quot;18,18&quot; cursor=&quot;hand&quot;" />
+  <Style name="PopupTab" value="height=&quot;32&quot; width=&quot;116&quot; bkcolor=&quot;#00FFFFFF&quot; hotbkcolor=&quot;#FFE8F0F8&quot; pushedbkcolor=&quot;#FFD6E7FA&quot; borderround=&quot;16,16&quot; cursor=&quot;hand&quot;" />
+  <Default name="Label" value="font=&quot;0&quot; textcolor=&quot;#FF243042&quot;" />
+  <Default name="Button" value="font=&quot;0&quot; align=&quot;center&quot; valign=&quot;vcenter&quot; cursor=&quot;hand&quot;" />
+
+  <VBox name="popup_root" bkcolor="#FFF2F6FA">
+    <HBox name="popup_title_bar" height="46" bkcolor="#FF223040" childvalign="vcenter" childpadding="8" inset="14,0,10,0">
+      <Control width="28" height="28" bkimage="file='tishi.png'" />
+      <Label name="popup_caption" text="FYUI child window" font="1" textcolor="#FFFFFFFF" />
+      <Button name="closebtn" text="X" width="42" height="30" bkcolor="#00222F3D" hotbkcolor="#FFE15A5A" pushedbkcolor="#FFC84242" textcolor="#FFFFFFFF" />
+    </HBox>
+    <HBox height="44" bkcolor="#FFFFFFFF" bordercolor="#FFE2E8EF" bottombordersize="1" childvalign="vcenter" childpadding="6" inset="14,6,14,6">
+      <Button text="Form" style="PopupTab" bindtablayoutname="popup_tabs" bindtabindex="0" />
+      <Button text="List" style="PopupTab" bindtablayoutname="popup_tabs" bindtabindex="1" />
+      <Button text="Media" style="PopupTab" bindtablayoutname="popup_tabs" bindtabindex="2" />
+      <Label />
+      <Button name="popup_ok" text="OK" style="PopupButton" width="88" />
+      <Button name="popup_cancel" text="Cancel" style="PopupButton" width="88" />
+    </HBox>
+    <TabBox name="popup_tabs" selectedid="0" inset="14,14,14,10">
+      <VBox style="PopupPanel" inset="14,14,14,14" childpadding="10">
+        <Label text="Modal and modeless popup reuse the same XML." height="28" font="1" />
+        <HBox height="38" childpadding="8">
+          <Label text="Name" width="96" valign="vcenter" />
+          <Label name="popup_removed_edit_name" height="34" text="FYUI tester" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="6,6" padding="8,0,8,0" valign="vcenter" />
+        </HBox>
+        <HBox height="38" childpadding="8">
+          <Label text="Mode" width="96" valign="vcenter" />
+          <Option text="Modal" group="popup_mode" selected="true" width="120" />
+          <Option text="Modeless" group="popup_mode" width="140" />
+          <CheckBox text="Auto check" EnableAutoCheck="true" selected="true" width="140" />
+        </HBox>
+        <HBox height="40" childpadding="10">
+          <Combo name="popup_combo" width="210" height="34" text="Popup combo A" dropboxsize="220,120" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA">
+            <ListLabelElement text="Popup combo A" height="30" selected="true" />
+            <ListLabelElement text="Popup combo B" height="30" />
+            <ListLabelElement text="Popup combo C" height="30" />
+          </Combo>
+          <Slider name="popup_slider" height="28" min="0" max="100" value="48" sendmove="true" thumbimage="file='SliderPlayThumb.png'" />
+        </HBox>
+        <Progress name="popup_progress" height="18" value="48" showtext="true" bkcolor="#FFEAF0F6" forecolor="#FF3E8ED0" />
+      </VBox>
+      <VBox style="PopupPanel" inset="14,14,14,14" childpadding="10">
+        <Label text="Popup list and tree" height="28" font="1" />
+        <HBox childpadding="10">
+          <List name="popup_list" width="300" header="show" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" itemtextpadding="8,0,8,0">
+            <ListHeader height="32" bkcolor="#FFF1F5F9">
+              <ListHeaderItem text="Item" width="150" />
+              <ListHeaderItem text="Value" width="110" />
+            </ListHeader>
+            <ListTextElement text="Alpha|10" height="30" selected="true" />
+            <ListTextElement text="Beta|20" height="30" />
+            <ListTextElement text="Gamma|30" height="30" />
+          </List>
+          <TreeView name="popup_tree" itemminwidth="190" visiblefolderbtn="true" visiblecheckbtn="true" bordercolor="#FFE0E7EF" bordersize="1">
+            <TreeNode text="Popup root" itemattr="height=&quot;28&quot;">
+              <TreeNode text="Child one" itemattr="height=&quot;26&quot;" />
+              <TreeNode text="Child two" itemattr="height=&quot;26&quot;" />
+            </TreeNode>
+          </TreeView>
+        </HBox>
+      </VBox>
+      <VBox style="PopupPanel" inset="14,14,14,14" childpadding="10">
+        <Label text="Popup media controls" height="28" font="1" />
+        <HBox height="120" childpadding="14">
+          <Control width="110" bkimage="file='VideoGIF_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="8,8" />
+          <GifAnim name="popup_gif" width="110" bkimage="file='loading.gif'" autoplay="true" autosize="false" bordercolor="#FFE0E7EF" bordersize="1" />
+          <Ring name="popup_ring" width="96" height="96" bkimage="loading.gif" />
+        </HBox>
+        <ColorPalette name="popup_palette" height="160" palletheight="120" barheight="18" bordercolor="#FFE0E7EF" bordersize="1" />
+      </VBox>
+    </TabBox>
+  </VBox>
+</Window>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Menu name="fytest_popup_menu" width="250" bkcolor="#FFFFFFFF" bordercolor="#FFD9E1EA" bordersize="1" borderround="16,16" inset="6,6,6,6" 
+				itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" itemtextpadding="34,0,30,0">
+  <Default name="ExplandIcon" value="file='Down.png' dest='0,0,12,12'" />
+  <MenuElement text="New demo page" height="34" icon="file='menu.png'" iconsize="18,18" />
+  <MenuElement text="Checkable action" name="menu_check_demo" height="34" checkitem="true" ischeck="true" icon="file='affirm.png'" iconsize="18,18" />
+  <MenuElement text="Export" height="34" expland="true" icon="file='option.png'" iconsize="18,18" childwndpacing="4">
+    <MenuElement text="Export as PNG" height="34" icon="file='help.png'" iconsize="18,18" />
+    <MenuElement text="Export as XML" height="34" icon="file='help.png'" iconsize="18,18" />
+    <MenuElement text="More formats" height="34" expland="true" icon="file='menu.png'" iconsize="18,18" childwndpacing="4">
+      <MenuElement text="Vector snapshot" height="34" icon="file='option.png'" iconsize="18,18" />
+      <MenuElement text="Diagnostics log" height="34" icon="file='tishi.png'" iconsize="18,18" />
+    </MenuElement>
+  </MenuElement>
+  <MenuElement linetype="true" height="8" linecolor="#FFE0E7EF" />
+  <MenuElement text="Close menu" height="34" icon="file='menu.png'" iconsize="18,18" />
+</Menu>

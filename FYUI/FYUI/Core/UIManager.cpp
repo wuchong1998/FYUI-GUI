@@ -1,11 +1,11 @@
 ﻿#include "pch.h"
 #include "UIManager.h"
 #include "UIContainer.h"
-#include "UIRenderBatchInternal.h"
-#include "UIRenderContext.h"
-#include "UIRenderImageRuntimeInternal.h"
-#include "UIRenderSurfaceInternal.h"
-#include "UIRenderTextSharedInternal.h"
+#include "Render/UIRenderBatchInternal.h"
+#include "Render/UIRenderContext.h"
+#include "Render/UIRenderImageRuntimeInternal.h"
+#include "Render/UIRenderSurfaceInternal.h"
+#include "Render/UIRenderTextSharedInternal.h"
 #include "UIResourceData.h"
 #include <zmouse.h>
 #include <cwctype>

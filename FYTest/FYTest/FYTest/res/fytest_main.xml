@@ -9,13 +9,15 @@
   <Style name="RoundProbe" value="bkcolor=&quot;#FFFFF1DF&quot; bordercolor=&quot;#FFE0B887&quot; bordersize=&quot;1&quot; borderround=&quot;28,28&quot;" />
   <Style name="TabButton" value="height=&quot;36&quot; width=&quot;152&quot; bkcolor=&quot;#00FFFFFF&quot; hotbkcolor=&quot;#FFE8F0F8&quot; pushedbkcolor=&quot;#FFD6E7FA&quot; borderround=&quot;18,18&quot; textcolor=&quot;#FF2B3545&quot; cursor=&quot;hand&quot;" />
   <Style name="ActionButton" value="height=&quot;34&quot; width=&quot;140&quot; bkcolor=&quot;#FFF4F8FC&quot; hotbkcolor=&quot;#FFE5EEF7&quot; pushedbkcolor=&quot;#FFD4E4F4&quot; bordercolor=&quot;#FFC8D5E2&quot; bordersize=&quot;1&quot; borderround=&quot;18,18&quot; cursor=&quot;hand&quot;" />
-  <Style name="ScrollSkin" value="width=&quot;10&quot; button1normalimage=&quot;file='public/vscrollbar/bk_normal.png'&quot; button2normalimage=&quot;file='public/vscrollbar/bk_normal.png'&quot; thumbnormalimage=&quot;file='public/vscrollbar/thumb_normal.png'&quot; thumbhotimage=&quot;file='public/vscrollbar/thumb_hovered.png'&quot; bknormalimage=&quot;file='public/vscrollbar/bk_normal.png'&quot; bkhotimage=&quot;file='public/vscrollbar/bk_hovered.png'&quot; showbutton1=&quot;false&quot; showbutton2=&quot;false&quot;" />
   <Default name="Label" value="font=&quot;0&quot; textcolor=&quot;#FF243042&quot;" />
   <Default name="Button" value="font=&quot;0&quot; align=&quot;center&quot; valign=&quot;vcenter&quot; cursor=&quot;hand&quot;" />
   <Default name="Option" value="font=&quot;0&quot; cursor=&quot;hand&quot; selectedbkcolor=&quot;#FFDCEBFA&quot; selectedtextcolor=&quot;#FF1D5F9F&quot;" />
   <Default name="CheckBox" value="font=&quot;0&quot; cursor=&quot;hand&quot; selectedbkcolor=&quot;#FFEAF4EC&quot; selectedtextcolor=&quot;#FF22784F&quot;" />
-  <Default name="ScrollBar" value="style=&quot;ScrollSkin&quot;" />
+
   <Default name="Progress" value="height=&quot;18&quot; showtext=&quot;true&quot; bkcolor=&quot;#FFEAF0F6&quot; forecolor=&quot;#FF2EA97D&quot; borderround=&quot;18,18&quot;" />
+ <Default name="VScrollBar" shared="true" value="width=&quot;14&quot; range=&quot;14&quot; showbutton1=&quot;false&quot; showbutton2=&quot;false&quot; thumbnormalimage=&quot;file='public/vscrollbar/thumb_normal.png'  corner='0,8,0,8' &quot; thumbhotimage=&quot;file='public/vscrollbar/thumb_hovered.png' corner='0,8,0,8'&quot; thumbpushedimage=&quot;file='public/vscrollbar/thumb_hovered.png' corner='0,8,0,8'&quot; railnormalimage=&quot;&quot; railhotimage=&quot;&quot; railpushedimage=&quot;&quot; raildisabledimage=&quot;&quot; bknormalimage=&quot;&quot; bkhotimage=&quot;file='public/vscrollbar/bk_hovered.png' corner='0,4,0,4'&quot; bkpushedimage=&quot;file='public/vscrollbar/bk_hovered.png' corner='0,4,0,4'&quot; bkdisabledimage=&quot;&quot; "/>
+
+ <Default name="HScrollBar" shared="true" value="height=&quot;14&quot; showbutton1=&quot;false&quot; showbutton2=&quot;false&quot; thumbnormalimage=&quot;file='public/hscrollbar/thumb_normal.png'  corner='8,0,8,0'&quot; thumbhotimage=&quot;file='public/hscrollbar/thumb_hovered.png' corner='8,0,8,0'&quot; thumbpushedimage=&quot;file='public/hscrollbar/thumb_hovered.png'  corner='8,0,8,0'&quot; railnormalimage=&quot;&quot; railhotimage=&quot;&quot; railpushedimage=&quot;&quot; raildisabledimage=&quot;&quot; bknormalimage=&quot;&quot; bkhotimage=&quot;file='public/hscrollbar/bk_hovered.png' corner='4,0,4,0'&quot; bkpushedimage=&quot;file='public/hscrollbar/bk_hovered.png' corner='4,0,4,0'&quot; bkdisabledimage=&quot;&quot; "/>
 
   <VBox name="root" bkcolor="#FFF0F4F8">
     <HBox name="title_bar" height="50" bkcolor="#FF1F2A36" childvalign="vcenter" childpadding="8" inset="16,0,10,0">
@@ -116,7 +118,7 @@
       </VBox>
 
       <VBox name="page_data" childpadding="12">
-        <HBox height="300" childpadding="12">
+        <HBox height="500" childpadding="12">
           <List name="list_basic" style="Panel" width="520" header="show" itemalign="left" itemvalign="vcenter" itemtextpadding="8,0,8,0" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" itemshowrowline="true" itemlinecolor="#FFE0E7EF" vscrollbar="true" vscrollbarstyle="ScrollSkin">
             <ListHeader height="34" bkcolor="#FFF1F5F9">
               <ListHeaderItem text="Control" width="160" sepwidth="1" textcolor="#FF243042" />
@@ -132,20 +134,19 @@
             <ListTextElement text="ColorPalette|color change notify|ready" height="34" />
           </List>
           <VBox style="Panel" inset="12,12,12,12" childpadding="10">
-            <Label text="Tree and virtual list" height="26" font="1" />
-            <TreeView name="tree_demo" height="160" visiblefolderbtn="true" visiblecheckbtn="true" itemminwidth="180" itemtextcolor="#FF243042" itemhottextcolor="#FF1D5F9F" selitemtextcolor="#FFFFFFFF" selitemhottextcolor="#FFFFFFFF" bkcolor="#FFFFFFFF" bordercolor="#FFE0E7EF" bordersize="1">
-              <TreeNode text="FYUI window" itemattr="height=&quot;28&quot;" />
-              <TreeNode text="Controls" itemattr="height=&quot;28&quot;">
-                <TreeNode text="Button and Option" itemattr="height=&quot;26&quot;" />
-                <TreeNode text="Slider and Progress" itemattr="height=&quot;26&quot;" />
-              </TreeNode>
-              <TreeNode text="Layouts" itemattr="height=&quot;28&quot;">
-                <TreeNode text="TabBox" itemattr="height=&quot;26&quot;" />
-                <TreeNode text="TileBox" itemattr="height=&quot;26&quot;" />
-              </TreeNode>
-            </TreeView>
-            <VirtualList name="virtual_list_demo" height="80" itemcount="10000000" itemheight="24" overscan="6" vscrollbar="true" vscrollbarstyle="ScrollSkin" bordercolor="#FFE0E7EF" bordersize="1" />
-            <Label text="VirtualList fixed-height demo: 10,000,000 rows rendered through a small visible item pool." height="24" font="2" textcolor="#FF667789" />
+            <Label text="VirtualList test bench" height="26" font="1" />
+            <HBox height="34" childpadding="8">
+              <Button name="virt_apply_fixed_demo" text="Fixed 240" style="ActionButton" width="118" />
+              <Button name="virt_apply_large_demo" text="Fixed 10M" style="ActionButton" width="118" />
+              <Button name="virt_apply_variable_demo" text="Variable" style="ActionButton" width="118" />
+            </HBox>
+            <HBox height="34" childpadding="8">
+              <Button name="virt_mutate_height" text="Mutate height" style="ActionButton" width="118" />
+              <Button name="virt_change_count" text="Mutate count" style="ActionButton" width="118" />
+              <Button name="virt_clear_selection" text="Clear select" style="ActionButton" width="118" />
+            </HBox>
+            <VirtualList name="virtual_list_demo" height="182" itemcount="240" itemheight="32" overscan="8" vscrollbar="true" vscrollbarstyle="ScrollSkin" allowselectioncancel="true" itembkcolor="#FFF7FAFD" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" bordercolor="#FFE0E7EF" bordersize="1" />
+            <Label name="virtual_list_status" text="VirtualList ready." height="54" wordbreak="true" font="2" textcolor="#FF667789" />
           </VBox>
         </HBox>
         <HBox height="240" childpadding="12">

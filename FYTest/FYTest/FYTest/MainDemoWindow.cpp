@@ -12,7 +12,7 @@
 namespace
 {
     constexpr wchar_t kMainSkin[] = L"fytest_main.xml";
-    constexpr wchar_t kMenuSkin[] = L"fytest_menu.xml";
+    constexpr wchar_t kMenuSkin[] = L"right_title_pop_wnd.xml";
     constexpr RECT kPopupCreateRect = { 0, 0, 640, 470 };
     constexpr DWORD kCreateHiddenDialogStyle = UI_WNDSTYLE_DIALOG & ~WS_VISIBLE;
     constexpr UINT_PTR kFpsTimerId = 1001;
@@ -64,6 +64,7 @@ namespace FYTestApp
     void MainDemoWindow::InitWindow()
     {
         PopulateStressTiles();
+        SetupVirtualListDemo();
         ::SetTimer(*this, kFpsTimerId, kFpsTimerMs, nullptr);
         UpdateFpsMeter(true);
 
@@ -81,10 +82,16 @@ namespace FYTestApp
             UpdateValueStatus(msg.pSender);
         }
         else if (msg.sType == DUI_MSGTYPE_SCROLL || msg.sType == DUI_MSGTYPE_SCROLL_TOOLS) {
+            if (msg.pSender == FindControlAs<FYUI::CVirtualListUI>(m_pm, L"virtual_list_demo")) {
+                UpdateVirtualListStatus(L"VirtualList scrolled.");
+            }
             UpdateFpsMeterIfDue();
         }
         else if (msg.sType == DUI_MSGTYPE_TABSELECT || msg.sType == DUI_MSGTYPE_ITEMSELECT ||
             msg.sType == DUI_MSGTYPE_ITEMCLICK || msg.sType == DUI_MSGTYPE_COLORCHANGED) {
+            if (msg.pSender == FindControlAs<FYUI::CVirtualListUI>(m_pm, L"virtual_list_demo")) {
+                UpdateVirtualListStatus(L"VirtualList notify: " + msg.sType);
+            }
             UpdateStatusFromNotify(msg);
         }
 
@@ -115,8 +122,207 @@ namespace FYTestApp
                 StepProgress();
                 return;
             }
+            if (name == L"virt_apply_fixed_demo") {
+                ApplyVirtualListFixedDemo(240, 32, L"fixed 240 items");
+                return;
+            }
+            if (name == L"virt_apply_large_demo") {
+                ApplyVirtualListFixedDemo(10000000ULL, 24, L"fixed 10,000,000 items");
+                return;
+            }
+            if (name == L"virt_apply_variable_demo") {
+                ApplyVirtualListVariableDemo(180);
+                return;
+            }
+            if (name == L"virt_mutate_height") {
+                MutateVirtualListHeights();
+                return;
+            }
+            if (name == L"virt_change_count") {
+                MutateVirtualListCount();
+                return;
+            }
+            if (name == L"virt_clear_selection") {
+                if (auto* list = FindControlAs<FYUI::CVirtualListUI>(m_pm, L"virtual_list_demo")) {
+                    list->ClearSelection(true);
+                    UpdateVirtualListStatus(L"VirtualList selection cleared.");
+                }
+                return;
+            }
         }
         WindowImplBase::OnClick(msg);
+    }
+
+    void MainDemoWindow::SetupVirtualListDemo()
+    {
+        auto* list = FindControlAs<FYUI::CVirtualListUI>(m_pm, L"virtual_list_demo");
+        if (list == nullptr) {
+            return;
+        }
+
+        list->SetOverscanItemCount(8);
+        list->SetAllowSelectionCancel(true);
+        list->SetItemBkColor(0xFFF7FAFD);
+        list->SetItemHotBkColor(0xFFEAF2FA);
+        list->SetItemSelectedBkColor(0xFFDCEBFA);
+        list->SetCreateItemCallback([](FYUI::CVirtualListUI*) -> FYUI::CControlUI* {
+            auto* label = new FYUI::CLabelUI();
+            RECT padding = { 12, 0, 12, 0 };
+            label->SetTextPadding(padding);
+            label->SetTextColor(0xFF243042);
+            label->SetBkColor(0x00FFFFFF);
+            return label;
+        });
+        list->SetBindItemCallback([this](FYUI::CVirtualListUI* owner, FYUI::CControlUI* control, FYUI::CVirtualListUI::ItemIndex index) {
+            auto* label = dynamic_cast<FYUI::CLabelUI*>(control);
+            if (label == nullptr) {
+                return;
+            }
+
+            std::wstring text = L"#" + std::to_wstring(index);
+            text += L"  height=" + std::to_wstring(owner->GetItemHeight(index));
+            if (virtual_list_mode_text_.find(L"variable") != std::wstring::npos) {
+                text += L"  variable";
+            }
+            else {
+                text += L"  fixed";
+            }
+            if (owner->IsItemSelected(index)) {
+                text += L"  [selected]";
+            }
+            else if (owner->HasHotItem() && owner->GetHotItemIndex() == index) {
+                text += L"  [hot]";
+            }
+            label->SetText(text);
+        });
+        list->SetItemClickCallback([this](FYUI::CVirtualListUI*, FYUI::CVirtualListUI::ItemIndex index, FYUI::TEventUI&) {
+            UpdateVirtualListStatus(L"VirtualList clicked item " + std::to_wstring(index) + L".");
+        });
+        list->SetItemDoubleClickCallback([this](FYUI::CVirtualListUI*, FYUI::CVirtualListUI::ItemIndex index, FYUI::TEventUI&) {
+            UpdateVirtualListStatus(L"VirtualList double-clicked item " + std::to_wstring(index) + L".");
+        });
+
+        ApplyVirtualListFixedDemo(240, 32, L"fixed 240 items");
+    }
+
+    void MainDemoWindow::ApplyVirtualListFixedDemo(std::uint64_t count, int height, std::wstring modeText)
+    {
+        auto* list = FindControlAs<FYUI::CVirtualListUI>(m_pm, L"virtual_list_demo");
+        if (list == nullptr) {
+            return;
+        }
+
+        virtual_list_heights_.clear();
+        virtual_list_mode_text_ = std::move(modeText);
+        list->SetFixedItemHeight(height);
+        list->SetItemCount(count);
+        list->SetScrollOffset(0, false);
+        list->ClearSelection(false);
+        UpdateVirtualListStatus(L"VirtualList switched to " + virtual_list_mode_text_ + L".");
+    }
+
+    void MainDemoWindow::ApplyVirtualListVariableDemo(size_t count)
+    {
+        auto* list = FindControlAs<FYUI::CVirtualListUI>(m_pm, L"virtual_list_demo");
+        if (list == nullptr) {
+            return;
+        }
+
+        virtual_list_heights_ = BuildVirtualListWaveHeights(count);
+        virtual_list_mode_text_ = L"variable heights";
+        list->SetItemHeights(virtual_list_heights_);
+        list->SetScrollOffset(0, false);
+        list->ClearSelection(false);
+        UpdateVirtualListStatus(L"VirtualList switched to variable-height mode.");
+    }
+
+    void MainDemoWindow::MutateVirtualListHeights()
+    {
+        auto* list = FindControlAs<FYUI::CVirtualListUI>(m_pm, L"virtual_list_demo");
+        if (list == nullptr) {
+            return;
+        }
+
+        if (list->IsVariableHeightMode()) {
+            if (virtual_list_heights_.empty()) {
+                virtual_list_heights_ = BuildVirtualListWaveHeights(static_cast<size_t>(list->GetItemCount()));
+            }
+            for (size_t i = 0; i < virtual_list_heights_.size(); ++i) {
+                if (i % 5 == 0) {
+                    virtual_list_heights_[i] = 26 + static_cast<int>((i * 11) % 46);
+                }
+            }
+            list->SetItemHeights(virtual_list_heights_);
+            UpdateVirtualListStatus(L"VirtualList mutated several variable item heights.");
+            return;
+        }
+
+        const int nextHeight = list->GetFixedItemHeight() >= 56 ? 24 : list->GetFixedItemHeight() + 8;
+        list->SetFixedItemHeight(nextHeight);
+        UpdateVirtualListStatus(L"VirtualList changed fixed item height to " + std::to_wstring(nextHeight) + L".");
+    }
+
+    void MainDemoWindow::MutateVirtualListCount()
+    {
+        auto* list = FindControlAs<FYUI::CVirtualListUI>(m_pm, L"virtual_list_demo");
+        if (list == nullptr) {
+            return;
+        }
+
+        if (list->IsVariableHeightMode()) {
+            size_t nextCount = virtual_list_heights_.size();
+            if (virtual_list_count_grow_) {
+                nextCount += 37;
+            }
+            else {
+                nextCount = nextCount > 60 ? nextCount - 41 : 96;
+            }
+            virtual_list_count_grow_ = !virtual_list_count_grow_;
+            virtual_list_heights_ = BuildVirtualListWaveHeights(nextCount);
+            list->SetItemHeights(virtual_list_heights_);
+            UpdateVirtualListStatus(L"VirtualList changed variable item count to " + std::to_wstring(nextCount) + L".");
+            return;
+        }
+
+        const std::uint64_t currentCount = list->GetItemCount();
+        const std::uint64_t nextCount = currentCount >= 10000000ULL ? 512ULL : currentCount + 128ULL;
+        list->SetItemCount(nextCount);
+        UpdateVirtualListStatus(L"VirtualList changed fixed item count to " + std::to_wstring(nextCount) + L".");
+    }
+
+    void MainDemoWindow::UpdateVirtualListStatus(const std::wstring& prefix)
+    {
+        auto* list = FindControlAs<FYUI::CVirtualListUI>(m_pm, L"virtual_list_demo");
+        auto* label = FindControlAs<FYUI::CLabelUI>(m_pm, L"virtual_list_status");
+        if (list == nullptr || label == nullptr) {
+            return;
+        }
+
+        std::wstring text;
+        if (!prefix.empty()) {
+            text += prefix;
+            text += L" ";
+        }
+        text += L"mode=" + virtual_list_mode_text_;
+        text += L", count=" + std::to_wstring(list->GetItemCount());
+        text += L", scroll=" + std::to_wstring(list->GetScrollOffset());
+        text += L", selected=";
+        text += (list->HasSelection() ? std::to_wstring(list->GetSelectedIndex()) : L"none");
+        text += L", hot=";
+        text += (list->HasHotItem() ? std::to_wstring(list->GetHotItemIndex()) : L"none");
+        text += L", allowCancel=";
+        text += (list->IsAllowSelectionCancel() ? L"true" : L"false");
+        label->SetText(text);
+    }
+
+    std::vector<int> MainDemoWindow::BuildVirtualListWaveHeights(size_t count) const
+    {
+        std::vector<int> heights;
+        heights.reserve(count);
+        for (size_t i = 0; i < count; ++i) {
+            heights.push_back(24 + static_cast<int>((i * 9 + (i % 3) * 7) % 40));
+        }
+        return heights;
     }
 
     LRESULT MainDemoWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

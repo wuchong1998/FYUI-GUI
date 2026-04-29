@@ -132,20 +132,19 @@
             <ListTextElement text="ColorPalette|color change notify|ready" height="34" />
           </List>
           <VBox style="Panel" inset="12,12,12,12" childpadding="10">
-            <Label text="Tree and virtual list" height="26" font="1" />
-            <TreeView name="tree_demo" height="160" visiblefolderbtn="true" visiblecheckbtn="true" itemminwidth="180" itemtextcolor="#FF243042" itemhottextcolor="#FF1D5F9F" selitemtextcolor="#FFFFFFFF" selitemhottextcolor="#FFFFFFFF" bkcolor="#FFFFFFFF" bordercolor="#FFE0E7EF" bordersize="1">
-              <TreeNode text="FYUI window" itemattr="height=&quot;28&quot;" />
-              <TreeNode text="Controls" itemattr="height=&quot;28&quot;">
-                <TreeNode text="Button and Option" itemattr="height=&quot;26&quot;" />
-                <TreeNode text="Slider and Progress" itemattr="height=&quot;26&quot;" />
-              </TreeNode>
-              <TreeNode text="Layouts" itemattr="height=&quot;28&quot;">
-                <TreeNode text="TabBox" itemattr="height=&quot;26&quot;" />
-                <TreeNode text="TileBox" itemattr="height=&quot;26&quot;" />
-              </TreeNode>
-            </TreeView>
-            <VirtualList name="virtual_list_demo" height="80" itemcount="10000000" itemheight="24" overscan="6" vscrollbar="true" vscrollbarstyle="ScrollSkin" bordercolor="#FFE0E7EF" bordersize="1" />
-            <Label text="VirtualList fixed-height demo: 10,000,000 rows rendered through a small visible item pool." height="24" font="2" textcolor="#FF667789" />
+            <Label text="VirtualList test bench" height="26" font="1" />
+            <HBox height="34" childpadding="8">
+              <Button name="virt_apply_fixed_demo" text="Fixed 240" style="ActionButton" width="118" />
+              <Button name="virt_apply_large_demo" text="Fixed 10M" style="ActionButton" width="118" />
+              <Button name="virt_apply_variable_demo" text="Variable" style="ActionButton" width="118" />
+            </HBox>
+            <HBox height="34" childpadding="8">
+              <Button name="virt_mutate_height" text="Mutate height" style="ActionButton" width="118" />
+              <Button name="virt_change_count" text="Mutate count" style="ActionButton" width="118" />
+              <Button name="virt_clear_selection" text="Clear select" style="ActionButton" width="118" />
+            </HBox>
+            <VirtualList name="virtual_list_demo" height="182" itemcount="240" itemheight="32" overscan="8" vscrollbar="true" vscrollbarstyle="ScrollSkin" allowselectioncancel="true" itembkcolor="#FFF7FAFD" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" bordercolor="#FFE0E7EF" bordersize="1" />
+            <Label name="virtual_list_status" text="VirtualList ready." height="54" wordbreak="true" font="2" textcolor="#FF667789" />
           </VBox>
         </HBox>
         <HBox height="240" childpadding="12">

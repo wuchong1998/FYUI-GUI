@@ -25,6 +25,12 @@ namespace FYUI
 			if (value >= kMaxScrollBarRange) return static_cast<int>(kMaxScrollBarRange);
 			return static_cast<int>(value);
 		}
+
+		size_t ClampItemCountToSize(CVirtualListUI::ItemIndex count)
+		{
+			const auto maxSize = static_cast<CVirtualListUI::ItemIndex>((std::numeric_limits<size_t>::max)());
+			return static_cast<size_t>((std::min)(count, maxSize));
+		}
 	}
 
 	CVirtualListUI::CVirtualListUI()
@@ -38,7 +44,13 @@ namespace FYUI
 		m_lastVisibleIndex(0),
 		m_selectedIndex(kInvalidVirtualIndex),
 		m_hasSelection(false),
-		m_updatingScrollBar(false)
+		m_hotIndex(kInvalidVirtualIndex),
+		m_hasHotItem(false),
+		m_allowSelectionCancel(false),
+		m_updatingScrollBar(false),
+		m_dwItemBkColor(0),
+		m_dwItemHotBkColor(0xFFEAF2FA),
+		m_dwItemSelectedBkColor(0xFFDCEBFA)
 	{
 		SetMouseChildEnabled(true);
 		EnableScrollBar(true, false);
@@ -65,15 +77,22 @@ namespace FYUI
 	void CVirtualListUI::SetItemCount(ItemIndex count)
 	{
 		if (m_useVariableHeights) {
-			count = (std::min<ItemIndex>)(count, static_cast<ItemIndex>(m_itemHeights.size()));
+			m_itemHeights.resize(ClampItemCountToSize(count), m_fixedItemHeight);
+			count = static_cast<ItemIndex>(m_itemHeights.size());
 		}
-		if (m_itemCount == count) return;
+		if (m_itemCount == count) {
+			FinalizeDataChange(false);
+			return;
+		}
+
 		m_itemCount = count;
-		if (!m_hasSelection || m_selectedIndex >= m_itemCount) ClearSelection(false);
-		if (m_useVariableHeights) RebuildPrefixHeights();
-		else m_contentHeight = static_cast<long long>(m_itemCount) * ClampPositiveHeight(m_fixedItemHeight, 24);
-		SetScrollOffset(m_scrollOffset, false);
-		Refresh();
+		if (m_useVariableHeights) {
+			RebuildPrefixHeights();
+		}
+		else {
+			m_contentHeight = static_cast<long long>(m_itemCount) * ClampPositiveHeight(m_fixedItemHeight, 24);
+		}
+		FinalizeDataChange(false);
 	}
 
 	CVirtualListUI::ItemIndex CVirtualListUI::GetItemCount() const
@@ -88,8 +107,7 @@ namespace FYUI
 		m_itemHeights.clear();
 		m_prefixHeights.clear();
 		m_contentHeight = static_cast<long long>(m_itemCount) * m_fixedItemHeight;
-		SetScrollOffset(m_scrollOffset, false);
-		Refresh();
+		FinalizeDataChange(false);
 	}
 
 	int CVirtualListUI::GetFixedItemHeight() const
@@ -102,14 +120,30 @@ namespace FYUI
 		return !m_useVariableHeights;
 	}
 
-	void CVirtualListUI::SetItemHeights(std::vector<int> heights)
+	void CVirtualListUI::SetItemHeights(const std::vector<int>& heights)
 	{
-		m_itemHeights = std::move(heights);
-		m_useVariableHeights = true;
-		m_itemCount = static_cast<ItemIndex>(m_itemHeights.size());
+		ApplyVariableItemHeights(std::vector<int>(heights.begin(), heights.end()));
+	}
+
+	void CVirtualListUI::SetItemHeights(std::vector<int>&& heights)
+	{
+		ApplyVariableItemHeights(std::move(heights));
+	}
+
+	bool CVirtualListUI::SetItemHeight(ItemIndex index, int height)
+	{
+		if (index >= m_itemCount) return false;
+		if (!m_useVariableHeights) {
+			m_itemHeights.assign(ClampItemCountToSize(m_itemCount), m_fixedItemHeight);
+			m_useVariableHeights = true;
+		}
+
+		const size_t itemIndex = static_cast<size_t>(index);
+		if (itemIndex >= m_itemHeights.size()) return false;
+		m_itemHeights[itemIndex] = ClampPositiveHeight(height, m_fixedItemHeight);
 		RebuildPrefixHeights();
-		SetScrollOffset(m_scrollOffset, false);
-		Refresh();
+		FinalizeDataChange(false);
+		return true;
 	}
 
 	void CVirtualListUI::SetItemHeights(const int* heights, size_t count)
@@ -118,12 +152,8 @@ namespace FYUI
 			ClearItemHeights();
 			return;
 		}
-		m_itemHeights.assign(heights, heights + count);
-		m_useVariableHeights = true;
-		m_itemCount = static_cast<ItemIndex>(m_itemHeights.size());
-		RebuildPrefixHeights();
-		SetScrollOffset(m_scrollOffset, false);
-		Refresh();
+		std::vector<int> values(heights, heights + count);
+		ApplyVariableItemHeights(std::move(values));
 	}
 
 	void CVirtualListUI::ClearItemHeights()
@@ -132,8 +162,7 @@ namespace FYUI
 		m_itemHeights.clear();
 		m_prefixHeights.clear();
 		m_contentHeight = static_cast<long long>(m_itemCount) * ClampPositiveHeight(m_fixedItemHeight, 24);
-		SetScrollOffset(m_scrollOffset, false);
-		Refresh();
+		FinalizeDataChange(false);
 	}
 
 	bool CVirtualListUI::IsVariableHeightMode() const
@@ -157,6 +186,49 @@ namespace FYUI
 	int CVirtualListUI::GetOverscanItemCount() const
 	{
 		return m_overscanItemCount;
+	}
+
+	void CVirtualListUI::SetItemBkColor(DWORD dwColor)
+	{
+		m_dwItemBkColor = dwColor;
+		Invalidate();
+	}
+
+	DWORD CVirtualListUI::GetItemBkColor() const
+	{
+		return m_dwItemBkColor;
+	}
+
+	void CVirtualListUI::SetItemHotBkColor(DWORD dwColor)
+	{
+		m_dwItemHotBkColor = dwColor;
+		Invalidate();
+	}
+
+	DWORD CVirtualListUI::GetItemHotBkColor() const
+	{
+		return m_dwItemHotBkColor;
+	}
+
+	void CVirtualListUI::SetItemSelectedBkColor(DWORD dwColor)
+	{
+		m_dwItemSelectedBkColor = dwColor;
+		Invalidate();
+	}
+
+	DWORD CVirtualListUI::GetItemSelectedBkColor() const
+	{
+		return m_dwItemSelectedBkColor;
+	}
+
+	void CVirtualListUI::SetAllowSelectionCancel(bool allow)
+	{
+		m_allowSelectionCancel = allow;
+	}
+
+	bool CVirtualListUI::IsAllowSelectionCancel() const
+	{
+		return m_allowSelectionCancel;
 	}
 
 	void CVirtualListUI::SetCreateItemCallback(CreateItemCallback callback)
@@ -239,26 +311,41 @@ namespace FYUI
 	bool CVirtualListUI::SelectItem(ItemIndex index, bool takeFocus, bool notify)
 	{
 		if (index >= m_itemCount) return false;
+		const bool selectionChanged = !m_hasSelection || m_selectedIndex != index;
 		m_selectedIndex = index;
 		m_hasSelection = true;
 		EnsureVisible(index);
 		if (takeFocus) SetFocus();
-		if (notify && m_pManager != nullptr) m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, static_cast<WPARAM>(index));
-		Refresh();
+		if (selectionChanged) {
+			if (notify && m_pManager != nullptr) {
+				m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, static_cast<WPARAM>(index));
+			}
+			Refresh();
+		}
 		return true;
 	}
 
 	void CVirtualListUI::ClearSelection(bool notify)
 	{
+		if (!m_hasSelection) return;
 		m_selectedIndex = kInvalidVirtualIndex;
 		m_hasSelection = false;
-		if (notify && m_pManager != nullptr) m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, static_cast<WPARAM>(-1));
+		if (notify && m_pManager != nullptr) {
+			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, static_cast<WPARAM>(-1));
+		}
 		Refresh();
 	}
 
 	bool CVirtualListUI::HasSelection() const
 	{
 		return m_hasSelection;
+	}
+
+	bool CVirtualListUI::UnselectItem(ItemIndex index, bool notify)
+	{
+		if (!m_hasSelection || m_selectedIndex != index) return false;
+		ClearSelection(notify);
+		return true;
 	}
 
 	CVirtualListUI::ItemIndex CVirtualListUI::GetSelectedIndex() const
@@ -269,6 +356,16 @@ namespace FYUI
 	bool CVirtualListUI::IsItemSelected(ItemIndex index) const
 	{
 		return m_hasSelection && m_selectedIndex == index;
+	}
+
+	bool CVirtualListUI::HasHotItem() const
+	{
+		return m_hasHotItem;
+	}
+
+	CVirtualListUI::ItemIndex CVirtualListUI::GetHotItemIndex() const
+	{
+		return m_hotIndex;
 	}
 
 	long long CVirtualListUI::GetScrollOffset() const
@@ -286,7 +383,9 @@ namespace FYUI
 		m_scrollOffset = newOffset;
 		UpdateScrollBar();
 		RealizeVisibleItems();
-		if (notify && m_pManager != nullptr) m_pManager->SendNotify(this, DUI_MSGTYPE_SCROLL, 0, static_cast<LPARAM>(m_scrollOffset));
+		if (notify && m_pManager != nullptr) {
+			m_pManager->SendNotify(this, DUI_MSGTYPE_SCROLL, 0, static_cast<LPARAM>(m_scrollOffset));
+		}
 		Invalidate();
 	}
 
@@ -363,6 +462,13 @@ namespace FYUI
 			return;
 		}
 
+		if (event.Type == UIEVENT_MOUSEMOVE || event.Type == UIEVENT_MOUSEENTER) {
+			UpdateHotItemFromPoint(event.ptMouse);
+		}
+		else if (event.Type == UIEVENT_MOUSELEAVE) {
+			SetHotItem(kInvalidVirtualIndex, false);
+		}
+
 		if (event.Type == UIEVENT_SCROLLWHEEL) {
 			const WORD code = LOWORD(event.wParam);
 			if (code == SB_LINEUP) LineUp();
@@ -381,12 +487,30 @@ namespace FYUI
 			default: break;
 			}
 		}
+
 		if (event.Type == UIEVENT_BUTTONDOWN || event.Type == UIEVENT_DBLCLICK) {
 			const int realized = HitTestRealizedItem(event.ptMouse);
 			if (realized >= 0) {
-				SelectItem(m_realizedItems[static_cast<size_t>(realized)].index, true, true);
+				const ItemIndex index = m_realizedItems[static_cast<size_t>(realized)].index;
+				if (event.Type == UIEVENT_BUTTONDOWN && m_allowSelectionCancel && IsItemSelected(index)) {
+					ClearSelection(true);
+				}
+				else {
+					SelectItem(index, true, true);
+				}
+
+				if (m_pManager != nullptr) {
+					m_pManager->SendNotify(
+						this,
+						event.Type == UIEVENT_DBLCLICK ? DUI_MSGTYPE_ITEMDBCLICK : DUI_MSGTYPE_ITEMCLICK,
+						static_cast<WPARAM>(index));
+				}
 				DispatchItemEvent(realized, event, event.Type == UIEVENT_DBLCLICK ? m_itemDoubleClickCallback : m_itemClickCallback);
 				return;
+			}
+
+			if (event.Type == UIEVENT_BUTTONDOWN && m_allowSelectionCancel && m_hasSelection) {
+				ClearSelection(true);
 			}
 		}
 
@@ -407,6 +531,12 @@ namespace FYUI
 			CRenderClip::GenerateClip(renderContext, rcTemp, clip);
 			for (RealizedItem& item : m_realizedItems) {
 				if (!item.active || item.control == nullptr || !item.control->IsVisible()) continue;
+
+				const DWORD drawColor = GetItemDrawColor(item.index);
+				if (drawColor != 0) {
+					CRenderEngine::DrawColor(renderContext, item.rect, GetAdjustColor(drawColor));
+				}
+
 				if (m_paintItemCallback) m_paintItemCallback(this, renderContext, item.index, item.rect);
 				item.control->Paint(renderContext, pStopControl);
 			}
@@ -436,6 +566,22 @@ namespace FYUI
 			int value = 0;
 			if (StringUtil::TryParseInt(pstrValue, value)) SetOverscanItemCount(value);
 		}
+		else if (StringUtil::EqualsNoCase(name, L"itembkcolor")) {
+			DWORD color = 0;
+			if (StringUtil::TryParseColor(pstrValue, color)) SetItemBkColor(color);
+		}
+		else if (StringUtil::EqualsNoCase(name, L"itemhotbkcolor")) {
+			DWORD color = 0;
+			if (StringUtil::TryParseColor(pstrValue, color)) SetItemHotBkColor(color);
+		}
+		else if (StringUtil::EqualsNoCase(name, L"itemselectedbkcolor")) {
+			DWORD color = 0;
+			if (StringUtil::TryParseColor(pstrValue, color)) SetItemSelectedBkColor(color);
+		}
+		else if (StringUtil::EqualsNoCase(name, L"allowselectioncancel") ||
+			StringUtil::EqualsNoCase(name, L"allowcancelselection")) {
+			SetAllowSelectionCancel(StringUtil::ParseBool(pstrValue));
+		}
 		else if (StringUtil::EqualsNoCase(name, L"vscrollbar")) {
 			EnableScrollBar(StringUtil::ParseBool(pstrValue), false);
 			ConfigureScrollBar();
@@ -449,6 +595,9 @@ namespace FYUI
 	void CVirtualListUI::RemoveAll(bool bChildDelayed)
 	{
 		m_realizedItems.clear();
+		m_firstVisibleIndex = 0;
+		m_lastVisibleIndex = 0;
+		SetHotItem(kInvalidVirtualIndex, false);
 		CContainerUI::RemoveAll(bChildDelayed);
 	}
 
@@ -537,6 +686,88 @@ namespace FYUI
 		}
 	}
 
+	void CVirtualListUI::ApplyVariableItemHeights(std::vector<int>&& heights)
+	{
+		m_itemHeights = std::move(heights);
+		for (int& height : m_itemHeights) {
+			height = ClampPositiveHeight(height, m_fixedItemHeight);
+		}
+		m_useVariableHeights = true;
+		m_itemCount = static_cast<ItemIndex>(m_itemHeights.size());
+		RebuildPrefixHeights();
+		FinalizeDataChange(false);
+	}
+
+	void CVirtualListUI::FinalizeDataChange(bool notifySelection)
+	{
+		bool selectionChanged = false;
+		if (!m_hasSelection) {
+			m_selectedIndex = kInvalidVirtualIndex;
+		}
+		else if (m_selectedIndex >= m_itemCount) {
+			m_hasSelection = false;
+			m_selectedIndex = kInvalidVirtualIndex;
+			selectionChanged = true;
+		}
+
+		if (m_itemCount == 0 || (m_hasHotItem && m_hotIndex >= m_itemCount)) {
+			m_hasHotItem = false;
+			m_hotIndex = kInvalidVirtualIndex;
+		}
+
+		m_scrollOffset = ClampScrollOffset(m_scrollOffset);
+		m_firstVisibleIndex = m_itemCount == 0 ? 0 : (std::min)(m_firstVisibleIndex, m_itemCount - 1);
+		m_lastVisibleIndex = m_itemCount == 0 ? 0 : (std::min)(m_lastVisibleIndex, m_itemCount - 1);
+
+		UpdateScrollBar();
+		RealizeVisibleItems();
+		if (selectionChanged && notifySelection && m_pManager != nullptr) {
+			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, static_cast<WPARAM>(-1));
+		}
+		Invalidate();
+	}
+
+	void CVirtualListUI::SetHotItem(ItemIndex index, bool hot)
+	{
+		if (!hot) index = kInvalidVirtualIndex;
+		if (m_hasHotItem == hot && m_hotIndex == index) return;
+		m_hasHotItem = hot;
+		m_hotIndex = index;
+		Invalidate();
+	}
+
+	void CVirtualListUI::UpdateHotItemFromPoint(POINT pt)
+	{
+		const RECT rcView = GetViewRect();
+		if (!::PtInRect(&rcView, pt)) {
+			SetHotItem(kInvalidVirtualIndex, false);
+			return;
+		}
+
+		const int realized = HitTestRealizedItem(pt);
+		if (realized < 0) {
+			SetHotItem(kInvalidVirtualIndex, false);
+			return;
+		}
+
+		SetHotItem(m_realizedItems[static_cast<size_t>(realized)].index, true);
+	}
+
+	DWORD CVirtualListUI::GetItemDrawColor(ItemIndex index) const
+	{
+		if (m_hasSelection && m_selectedIndex == index && m_dwItemSelectedBkColor != 0) return m_dwItemSelectedBkColor;
+		if (m_hasHotItem && m_hotIndex == index && m_dwItemHotBkColor != 0) return m_dwItemHotBkColor;
+		return m_dwItemBkColor;
+	}
+
+	bool CVirtualListUI::IsIndexRealized(ItemIndex index) const
+	{
+		for (const RealizedItem& item : m_realizedItems) {
+			if (item.active && item.index == index) return true;
+		}
+		return false;
+	}
+
 	void CVirtualListUI::RebuildPrefixHeights()
 	{
 		m_prefixHeights.assign(m_itemHeights.size() + 1, 0);
@@ -601,33 +832,51 @@ namespace FYUI
 		const RECT rcView = GetViewRect();
 		const long long viewHeight = GetViewportHeight();
 		if (m_itemCount == 0 || viewHeight <= 0) {
+			m_firstVisibleIndex = 0;
+			m_lastVisibleIndex = 0;
 			for (RealizedItem& item : m_realizedItems) {
 				item.active = false;
 				if (item.control != nullptr) item.control->SetVisible(false, false);
 			}
+			if (m_hasHotItem && !IsIndexRealized(m_hotIndex)) {
+				m_hasHotItem = false;
+				m_hotIndex = kInvalidVirtualIndex;
+			}
 			return;
 		}
 
-		const ItemIndex first = FindItemByOffset(m_scrollOffset);
+		const ItemIndex firstVisible = FindItemByOffset(m_scrollOffset);
+		const size_t leadingOverscan = (std::min)(static_cast<size_t>(m_overscanItemCount), static_cast<size_t>(firstVisible));
+		const ItemIndex first = firstVisible - static_cast<ItemIndex>(leadingOverscan);
+		const long long visibleEnd = m_scrollOffset + viewHeight;
+
 		ItemIndex index = first;
 		long long itemTop = GetItemTop(index);
-		const long long overscanPixels = static_cast<long long>((std::max)(0, m_overscanItemCount)) * (std::max)(1, m_fixedItemHeight);
-		const long long endOffset = m_scrollOffset + viewHeight + overscanPixels;
+		size_t trailingOverscanRemaining = static_cast<size_t>(m_overscanItemCount);
 		size_t needed = 0;
-		while (index < m_itemCount && itemTop < endOffset) {
+		while (index < m_itemCount) {
+			if (itemTop >= visibleEnd) {
+				if (trailingOverscanRemaining == 0) break;
+				--trailingOverscanRemaining;
+			}
 			++needed;
 			itemTop += GetItemHeight(index);
 			++index;
 		}
-		needed += static_cast<size_t>(m_overscanItemCount);
 		EnsurePoolSize(needed);
 
 		index = first;
 		itemTop = GetItemTop(index);
+		trailingOverscanRemaining = static_cast<size_t>(m_overscanItemCount);
 		size_t slot = 0;
 		m_firstVisibleIndex = first;
 		m_lastVisibleIndex = first;
-		while (slot < m_realizedItems.size() && index < m_itemCount && itemTop < endOffset) {
+		while (slot < m_realizedItems.size() && index < m_itemCount) {
+			if (itemTop >= visibleEnd) {
+				if (trailingOverscanRemaining == 0) break;
+				--trailingOverscanRemaining;
+			}
+
 			RealizedItem& item = m_realizedItems[slot];
 			const int height = GetItemHeight(index);
 			item.index = index;
@@ -644,9 +893,15 @@ namespace FYUI
 			++index;
 			++slot;
 		}
+
 		for (; slot < m_realizedItems.size(); ++slot) {
 			m_realizedItems[slot].active = false;
 			if (m_realizedItems[slot].control != nullptr) m_realizedItems[slot].control->SetVisible(false, false);
+		}
+
+		if (m_hasHotItem && !IsIndexRealized(m_hotIndex)) {
+			m_hasHotItem = false;
+			m_hotIndex = kInvalidVirtualIndex;
 		}
 	}
 
@@ -664,6 +919,7 @@ namespace FYUI
 	CControlUI* CVirtualListUI::CreatePoolItem()
 	{
 		if (m_createItemCallback) return m_createItemCallback(this);
+
 		CLabelUI* label = new CLabelUI();
 		label->SetTextPadding(CDuiRect(8, 0, 8, 0));
 		label->SetTextColor(0xFF243042);

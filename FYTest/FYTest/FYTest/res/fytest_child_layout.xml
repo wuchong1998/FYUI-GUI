@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window>
+  <VBox name="child_layout_surface" inset="12,12,12,12" childpadding="8" bkcolor="#FFFFFFFF" bordercolor="#FFD9E1EA" bordersize="1" borderround="8,8">
+    <Label text="ChildLayout imported XML" height="26" font="1" textcolor="#FF243042" />
+    <HBox height="38" childpadding="8">
+      <Button name="child_import_btn_a" text="Imported button" width="150" hotbkcolor="#FFE7EEF7" pushedbkcolor="#FFD7E8FA" bkcolor="#FFF4F8FC" bordercolor="#FFC9D6E4" bordersize="1" />
+      <CheckBox name="child_import_check" text="Imported checkbox" width="170" EnableAutoCheck="true" selected="true" />
+      <Option name="child_import_opt" text="Imported option" group="child_import_group" selected="true" width="150" />
+    </HBox>
+    <HBox height="54" childpadding="8">
+      <Label text="Float image and label composition" width="220" bkcolor="#FFF7FAFD" bordercolor="#FFDDE7F0" bordersize="1" padding="10,0,10,0" valign="vcenter" />
+      <Control width="86" bkimage="file='logo39.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="6,6" tooltip="Image loaded by ChildLayout XML" />
+      <Progress name="child_import_progress" width="180" height="16" min="0" max="100" value="58" showtext="true" bkcolor="#FFEAF0F6" forecolor="#FF2EA97D" />
+    </HBox>
+  </VBox>
+</Window>

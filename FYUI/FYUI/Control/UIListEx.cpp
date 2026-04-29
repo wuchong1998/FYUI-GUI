@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "UIListEx.h"
-#include "../Core/UIRenderContext.h"
+#include "../Core/Render/UIRenderContext.h"
 
 namespace FYUI {
 
@@ -9,7 +9,7 @@ namespace FYUI {
 	//
 	IMPLEMENT_DUICONTROL(CListExUI)
 
-		CListExUI::CListExUI() : m_pEditUI(NULL), m_pComboBoxUI(NULL), m_bAddMessageFilter(FALSE),m_nRow(-1),m_nColum(-1),m_pXCallback(NULL)
+		CListExUI::CListExUI() : m_pComboBoxUI(NULL), m_bAddMessageFilter(FALSE),m_nRow(-1),m_nColum(-1),m_pXCallback(NULL)
 	{
 	}
 
@@ -90,15 +90,6 @@ namespace FYUI {
 		}
 	}
 
-	bool CListExUI::HandleInlineEditNotify(const TNotifyUI& msg)
-	{
-		if( !m_pEditUI || m_nRow < 0 || m_nColum < 0 ) return false;
-		if (!StringUtil::EqualsNoCase(msg.sType, DUI_MSGTYPE_KILLFOCUS)) return false;
-
-		CommitInlineEditText();
-		return true;
-	}
-
 	bool CListExUI::HandleInlineComboNotify(const TNotifyUI& msg)
 	{
 		if( !m_pComboBoxUI || m_nRow < 0 || m_nColum < 0 ) return false;
@@ -112,7 +103,7 @@ namespace FYUI {
 	bool CListExUI::HandleInlineScrollNotify(const TNotifyUI& msg)
 	{
 		if (!StringUtil::EqualsNoCase(msg.sType, L"scroll")) return false;
-		if( (m_pComboBoxUI == NULL && m_pEditUI == NULL) || m_nRow < 0 || m_nColum < 0 ) return false;
+		if( m_pComboBoxUI == NULL || m_nRow < 0 || m_nColum < 0 ) return false;
 
 		HideEditAndComboCtrl();
 		return true;
@@ -120,8 +111,8 @@ namespace FYUI {
 
 	BOOL CListExUI::CheckColumEditable(int nColum)
 	{
-		CListContainerHeaderItemUI* pHItem = GetHeaderItemAt(nColum);
-		return pHItem != NULL? pHItem->GetColumeEditable() : FALSE;
+		(void)nColum;
+		return FALSE;
 	}
 	void CListExUI::InitListCtrl()
 	{
@@ -131,29 +122,6 @@ namespace FYUI {
 			m_bAddMessageFilter = TRUE;
 		}
 	}
-	CRichEditUI* CListExUI::GetEditUI()
-	{
-		if (m_pEditUI == NULL)
-		{
-			m_pEditUI = new CRichEditUI;
-			m_pEditUI->SetName(_T("ListEx_Edit"));
-			const std::wstring_view pDefaultAttributes = GetManager()->GetDefaultAttributeList(L"RichEdit");
-			if( !pDefaultAttributes.empty() ) {
-				m_pEditUI->ApplyAttributeList(pDefaultAttributes);
-			}
-			m_pEditUI->SetBkColor(0xFFFFFFFF);
-			m_pEditUI->SetRich(false);
-			m_pEditUI->SetMultiLine(false);
-			m_pEditUI->SetWantReturn(true);
-			m_pEditUI->SetFloat(true);
-			m_pEditUI->SetAttribute(_T("autohscroll"), _T("true"));
-			Add(m_pEditUI);
-		}
-		HideInlineComboControl();
-
-		return m_pEditUI;
-	}
-
 	BOOL CListExUI::CheckColumComboBoxable(int nColum)
 	{
 		CListContainerHeaderItemUI* pHItem = GetHeaderItemAt(nColum);
@@ -173,8 +141,6 @@ namespace FYUI {
 
 			Add(m_pComboBoxUI);
 		}
-		HideInlineEditControl();
-
 		return m_pComboBoxUI;
 	}
 
@@ -197,11 +163,7 @@ namespace FYUI {
 			HandleItemCheckedNotify(msg);
 		}
 
-		if (StringUtil::EqualsNoCase(strName, L"ListEx_Edit") && m_pEditUI && m_nRow >= 0 && m_nColum >= 0)
-		{
-			HandleInlineEditNotify(msg);
-		}
-		else if (StringUtil::EqualsNoCase(strName, L"ListEx_Combo") && m_pComboBoxUI && m_nRow >= 0 && m_nColum >= 0)
+		if (StringUtil::EqualsNoCase(strName, L"ListEx_Combo") && m_pComboBoxUI && m_nRow >= 0 && m_nColum >= 0)
 		{
 			HandleInlineComboNotify(msg);
 		}
@@ -209,15 +171,6 @@ namespace FYUI {
 		{
 			HandleInlineScrollNotify(msg);
 		}
-	}
-
-	void CListExUI::HideInlineEditControl()
-	{
-		if(!m_pEditUI) return;
-
-		RECT rc = {0,0,0,0};
-		m_pEditUI->SetPos(rc);
-		m_pEditUI->SetVisible(false);
 	}
 
 		void CListExUI::HideInlineComboControl()
@@ -232,18 +185,7 @@ namespace FYUI {
 		void CListExUI::HideEditAndComboCtrl()
 		{
 			SetEditRowAndColum(-1, -1);
-			HideInlineEditControl();
 			HideInlineComboControl();
-		}
-
-		void CListExUI::CommitInlineEditText()
-		{
-			CListTextExtElementUI* pRowCtrl = GetTextExtItemAt(m_nRow);
-			if (pRowCtrl && m_pEditUI)
-			{
-				pRowCtrl->SetText(m_nColum, m_pEditUI->GetText());
-			}
-			HideEditAndComboCtrl();
 		}
 
 		void CListExUI::CommitInlineComboSelection()
@@ -255,22 +197,6 @@ namespace FYUI {
 			}
 			HideEditAndComboCtrl();
 		}
-
-	void CListExUI::ShowInlineEdit(int nIndex, int nColum, const RECT& rcColumn, std::wstring_view lpstrText)
-	{
-		if (!GetEditUI()) return;
-
-		SetEditRowAndColum(nIndex, nColum);
-		m_pEditUI->SetVisible(true);
-		m_pEditUI->SetFixedWidth(rcColumn.right - rcColumn.left);
-		m_pEditUI->SetFixedHeight(rcColumn.bottom - rcColumn.top);
-		m_pEditUI->SetFixedXY(CDuiSize(rcColumn.left, rcColumn.top));
-		CPaintRenderContext measureContext = m_pManager->CreateMeasureRenderContext(rcColumn);
-		SIZE szTextSize = CRenderEngine::GetTextSize(measureContext, _T("TTT"), m_ListInfo.nFont, DT_CALCRECT | DT_SINGLELINE);
-		m_pEditUI->SetTextPadding(CDuiRect(2, (rcColumn.bottom - rcColumn.top - szTextSize.cy) / 2, 2, 0));
-		m_pEditUI->SetText(std::wstring(lpstrText));
-		m_pEditUI->SetFocus();
-	}
 
 	void CListExUI::ShowInlineCombo(int nIndex, int nColum, const RECT& rcColumn, std::wstring_view lpstrText)
 	{
@@ -291,9 +217,6 @@ namespace FYUI {
 	{
 		if( nColum < 0 ) {
 			HideEditAndComboCtrl();
-		}
-		else if( CheckColumEditable(nColum) ) {
-			ShowInlineEdit(nIndex, nColum, rcColumn, lpstrText);
 		}
 		else if( CheckColumComboBoxable(nColum) ) {
 			ShowInlineCombo(nIndex, nColum, rcColumn, lpstrText);

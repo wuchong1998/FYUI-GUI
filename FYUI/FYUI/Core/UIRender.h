@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "UIRenderContext.h"
+#include "Render/UIRenderContext.h"
 
 namespace FYUI {
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -77,19 +77,22 @@ namespace FYUI {
 									DWORD mask = 0, HINSTANCE instance = NULL);
 		static void FreeImage(TImageInfo* pImageInfo, bool bDelete = true);
 		static void FreeBitmap(HBITMAP hBitmap);
-		static TImageInfo* LoadImage(std::wstring_view pStrImage, int nScale, std::wstring_view type = {}, DWORD mask = 0, HINSTANCE instance = NULL);
+		static TImageInfo* LoadImage(std::wstring_view pStrImage, int nScale, std::wstring_view type = {},
+										DWORD mask = 0, HINSTANCE instance = NULL);
 		static TImageInfo* LoadImage(UINT nID, int nScale, std::wstring_view type = {}, DWORD mask = 0, HINSTANCE instance = NULL);
 
 		static void DrawImage(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, const RECT& rcBmpPart,
 			const RECT& rcCorners, bool bAlpha, UINT uFade = 255, bool hole = false, bool xtiled = false, bool ytiled = false);
 
-		static void DrawRotateImage(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, const RECT& rcBmpPart, bool bAlpha, UINT uFade = 255, UINT uRotate = 0);
-		static bool DrawImageInfo(CPaintRenderContext& renderContext, const RECT& rcItem, TDrawInfo* pDrawInfo, HINSTANCE instance = NULL);
-		static bool DrawImageString(CPaintRenderContext& renderContext, const RECT& rcItem, std::wstring_view pStrImage, std::wstring_view pStrModify = {}, HINSTANCE instance = NULL);
+		static void DrawRotateImage(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, 
+										const RECT& rcBmpPart, bool bAlpha, UINT uFade = 255, UINT uRotate = 0);
+		static bool DrawImageInfo(CPaintRenderContext& renderContext, const RECT& rcItem, TDrawInfo* pDrawInfo,HINSTANCE instance = NULL);
+		static bool DrawImageString(CPaintRenderContext& renderContext, const RECT& rcItem, std::wstring_view pStrImage,
+									std::wstring_view pStrModify = {}, HINSTANCE instance = NULL);
 
 		// Gdiplus缂佹ê鍩?
 		static TImageInfo* GdiplusLoadImage(STRINGorID bitmap, std::wstring_view type = {}, DWORD mask = 0, HINSTANCE instance = NULL);
-		static TImageInfo* GdiplusLoadImage(std::wstring_view pStrImage, std::wstring_view type = {}, DWORD mask = 0, HINSTANCE instance = NULL);
+		static TImageInfo* GdiplusLoadImage(std::wstring_view pStrImage, std::wstring_view type = {}, DWORD mask = 0,HINSTANCE instance = NULL);
 
 		// 娴犮儰绗呴崙鑺ユ殶娑擃厾娈戞０婊嗗閸欏倹鏆焌lpha閸婂吋妫ら弫?
 		// 閸ユ儳鍘撶紒妯哄煑
@@ -98,13 +101,14 @@ namespace FYUI {
 		static void DrawGradient(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps);
 		static void DrawLine(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor,int nStyle = PS_SOLID);
 		static void DrawRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor,int nStyle = PS_SOLID);
-		static void DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int width, int height, DWORD dwPenColor,int nStyle = PS_SOLID);
+		static void DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int width, 
+									int height, DWORD dwPenColor,int nStyle = PS_SOLID);
 
 		// 鐎涙ぞ缍嬬紒妯哄煑
-		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, int iFont, UINT uStyle, DWORD dwTextBKColor);
-		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, int iFont, UINT uStyle);
-		[[deprecated("FYUI text rendering is DirectWrite-based; remove the legacy GDI+ text flag.")]]
-		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, int iFont, UINT uStyle, bool bGDIPlusDrawText);
+		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, 
+			int iFont, UINT uStyle, DWORD dwTextBKColor);
+		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, 
+			int iFont, UINT uStyle);
 
 		// DrawHtmlText 的 text 不是浏览器完整 HTML，而是 FYUI 内置的轻量富文本标记。
 		// text 是 UTF-16 std::wstring_view：可传 std::wstring、std::wstring_view 或 L"..."。
@@ -137,7 +141,8 @@ namespace FYUI {
 		// 转义写法：{<} 输出 <，{>} 输出 >，<{> 输出 {，<}> 输出 }。
 		// 链接输出：调用前 nLinkRects 表示 pLinks/sLinks 的容量；返回后表示实际写入的链接矩形数量。
 		// 标签必须正确嵌套和闭合；无法解析的标记会导致本次富文本绘制失败。
-		static void DrawHtmlText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, RECT* pLinks, std::wstring* sLinks, int& nLinkRects, int iFont, UINT uStyle);
+		static void DrawHtmlText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor,
+			RECT* pLinks, std::wstring* sLinks, int& nLinkRects, int iFont, UINT uStyle);
 
 		// 鏉堝懎濮崙鑺ユ殶
 		static void CheckAlphaColor(DWORD& dwColor);
@@ -147,6 +152,8 @@ namespace FYUI {
 		static HBITMAP GenerateBitmap(CPaintManagerUI* pManager, RECT rc, CControlUI* pStopControl = NULL, DWORD dwFilterColor = 0);
 		static HBITMAP GenerateBitmap(CPaintManagerUI* pManager, CControlUI* pControl, RECT rc, DWORD dwFilterColor = 0);
 		static SIZE GetTextSize(CPaintRenderContext& renderContext, std::wstring_view text, int iFont, UINT uStyle);
+
+
 	};
 
 } // namespace DuiLib

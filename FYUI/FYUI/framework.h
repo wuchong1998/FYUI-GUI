@@ -4,9 +4,10 @@
 #include <tchar.h>
 #include <windows.h>
 #include <windowsx.h>
+#include <objidl.h>
+#include <olectl.h>
 
 #include <stddef.h>
-#include <richedit.h>
 #include <assert.h>
 #include <crtdbg.h>
 #include <malloc.h>
@@ -28,7 +29,6 @@
 
 
 #include "FYUILib.h"
-#include <olectl.h>
 
 #define lengthof(x) (sizeof(x)/sizeof(*x))
 #define MAX max

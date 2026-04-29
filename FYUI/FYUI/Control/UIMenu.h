@@ -347,6 +347,7 @@ namespace FYUI {
 
 		std::wstring_view GetClass() const;
 		LPVOID GetInterface(std::wstring_view pstrName);
+		void SetOwner(CControlUI* pOwner) override;
 		bool DoPaint(CPaintRenderContext& renderContext, CControlUI* pStopControl) override;
 		void DrawItemText(CPaintRenderContext& renderContext, const RECT& rcItem);
 		SIZE EstimateSize(SIZE szAvailable);

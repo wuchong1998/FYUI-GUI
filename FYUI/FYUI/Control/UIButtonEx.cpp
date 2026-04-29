@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "UIButtonEx.h"
-#include "../Core/UIRenderContext.h"
-#include "../Core/UIRenderSurface.h"
+#include "../Core/Render/UIRenderContext.h"
+#include "../Core/Render/UIRenderSurface.h"
 #include <cmath>
 
 namespace FYUI
@@ -137,51 +137,7 @@ namespace FYUI
 			return;
 		}
 
-		if (!pManager->IsLayered() && !pManager->IsUseGdiplusText()) {
-			CRenderEngine::DrawText(renderContext, rc, resolvedText.c_str(), dwTextColor, iFont, uStyle);
-			return;
-		}
-
-		const bool bCalcRect = (uStyle & DT_CALCRECT) != 0;
-		RECT rcText = { 20, -55, 20 + cx, cy - 55 };
-
-		if (bCalcRect) {
-			RECT rcMeasure = rcText;
-			CRenderEngine::DrawText(renderContext, rcMeasure, resolvedText.c_str(), dwTextColor, iFont, uStyle | DT_CALCRECT);
-
-			const LONG textWidth = rcMeasure.right - rcMeasure.left;
-			const LONG textHeight = rcMeasure.bottom - rcMeasure.top;
-			const double radians = 45.0 * 3.14159265358979323846 / 180.0;
-			const double cosAngle = std::abs(std::cos(radians));
-			const double sinAngle = std::abs(std::sin(radians));
-
-			rc.right = rc.left + static_cast<LONG>(std::ceil(textWidth * cosAngle + textHeight * sinAngle)) + 1;
-			rc.bottom = rc.top + static_cast<LONG>(std::ceil(textWidth * sinAngle + textHeight * cosAngle)) + 1;
-			return;
-		}
-
-		CPaintRenderSurface paintSurface;
-		if (!paintSurface.Ensure(pManager, cx, cy)) {
-			CRenderEngine::DrawText(renderContext, rc, resolvedText.c_str(), dwTextColor, iFont, uStyle);
-			return;
-		}
-
-		BYTE* pBits = paintSurface.GetBits();
-		if (pBits != nullptr) {
-			::ZeroMemory(pBits, static_cast<size_t>(cx) * static_cast<size_t>(cy) * 4);
-		}
-
-		RECT rcSurface = { 0, 0, cx, cy };
-		CPaintRenderContext paintContext = paintSurface.CreateRenderContext(
-			pManager,
-			rcSurface,
-			renderContext.GetActiveBackend(),
-			renderContext.GetActiveDirect2DRenderMode());
-
-		CRenderEngine::DrawText(paintContext, rcText, resolvedText.c_str(), dwTextColor, iFont, uStyle & ~DT_CALCRECT);
-
-		RECT rcBitmap = { 0, 0, cx, cy };
-		CRenderEngine::DrawRotateImage(renderContext, paintSurface.GetBitmap(), rc, rcBitmap, true, 255, 45);
+		CRenderEngine::DrawText(renderContext, rc, resolvedText.c_str(), dwTextColor, iFont, uStyle);
 	}
 
 	CButtonExUI* CButtonExUI::Clone()

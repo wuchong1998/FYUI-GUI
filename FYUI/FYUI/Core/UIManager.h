@@ -3,15 +3,16 @@
 #include <unordered_map>
 #include <string>
 #include <string_view>
+#include <objidl.h>
+#include <olectl.h>
 #include <gdiplus.h>
-#include "UIRenderTypes.h"
-#include "UIRenderSurface.h"
+#include "Render/UIRenderTypes.h"
+#include "Render/UIRenderSurface.h"
 #pragma comment( lib, "GdiPlus.lib" )
 
 namespace FYUI
 {
 	class CControlUI;
-	class CRichEditUI;
 	class CIDropTarget;
 	class CPaintManagerUI;
 
@@ -67,6 +68,7 @@ namespace FYUI
 		UIMSG_SET_DPI,				 // DPI
 		WM_MENUCLICK,				 // 鑿滃崟娑堟伅
 		UIMSG_SCROLL_ANIMATE = WM_APP + 2,
+		UIMSG_ANIMATION_FRAME = WM_APP + 3,
 		UIMSG_USER = WM_USER + 100,	 // 绋嬪簭鑷畾涔夋秷鎭?
 	};
 
@@ -305,6 +307,7 @@ namespace FYUI
 		void NeedUpdate();
 		void Invalidate();
 		void Invalidate(RECT& rcItem);
+		void RequestAnimationFrame(CControlUI* pControl);
 		bool ScrollRenderCacheRect(const RECT& rcScroll, int dx, int dy);
 
 		const std::wstring& GetName() const;
@@ -374,11 +377,6 @@ namespace FYUI
 		void GetRenderDiagnostics(TRenderDiagnostics& diagnostics);
 		void NotifyImageScaleCacheHit();
 		void NotifyImageScaleCacheRefresh();
-
-		void SetUseGdiplusText(bool bUse);
-		bool IsUseGdiplusText() const;
-		void SetGdiplusTextRenderingHint(int trh);
-		int GetGdiplusTextRenderingHint() const;
 
 		static HINSTANCE GetInstance();
 		static std::wstring GetInstancePath();
@@ -691,6 +689,7 @@ namespace FYUI
 		bool m_bIsPainting;
 		bool m_bUsedVirtualWnd;
 		bool m_bAsyncNotifyPosted;
+		bool m_bAnimationFramePosted;
 
 
 		//
@@ -792,8 +791,6 @@ namespace FYUI
 		UINT m_nSampleHtmlDirectWriteParseFailures;
 		UINT m_nSampleHtmlDirectWriteLayoutFailures;
 		UINT m_nSampleHtmlDirectWriteRenderFailures;
-		bool m_bUseGdiplusText;
-		int m_trh;
 		ULONG_PTR m_gdiplusToken;
 		Gdiplus::GdiplusStartupInput *m_pGdiplusStartupInput;
 

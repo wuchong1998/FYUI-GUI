@@ -1,23 +1,22 @@
 #pragma once
 
 #include <Richedit.h>
-namespace FYUI 
+
+namespace FYUI
 {
-
-	class CTxtWinHost;
-
 	class FYUI_API CRichEditUI : public CContainerUI, public IMessageFilterUI
 	{
 		DECLARE_DUICONTROL(CRichEditUI)
+
 	public:
 		CRichEditUI();
 		~CRichEditUI();
 
-		std::wstring_view GetClass() const;
-		LPVOID GetInterface(std::wstring_view pstrName);
-		UINT GetControlFlags() const;
+		std::wstring_view GetClass() const override;
+		LPVOID GetInterface(std::wstring_view pstrName) override;
+		UINT GetControlFlags() const override;
 
-		void SetEnabled(bool bEnabled);
+		void SetEnabled(bool bEnabled) override;
 		bool IsMultiLine();
 		void SetMultiLine(bool bMultiLine);
 		bool IsWantTab();
@@ -32,6 +31,8 @@ namespace FYUI
 		void SetRich(bool bRich = true);
 		bool IsReadOnly();
 		void SetReadOnly(bool bReadOnly = true);
+		bool IsPasswordMode() const;
+		void SetPasswordMode(bool bPasswordMode = true);
 		bool IsWordWrap();
 		void SetWordWrap(bool bWordWrap = true);
 		int GetFont();
@@ -47,14 +48,14 @@ namespace FYUI
 		void SetLimitTextString(std::wstring_view pStrLimitText);
 		std::wstring GetLimitTextString() const;
 		long GetTextLength(DWORD dwFlags = GTL_DEFAULT) const;
-		std::wstring GetText() const;
-		void SetText(std::wstring_view pstrText);
+		std::wstring GetText() const override;
+		void SetText(std::wstring_view pstrText) override;
 		void SetShowText(std::wstring_view pstrText);
 		bool IsModify() const;
 		void SetModify(bool bModified = true) const;
-		void GetSel(CHARRANGE &cr) const;
+		void GetSel(CHARRANGE& cr) const;
 		void GetSel(long& nStartChar, long& nEndChar) const;
-		int SetSel(CHARRANGE &cr);
+		int SetSel(CHARRANGE& cr);
 		int SetSel(long nStartChar, long nEndChar);
 		void ReplaceSel(std::wstring_view lpszNewText, bool bCanUndo);
 		void ReplaceShowSel(std::wstring_view lpszNewText, bool bCanUndo);
@@ -75,13 +76,13 @@ namespace FYUI
 		void ScrollCaret();
 		int InsertText(long nInsertAfterChar, std::wstring_view lpstrText, bool bCanUndo = false);
 		int AppendText(std::wstring_view lpstrText, bool bCanUndo = false);
-		DWORD GetDefaultCharFormat(CHARFORMAT2 &cf) const;
-		bool SetDefaultCharFormat(CHARFORMAT2 &cf);
-		DWORD GetSelectionCharFormat(CHARFORMAT2 &cf) const;
-		bool SetSelectionCharFormat(CHARFORMAT2 &cf);
-		bool SetWordCharFormat(CHARFORMAT2 &cf);
-		DWORD GetParaFormat(PARAFORMAT2 &pf) const;
-		bool SetParaFormat(PARAFORMAT2 &pf);
+		DWORD GetDefaultCharFormat(CHARFORMAT2& cf) const;
+		bool SetDefaultCharFormat(CHARFORMAT2& cf);
+		DWORD GetSelectionCharFormat(CHARFORMAT2& cf) const;
+		bool SetSelectionCharFormat(CHARFORMAT2& cf);
+		bool SetWordCharFormat(CHARFORMAT2& cf);
+		DWORD GetParaFormat(PARAFORMAT2& pf) const;
+		bool SetParaFormat(PARAFORMAT2& pf);
 		bool CanUndo();
 		bool CanRedo();
 		bool CanPaste();
@@ -102,8 +103,8 @@ namespace FYUI
 		int CharFromPos(CDuiPoint pt) const;
 		void EmptyUndoBuffer();
 		UINT SetUndoLimit(UINT nLimit);
-		long StreamIn(int nFormat, EDITSTREAM &es);
-		long StreamOut(int nFormat, EDITSTREAM &es);
+		long StreamIn(int nFormat, EDITSTREAM& es);
+		long StreamOut(int nFormat, EDITSTREAM& es);
 		void SetAccumulateDBCMode(bool bDBCMode);
 		bool IsAccumulateDBCMode();
 
@@ -118,7 +119,6 @@ namespace FYUI
 		std::wstring_view GetDisabledImage();
 		void SetDisabledImage(std::wstring_view pStrImage);
 		void PaintStatusImage(CPaintRenderContext& renderContext) override;
-		void PaintStatusImage(HDC hDC);
 
 		void SetTipValue(std::wstring_view pStrTipValue);
 		std::wstring_view GetTipValue();
@@ -126,84 +126,119 @@ namespace FYUI
 		DWORD GetTipValueColor();
 		void SetTipValueAlign(UINT uAlign);
 		UINT GetTipValueAlign();
-
 		void SetTipValuePadding(RECT rcTipValuePadding);
 		RECT GetTipValuePadding();
 
-		void DoInit();
+		void DoInit() override;
 		bool SetDropAcceptFile(bool bAccept);
-		// 娉ㄦ剰锛歍xSendMessage鍜孲endMessage鏄湁鍖哄埆鐨勶紝TxSendMessage娌℃湁multibyte鍜寀nicode鑷姩杞崲鐨勫姛鑳斤紝
-		// 鑰宺ichedit2.0鍐呴儴鏄互unicode瀹炵幇鐨勶紝鍦╩ultibyte绋嬪簭涓紝蹇呴』鑷繁澶勭悊unicode鍒癿ultibyte鐨勮浆鎹?
-		virtual HRESULT TxSendMessage(UINT msg, WPARAM wparam, LPARAM lparam, LRESULT *plresult) const; 
+		HRESULT TxSendMessage(UINT msg, WPARAM wparam, LPARAM lparam, LRESULT* plresult) const;
 		IDropTarget* GetTxDropTarget();
-		virtual bool OnTxViewChanged();
-		virtual void OnTxNotify(DWORD iNotify, void *pv);
+		bool OnTxViewChanged();
+		void OnTxNotify(DWORD iNotify, void* pv);
 
 		CDuiSize GetNaturalSize(LONG width, LONG height);
-		/**
-		* @brief 鑾峰彇 RichEdit 涓墍鏈夋枃瀛楀湪褰撳墠鎺т欢瀹藉害绾︽潫涓嬬殑鎬婚珮搴?
-		* @return int 鏂囧瓧鍐呭鐨勬€婚珮搴︼紙鐗╃悊鍍忕礌鍊硷級
-		* @param  nRichEditWidth 榛樿涓?鑷姩鑾峰彇姝ゆ帶浠堕珮搴︽潵鑾峰彇鏂囨湰鍐呭楂樺害锛屽鏋滀紶鍏ュぇ浜?鐨勫€硷紝鍒欎娇鐢ㄦ鍊间綔涓哄搴︾害鏉熸潵璁＄畻鏂囨湰鍐呭楂樺害
-		*/
 		int GetTextContentHeight(int nRichEditWidth = 0);
-		void SetScrollPos(SIZE szPos, bool bMsg = true, bool bScroolVisible = true);
-		void LineUp(bool bScroolVisible = true);
-		void LineDown(bool bScroolVisible =true);
-		void PageUp();
-		void PageDown();
-		void HomeUp();
-		void EndDown();
-		void LineLeft();
-		void LineRight();
-		void PageLeft();
-		void PageRight();
-		void HomeLeft();
-		void EndRight();
+		void SetScrollPos(SIZE szPos, bool bMsg = true, bool bScroolVisible = true) override;
+		void LineUp(bool bScroolVisible = true) override;
+		void LineDown(bool bScroolVisible = true) override;
+		void PageUp() override;
+		void PageDown() override;
+		void HomeUp() override;
+		void EndDown() override;
+		void LineLeft() override;
+		void LineRight() override;
+		void PageLeft() override;
+		void PageRight() override;
+		void HomeLeft() override;
+		void EndRight() override;
 
-		SIZE EstimateSize(SIZE szAvailable);
-		void SetPos(RECT rc, bool bNeedInvalidate = true);
-		void Move(SIZE szOffset, bool bNeedInvalidate = true);
-		void DoEvent(TEventUI& event);
+		SIZE EstimateSize(SIZE szAvailable) override;
+		void SetPos(RECT rc, bool bNeedInvalidate = true) override;
+		void Move(SIZE szOffset, bool bNeedInvalidate = true) override;
+		void DoEvent(TEventUI& event) override;
 		bool DoPaint(CPaintRenderContext& renderContext, CControlUI* pStopControl) override;
-		bool DoPaint(HDC hDC, const RECT& rcPaint, CControlUI* pStopControl);
+		void SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue) override;
 
-		void SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue);
-
-		LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& bHandled);
-		CTxtWinHost* GetTextHost() const { return m_pTwh; }
+		LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& bHandled) override;
 		bool PreprocessCharMessage(UINT& uMsg, WPARAM& wParam);
 		void FinalizeMessageDispatch(UINT uMsg, HRESULT hr, bool bWasHandled, bool& bHandled) const;
 
-		virtual CRichEditUI* Clone();
-		virtual void CopyData(CRichEditUI* pControl) ;
-
+		CRichEditUI* Clone() override;
+		void CopyData(CRichEditUI* pControl);
 
 	protected:
-		enum { 
-			DEFAULT_TIMERID = 20,
-		};
-		std::wstring m_strLimitText;
+		enum { DEFAULT_TIMERID = 20 };
 
-		CTxtWinHost* m_pTwh;
-		bool m_bVScrollBarFixing;
+	private:
+		struct TextLine
+		{
+			size_t start = 0;
+			size_t length = 0;
+			int width = 0;
+		};
+
+		void ResetCaretBlink();
+		void PushUndoState();
+		void MarkTextChanged(bool bCanUndo);
+		void NormalizeText(std::wstring& text) const;
+		void ReplaceRange(size_t start, size_t end, std::wstring_view replacement, bool bCanUndo);
+		void DeleteSelection(bool bCanUndo);
+		void MoveCaret(size_t pos, bool bKeepAnchor);
+		void MoveCaretVertical(int lineDelta, bool bKeepAnchor);
+		void EnsureLayout() const;
+		void InvalidateLayout() const;
+		RECT GetEditRect() const;
+		RECT GetViewRect() const;
+		int GetLineHeight() const;
+		std::wstring GetDisplayText() const;
+		int MeasureTextWidth(std::wstring_view text) const;
+		size_t HitTest(CDuiPoint pt) const;
+		CDuiPoint CharPos(size_t index) const;
+		size_t CurrentLineIndex() const;
+		void UpdateScrollBars();
+		void ApplyScrollBarStyle(CScrollBarUI* pScrollBar, std::wstring_view styleName, std::wstring_view defaultName);
+		void ScrollToCaret();
+		bool TryGetCachedCaretPoint(POINT& ptCaret) const;
+		void UpdateImeCompositionWindow();
+		void DrawSelection(CPaintRenderContext& renderContext, const RECT& rcView);
+		void DrawTextLines(CPaintRenderContext& renderContext, const RECT& rcView);
+		void DrawCaret(CPaintRenderContext& renderContext, const RECT& rcView);
+		void DrawTipText(CPaintRenderContext& renderContext, const RECT& rcView);
+		void ShowContextMenu(CDuiPoint pt);
+		std::wstring GetClipboardText() const;
+		void SetClipboardText(std::wstring_view text) const;
+		void HandleKeyDown(TEventUI& event);
+		void HandleChar(TEventUI& event);
+
+	protected:
+		std::wstring m_strLimitText;
 		bool m_bWantTab;
 		bool m_bWantReturn;
 		bool m_bWantCtrlReturn;
 		bool m_bTransparent;
 		bool m_bRich;
 		bool m_bReadOnly;
+		bool m_bPasswordMode;
 		bool m_bWordWrap;
+		bool m_bHideSelection;
+		bool m_bAutoURLDetect;
+		bool m_bModified;
+		bool m_bDrawCaret;
+		bool m_bInited;
+		bool m_bDraggingSelection;
+		bool m_fAccumulateDBC;
+		UINT m_chLeadByte;
 		DWORD m_dwTextColor;
+		DWORD m_dwEventMask;
 		int m_iFont;
 		int m_iLimitText;
 		LONG m_lTwhStyle;
-		bool m_bDrawCaret;
-		bool m_bInited;
-
-		bool  m_fAccumulateDBC ; // TRUE - need to cumulate ytes from 2 WM_CHAR msgs
-		// we are in this mode when we receive VK_PROCESSKEY
-		UINT m_chLeadByte; // use when we are in _fAccumulateDBC mode
-
+		UINT m_uUndoLimit;
+		int m_nZoomNum;
+		int m_nZoomDen;
+		size_t m_nCaret;
+		size_t m_nAnchor;
+		int m_nPreferredCaretX;
 		RECT m_rcTextPadding;
 		UINT m_uButtonState;
 		std::wstring m_sNormalImage;
@@ -213,10 +248,16 @@ namespace FYUI
 		std::wstring m_sTipValue;
 		DWORD m_dwTipValueColor;
 		UINT m_uTipValueAlign;
-		RECT m_rcTipValuePadding = {0,0,0,0};
+		RECT m_rcTipValuePadding;
+		CHARFORMAT2W m_defaultCharFormat;
+		CHARFORMAT2W m_selectionCharFormat;
+		PARAFORMAT2 m_paraFormat;
+		std::vector<std::wstring> m_undoStack;
+		std::vector<std::wstring> m_redoStack;
+		mutable bool m_bLayoutDirty;
+		mutable int m_nLayoutWidth;
+		mutable int m_nContentWidth;
+		mutable int m_nContentHeight;
+		mutable std::vector<TextLine> m_lines;
 	};
-
-} 
-
-
-
+}

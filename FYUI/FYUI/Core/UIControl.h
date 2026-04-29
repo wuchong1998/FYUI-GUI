@@ -179,8 +179,6 @@ namespace FYUI
 		virtual void SetFocus();
 		bool IsFloat() const;
 		virtual void SetFloat(bool bFloat = true);
-		virtual void SetGdiPlusDrawText(bool bGDIPlusDrawText);
-		virtual bool GetGdiPlusDrawText() const;
 
 		virtual CControlUI* FindControl(FINDCONTROLPROC Proc, LPVOID pData, UINT uFlags);
 		virtual CControlUI* Clone();
@@ -275,7 +273,6 @@ namespace FYUI
 		bool m_bKeyboardEnabled;
 		bool m_bFocused;
 		bool m_bFloat;
-		bool m_bGdiPlusDrawText = false;
 		TPercentInfo m_piFloatPercent;
 		UINT m_uFloatAlign;
 		bool m_bSetPos;

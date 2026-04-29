@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window size="1180,760" mininfo="980,640" sizebox="6,6,6,6" caption="0,0,1180,50" roundcorner="24,24" defaultfontcolor="#FF243042" disabledfontcolor="#FF8A98A8" selectedcolor="#FFDCEBFA" renderbackend="direct2d" d2drendermode="hardware" renderdiagnostics="true" tooltiphovertime="400">
+  <Font id="0" name="Segoe UI" size="13" default="true" />
+  <Font id="1" name="Segoe UI" size="18" bold="true" />
+  <Font id="2" name="Segoe UI" size="12" />
+  <Font id="3" name="Consolas" size="12" />
+  <Style name="Panel" value="bkcolor=&quot;#FFFFFFFF&quot; bordercolor=&quot;#FFD9E1EA&quot; bordersize=&quot;1&quot; borderround=&quot;22,22&quot;" />
+  <Style name="SubPanel" value="bkcolor=&quot;#FFF7FAFD&quot; bordercolor=&quot;#FFE0E7EF&quot; bordersize=&quot;1&quot; borderround=&quot;18,18&quot;" />
+  <Style name="RoundProbe" value="bkcolor=&quot;#FFFFF1DF&quot; bordercolor=&quot;#FFE0B887&quot; bordersize=&quot;1&quot; borderround=&quot;28,28&quot;" />
+  <Style name="TabButton" value="height=&quot;36&quot; width=&quot;152&quot; bkcolor=&quot;#00FFFFFF&quot; hotbkcolor=&quot;#FFE8F0F8&quot; pushedbkcolor=&quot;#FFD6E7FA&quot; borderround=&quot;18,18&quot; textcolor=&quot;#FF2B3545&quot; cursor=&quot;hand&quot;" />
+  <Style name="ActionButton" value="height=&quot;34&quot; width=&quot;140&quot; bkcolor=&quot;#FFF4F8FC&quot; hotbkcolor=&quot;#FFE5EEF7&quot; pushedbkcolor=&quot;#FFD4E4F4&quot; bordercolor=&quot;#FFC8D5E2&quot; bordersize=&quot;1&quot; borderround=&quot;18,18&quot; cursor=&quot;hand&quot;" />
+  <Style name="ScrollSkin" value="width=&quot;10&quot; button1normalimage=&quot;file='public/vscrollbar/bk_normal.png'&quot; button2normalimage=&quot;file='public/vscrollbar/bk_normal.png'&quot; thumbnormalimage=&quot;file='public/vscrollbar/thumb_normal.png'&quot; thumbhotimage=&quot;file='public/vscrollbar/thumb_hovered.png'&quot; bknormalimage=&quot;file='public/vscrollbar/bk_normal.png'&quot; bkhotimage=&quot;file='public/vscrollbar/bk_hovered.png'&quot; showbutton1=&quot;false&quot; showbutton2=&quot;false&quot;" />
+  <Default name="Label" value="font=&quot;0&quot; textcolor=&quot;#FF243042&quot;" />
+  <Default name="Button" value="font=&quot;0&quot; align=&quot;center&quot; valign=&quot;vcenter&quot; cursor=&quot;hand&quot;" />
+  <Default name="Option" value="font=&quot;0&quot; cursor=&quot;hand&quot; selectedbkcolor=&quot;#FFDCEBFA&quot; selectedtextcolor=&quot;#FF1D5F9F&quot;" />
+  <Default name="CheckBox" value="font=&quot;0&quot; cursor=&quot;hand&quot; selectedbkcolor=&quot;#FFEAF4EC&quot; selectedtextcolor=&quot;#FF22784F&quot;" />
+  <Default name="ScrollBar" value="style=&quot;ScrollSkin&quot;" />
+  <Default name="Progress" value="height=&quot;18&quot; showtext=&quot;true&quot; bkcolor=&quot;#FFEAF0F6&quot; forecolor=&quot;#FF2EA97D&quot; borderround=&quot;18,18&quot;" />
+
+  <VBox name="root" bkcolor="#FFF0F4F8">
+    <HBox name="title_bar" height="50" bkcolor="#FF1F2A36" childvalign="vcenter" childpadding="8" inset="16,0,10,0">
+      <Control width="30" height="30" bkimage="file='logo39.png'" />
+      <VBox width="360" childpadding="1">
+        <Label text="FYUI Direct2D Demo Lab" height="24" font="1" textcolor="#FFFFFFFF" />
+        <Label text="XML controls, rendering diagnostics and popup windows" height="18" font="2" textcolor="#FFC7D3DF" />
+      </VBox>
+      <Label name="diag_status" text="Direct2D diagnostics pending" textcolor="#FFD6E4F2" align="right" valign="vcenter" />
+      <Button name="fps_meter" text="FPS --/s" width="88" height="30" bkcolor="#153B82F6" hotbkcolor="#FF2E7CE6" pushedbkcolor="#FF2567C4" bordercolor="#663B82F6" bordersize="1" borderround="15,15" textcolor="#FFFFFFFF" />
+      <Button name="minbtn" text="-" width="36" height="30" bkcolor="#00222F3D" hotbkcolor="#FF334252" textcolor="#FFFFFFFF" />
+      <Button name="maxbtn" text="[]" width="36" height="30" bkcolor="#00222F3D" hotbkcolor="#FF334252" textcolor="#FFFFFFFF" />
+      <Button name="restorebtn" text="[]" width="36" height="30" visible="false" bkcolor="#00222F3D" hotbkcolor="#FF334252" textcolor="#FFFFFFFF" />
+      <Button name="closebtn" text="X" width="42" height="30" bkcolor="#00222F3D" hotbkcolor="#FFE15A5A" pushedbkcolor="#FFC84242" textcolor="#FFFFFFFF" />
+    </HBox>
+
+    <HBox height="54" bkcolor="#FFFFFFFF" bordercolor="#FFE2E8EF" bottombordersize="1" childvalign="vcenter" childpadding="6" inset="18,8,18,8">
+      <Button text="Controls" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="0" />
+      <Button text="Data" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="1" />
+      <Button text="Layouts" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="2" />
+      <Button text="Media" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="3" />
+      <Button text="Stress" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="4" />
+      <Label />
+      <Button name="open_modal" text="Modal popup" style="ActionButton" foreimage="file='tishi.png' dest='10,8,28,26'" textpadding="28,0,8,0" />
+      <Button name="open_modeless" text="Modeless popup" style="ActionButton" foreimage="file='menu.png' dest='10,8,28,26'" textpadding="28,0,8,0" />
+      <Button name="refresh_metrics" text="Refresh metrics" style="ActionButton" />
+    </HBox>
+
+    <TabBox name="main_tabs" selectedid="0" inset="16,16,16,12">
+      <VBox name="page_controls" childpadding="12" vscrollbar="true" vscrollbarstyle="ScrollSkin" smooth="true" scrollstepsize="80">
+        <HBox height="530" childpadding="12">
+          <VBox style="Panel" width="360" inset="14,14,14,14" childpadding="10">
+            <Label text="Buttons and state images" height="28" font="1" />
+            <Button name="btn_color" text="Color states" style="ActionButton" width="260" hotbkcolor="#FFFFF3C8" pushedbkcolor="#FFFFD38A" hottextcolor="#FF6B4C00" pushedtextcolor="#FF5C2D00" tooltip="Tests hot, pushed and text colors" />
+            <Label text="Button html text samples" height="22" font="2" textcolor="#FF667789" />
+            <Button name="btn_html_color" showhtml="true" text="Normal {b}bold{/b} {c #E67E22}orange{/c}" style="ActionButton" width="300" />
+            <Button name="btn_html_font" showhtml="true" text="{f 1}Large{/f} + {u}underline{/u}" style="ActionButton" width="300" />
+            <Button name="btn_html_link" showhtml="true" text="{a fyui://button}link style{/a} and {s}selected bg{/s}" style="ActionButton" width="300" />
+            <Button name="btn_html_bg_left" showhtml="true" text="Only {s}this phrase{/s} has selected background" style="ActionButton" width="300" />
+            <Button name="btn_html_bg_mix" showhtml="true" text="{c #FFFFFF}{s}white on selected bg{/s}{/c} then plain" style="ActionButton" width="300" />
+            <Button name="btn_image" text="Image button" style="ActionButton" width="260" normalimage="file='btn_def.png'" hotimage="file='ClickButton.png'" pushedimage="file='Default.png'" textcolor="#FFFFFFFF" hottextcolor="#FFFFFFFF" pushedtextcolor="#FFFFFFFF" />
+            <ButtonEx name="btn_ex" text="&#x2713;" width="70" height="70" bkcolor="#FFEDF6FF" hotbkcolor="#FFDCEEFF" bordercolor="#FFB9CCE1" bordersize="1" textcolor="#FF286AA8" tooltip="ButtonEx draws rotated glyph text" />
+            <FadeButton name="fade_btn" text="Fade image hover" width="260" height="42" normalimage="file='bt1.png'" hotimage="file='bt2.png'" textcolor="#FFFFFFFF" />
+            <Button name="progress_step" text="Advance progress" style="ActionButton" width="260" />
+          </VBox>
+          <VBox style="Panel" width="360" inset="14,14,14,14" childpadding="10">
+            <Label text="Options and checks" height="28" font="1" />
+            <HBox height="34" childpadding="8">
+              <Option name="option_a" text="Radio A" group="radio_test" selected="true" width="110" />
+              <Option name="option_b" text="Radio B" group="radio_test" width="110" />
+              <Option name="option_c" text="Radio C" group="radio_test" width="110" />
+            </HBox>
+            <HBox height="34" childpadding="8">
+              <CheckBox name="check_auto" text="Auto check" width="140" EnableAutoCheck="true" selected="true" />
+              <CheckBox name="check_disabled" text="Disabled" width="130" EnableAutoCheck="true" enabled="false" />
+            </HBox>
+            <Label text="Text label variants" height="24" font="1" />
+            <Label text="End ellipsis on a long line that should clip neatly" height="30" width="310" endellipsis="true" bordercolor="#FFE0E7EF" bordersize="1" padding="8,0,8,0" valign="vcenter" />
+            <Label name="wordbreak" text="Word break text wraps across several rows to exercise DirectWrite metrics and layout." height="86" wordbreak="true" bkcolor="#FFF7FAFD" bordercolor="#FFE0E7EF" bordersize="1" padding="8,6,8,6" />
+          </VBox>
+          <VBox style="Panel" inset="14,14,14,14" childpadding="10">
+            <Label text="Input, combo and value controls" height="28" font="1" />
+            <RichEdit name="richedit_single_tip" height="38" multiline="false" wanttab="false" wantreturn="false" wantctrlreturn="false" transparent="false" rich="false" wordwrap="false" font="0" textcolor="#FF243042" maxchar="64" textpadding="10,0,10,0" tipvalue="Single line RichEdit placeholder" tipvaluecolor="#FF8A98A8" tipvaluepadding="10,0,10,0" tipvaluealign="left" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="6,6" />
+            <RichEdit name="richedit_multi_wrap" height="118" multiline="true" wanttab="true" wantreturn="true" wantctrlreturn="true" transparent="false" rich="true" wordwrap="true" vscrollbar="true" hscrollbar="false" font="3" textcolor="#FF2B3545" textpadding="8,6,8,6" text="Direct2D RichEdit multiline text.&#10;Tab inserts a tab when focused. Return inserts a new line. Word wrap keeps the text inside this surface." bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="6,6" />
+            <HBox height="38" childpadding="10">
+              <Combo name="combo_basic" width="210" height="34" text="Combo item A" normalimage="file='menubk.png'" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" dropboxsize="220,140">
+                <ListLabelElement text="Combo item A" height="30" selected="true" />
+                <ListLabelElement text="Combo item B" height="30" />
+                <ListLabelElement text="Combo item C" height="30" />
+              </Combo>
+              <ComboBox name="combo_box" width="210" height="34" text="ComboBox item" arrowimage="file='Down.png' dest='188,8,206,26'" dropboxsize="220,120">
+                <ListLabelElement text="ComboBox item" height="30" selected="true" />
+                <ListLabelElement text="Second choice" height="30" />
+                <ListLabelElement text="Third choice" height="30" />
+              </ComboBox>
+            </HBox>
+            <Progress name="progress_runtime" height="18" min="0" max="100" value="44" showtext="true" bkcolor="#FFEAF0F6" forecolor="#FF2EA97D" />
+            <Slider name="slider_horizontal" height="28" min="0" max="100" value="35" step="5" sendmove="true" bkcolor="#FFEAF0F6" forecolor="#FF3E8ED0" thumbimage="file='SliderPlayThumb.png'" thumbsize="18,18" />
+            <Slider name="slider_vertical" width="42" height="110" hor="false" min="0" max="100" value="70" bkcolor="#FFEAF0F6" forecolor="#FFB66A4C" thumbimage="file='SliderPlayThumb.png'" thumbsize="18,18" />
+          </VBox>
+        </HBox>
+
+        <HBox height="380" childpadding="12">
+          <VBox style="Panel" width="560" inset="14,14,14,14" childpadding="10">
+            <Label text="RichEdit attributes: text, readonly and image states" height="28" font="1" />
+            <RichEdit name="richedit_readonly" height="76" readonly="true" multiline="true" transparent="true" wordwrap="true" font="0" textcolor="#FF4B5563" textpadding="10,8,10,8" text="Readonly RichEdit keeps selection and scroll behavior but rejects text editing." bkcolor="#FFF7FAFD" bordercolor="#FFD9E1EA" bordersize="1" borderround="6,6" />
+            <RichEdit name="richedit_image_state" height="72" multiline="false" transparent="false" rich="true" font="0" textcolor="#FFFFFFFF" textpadding="12,0,12,0" text="Normal, hot, focused and disabled image attributes" normalimage="file='btn_def.png'" hotimage="file='ClickButton.png'" focusedimage="file='Default.png'" disabledimage="file='bt1.png'" bkcolor="#FF3E8ED0" bordercolor="#FF2567C4" bordersize="1" borderround="6,6" />
+            <RichEdit name="richedit_limit" height="72" multiline="true" maxchar="96" limittext="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" wanttab="true" wantreturn="true" textpadding="10,8,10,8" tipvalue="Max 96 chars, limit text string stored for API tests" tipvaluecolor="#FF8A98A8" tipvaluepadding="10,8,10,8" tipvaluealign="center" bkcolor="#FFFFFBEB" bordercolor="#FFE6C36A" bordersize="1" borderround="6,6" />
+          </VBox>
+
+          <VBox style="Panel" inset="14,14,14,14" childpadding="10">
+            <Label text="RichEdit attributes: scrolling, wrapping and disabled" height="28" font="1" />
+            <RichEdit name="richedit_scroll_nowrap" height="118" multiline="true" wordwrap="false" vscrollbar="true" hscrollbar="true" wanttab="true" wantreturn="true" font="3" textcolor="#FF1F2937" textpadding="8,6,8,6" text="No word wrap: this very long line should use the horizontal scrollbar so Direct2D text clipping and scroll offsets can be checked.&#10;Second line for vertical scrolling coverage.&#10;Third line for caret movement coverage.&#10;Fourth line for scroll range coverage." bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="6,6" />
+            <RichEdit name="richedit_disabled" height="70" enabled="false" multiline="false" transparent="false" wordwrap="false" font="0" textcolor="#FF6B7280" textpadding="10,0,10,0" text="Disabled RichEdit with disabled image" disabledimage="file='bt2.png'" bkcolor="#FFE5E7EB" bordercolor="#FFD1D5DB" bordersize="1" borderround="6,6" />
+            <RichEdit name="richedit_transparent_tip" height="70" multiline="false" transparent="true" rich="false" readonly="false" font="2" textcolor="#FF0F766E" textpadding="10,0,10,0" tipvalue="Transparent empty RichEdit placeholder, right aligned" tipvaluecolor="#FF0F766E" tipvaluepadding="10,0,10,0" tipvaluealign="right" bordercolor="#FF99D7CF" bordersize="1" borderround="6,6" />
+          </VBox>
+        </HBox>
+      </VBox>
+
+      <VBox name="page_data" childpadding="12">
+        <HBox height="300" childpadding="12">
+          <List name="list_basic" style="Panel" width="520" header="show" itemalign="left" itemvalign="vcenter" itemtextpadding="8,0,8,0" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" itemshowrowline="true" itemlinecolor="#FFE0E7EF" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+            <ListHeader height="34" bkcolor="#FFF1F5F9">
+              <ListHeaderItem text="Control" width="160" sepwidth="1" textcolor="#FF243042" />
+              <ListHeaderItem text="Scenario" width="210" sepwidth="1" />
+              <ListHeaderItem text="Status" width="120" />
+            </ListHeader>
+            <ListTextElement text="Button states|normal hot pushed disabled|ready" height="34" selected="true" />
+            <ListTextElement text="Slider|drag, wheel and keyboard|ready" height="34" />
+            <ListTextElement text="Text rendering|DirectWrite labels and html text|ready" height="34" />
+            <ListTextElement text="Combo|popup list ownership|ready" height="34" />
+            <ListTextElement text="List|header, lines and scroll|ready" height="34" />
+            <ListTextElement text="TreeView|nested node layout|ready" height="34" />
+            <ListTextElement text="ColorPalette|color change notify|ready" height="34" />
+          </List>
+          <VBox style="Panel" inset="12,12,12,12" childpadding="10">
+            <Label text="VirtualList test bench" height="26" font="1" />
+            <HBox height="34" childpadding="8">
+              <Button name="virt_apply_fixed_demo" text="Fixed 240" style="ActionButton" width="118" />
+              <Button name="virt_apply_large_demo" text="Fixed 10M" style="ActionButton" width="118" />
+              <Button name="virt_apply_variable_demo" text="Variable" style="ActionButton" width="118" />
+            </HBox>
+            <HBox height="34" childpadding="8">
+              <Button name="virt_mutate_height" text="Mutate height" style="ActionButton" width="118" />
+              <Button name="virt_change_count" text="Mutate count" style="ActionButton" width="118" />
+              <Button name="virt_clear_selection" text="Clear select" style="ActionButton" width="118" />
+            </HBox>
+            <VirtualList name="virtual_list_demo" height="182" itemcount="240" itemheight="32" overscan="8" vscrollbar="true" vscrollbarstyle="ScrollSkin" allowselectioncancel="true" itembkcolor="#FFF7FAFD" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" bordercolor="#FFE0E7EF" bordersize="1" />
+            <Label name="virtual_list_status" text="VirtualList ready." height="54" wordbreak="true" font="2" textcolor="#FF667789" />
+          </VBox>
+        </HBox>
+        <HBox height="240" childpadding="12">
+          <XList name="xlist_demo" style="Panel" width="620" header="show" itemtextpadding="8,0,8,0" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA">
+            <ListHeader height="34" bkcolor="#FFF1F5F9">
+              <ListContainerHeaderItem text="Editable" width="160" editable="true" sepwidth="1" />
+              <ListContainerHeaderItem text="Combo" width="160" comboable="true" sepwidth="1" />
+              <ListContainerHeaderItem text="Check" width="160" checkable="true" checkboxwidth="18" checkboxheight="18" />
+            </ListHeader>
+            <ListTextExElement text="Cell edit|Choice A|Checked" height="34" checkboxwidth="18" checkboxheight="18" />
+            <ListTextExElement text="Inline text|Choice B|Unchecked" height="34" checkboxwidth="18" checkboxheight="18" />
+            <ListTextExElement text="Validation|Choice C|Checked" height="34" checkboxwidth="18" checkboxheight="18" />
+          </XList>
+          <VBox style="Panel" inset="12,12,12,12" childpadding="10">
+            <Label text="Standalone popup menu" height="26" font="1" />
+            <Button name="open_menu" text="Open XML menu" style="ActionButton" width="190" foreimage="file='menu.png' dest='10,8,28,26'" textpadding="30,0,8,0" />
+            <Label text="The menu XML lives in fytest_menu.xml and includes nested submenu items." height="52" wordbreak="true" textcolor="#FF667789" />
+          </VBox>
+        </HBox>
+      </VBox>
+
+      <VBox name="page_layouts" childpadding="14" vscrollbar="true" vscrollbarstyle="ScrollSkin" scrollstepsize="100" smooth="true">
+        <HBox height="230" childpadding="12">
+          <VBox style="Panel" width="560" inset="16,16,16,16" childpadding="12">
+            <Label text="UIHorizontalLayout with rounded child surfaces" height="28" font="1" />
+            <HBox height="128" childpadding="10">
+              <VBox style="RoundProbe" width="116" inset="12,10,12,10" childpadding="8">
+                <Label text="H item 01" height="24" align="center" />
+                <Progress value="22" />
+                <Button text="Round bg" style="ActionButton" width="92" />
+              </VBox>
+              <VBox style="RoundProbe" width="116" inset="12,10,12,10" childpadding="8" bkimage="file='VideoCut_2.png' fade='48'">
+                <Label text="H image" height="24" align="center" />
+                <Progress value="44" forecolor="#FF3E8ED0" />
+                <Button text="Image clip" style="ActionButton" width="92" />
+              </VBox>
+              <VBox style="RoundProbe" width="116" inset="12,10,12,10" childpadding="8" bkcolor="#FFEAF7EE">
+                <Label text="H item 03" height="24" align="center" />
+                <Progress value="68" forecolor="#FF6D9E3B" />
+                <Button text="Green" style="ActionButton" width="92" />
+              </VBox>
+              <VBox style="RoundProbe" width="116" inset="12,10,12,10" childpadding="8" bkcolor="#FFF4EDFF">
+                <Label text="H item 04" height="24" align="center" />
+                <Progress value="86" forecolor="#FF8E5AD7" />
+                <Button text="Purple" style="ActionButton" width="92" />
+              </VBox>
+            </HBox>
+          </VBox>
+          <VBox style="Panel" inset="16,16,16,16" childpadding="12">
+            <Label text="UIVerticalLayout with progress children" height="28" font="1" />
+            <VBox height="140" childpadding="9">
+              <HBox style="SubPanel" height="34" inset="12,0,12,0" childpadding="10" childvalign="vcenter">
+                <Label text="Vertical row A" width="130" />
+                <Progress value="31" />
+              </HBox>
+              <HBox style="SubPanel" height="34" inset="12,0,12,0" childpadding="10" childvalign="vcenter" bkcolor="#FFFFF7E5">
+                <Label text="Vertical row B" width="130" />
+                <Progress value="57" forecolor="#FFE6A23C" />
+              </HBox>
+              <HBox style="SubPanel" height="34" inset="12,0,12,0" childpadding="10" childvalign="vcenter" bkcolor="#FFE9F6F5">
+                <Label text="Vertical row C" width="130" />
+                <Progress value="79" forecolor="#FF0EA5A3" />
+              </HBox>
+            </VBox>
+          </VBox>
+        </HBox>
+
+        <HBox height="260" childpadding="12">
+          <VBox style="Panel" width="520" inset="16,16,16,16" childpadding="10">
+            <Label text="UITabLayout with multiple child pages" height="28" font="1" />
+            <HBox height="38" childpadding="8">
+              <Button text="Metrics" style="ActionButton" width="116" bindtablayoutname="nested_tabs" bindtabindex="0" />
+              <Button text="Render" style="ActionButton" width="116" bindtablayoutname="nested_tabs" bindtabindex="1" />
+              <Button text="Scroll" style="ActionButton" width="116" bindtablayoutname="nested_tabs" bindtabindex="2" />
+            </HBox>
+            <TabBox name="nested_tabs" selectedid="0" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="20,20">
+              <VBox inset="14,14,14,14" childpadding="10">
+                <Label text="Tab child 01: metrics" height="26" />
+                <Progress value="36" />
+                <Progress value="58" forecolor="#FF3E8ED0" />
+                <Button text="Focusable child" style="ActionButton" width="170" />
+              </VBox>
+              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFFFF7E5" borderround="20,20">
+                <Label text="Tab child 02: rounded background" height="26" />
+                <Progress value="67" forecolor="#FFE6A23C" />
+                <Button text="Orange page" style="ActionButton" width="170" />
+                <CheckBox text="Check child" EnableAutoCheck="true" selected="true" />
+              </VBox>
+              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFEAF7EE" borderround="20,20">
+                <Label text="Tab child 03: scroll target" height="26" />
+                <Progress value="88" forecolor="#FF2EA97D" />
+                <Slider height="28" value="48" thumbimage="file='SliderPlayThumb.png'" />
+                <Button text="Another child" style="ActionButton" width="170" />
+              </VBox>
+            </TabBox>
+          </VBox>
+
+          <VBox style="Panel" inset="16,16,16,16" childpadding="10">
+            <Label text="UIAnimationTabLayout with multiple child pages" height="28" font="1" />
+            <HBox height="38" childpadding="8">
+              <Button text="Anim A" style="ActionButton" width="100" bindtablayoutname="anim_tabs" bindtabindex="0" />
+              <Button text="Anim B" style="ActionButton" width="100" bindtablayoutname="anim_tabs" bindtabindex="1" />
+              <Button text="Anim C" style="ActionButton" width="100" bindtablayoutname="anim_tabs" bindtabindex="2" />
+            </HBox>
+            <AnimationTabLayout name="anim_tabs" selectedid="0" animation_direction="horizontal" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="20,20">
+              <VBox inset="14,14,14,14" childpadding="10">
+                <Label text="Animated page A" height="26" />
+                <Progress value="25" />
+                <Button text="Animation child" style="ActionButton" width="180" />
+              </VBox>
+              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFF4EDFF" borderround="20,20">
+                <Label text="Animated page B" height="26" />
+                <Progress value="52" forecolor="#FF8E5AD7" />
+                <CheckBox text="Auto check child" EnableAutoCheck="true" />
+              </VBox>
+              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFE9F6F5" borderround="20,20">
+                <Label text="Animated page C" height="26" />
+                <Progress value="91" forecolor="#FF0EA5A3" />
+                <Button text="Final page child" style="ActionButton" width="180" />
+              </VBox>
+            </AnimationTabLayout>
+          </VBox>
+        </HBox>
+
+        <HBox height="330" childpadding="12">
+          <TileBox name="tile_demo" style="Panel" width="760" inset="16,16,16,16" itemsize="142,104" columns="5" hor_spacing="8" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFE8F3FF"><Label text="Tile 01" height="22" align="center" /><Progress value="15" forecolor="#FF3E8ED0" /></VBox>
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFFFF0E7"><Label text="Tile 02" height="22" align="center" /><Progress value="24" forecolor="#FFE67E22" /></VBox>
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFEAF7EE"><Label text="Tile 03" height="22" align="center" /><Progress value="33" forecolor="#FF2EA97D" /></VBox>
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFF4EDFF"><Label text="Tile 04" height="22" align="center" /><Progress value="42" forecolor="#FF8E5AD7" /></VBox>
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFFFF7E5"><Label text="Tile 05" height="22" align="center" /><Progress value="51" forecolor="#FFE6A23C" /></VBox>
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFE9F6F5"><Label text="Tile 06" height="22" align="center" /><Progress value="60" forecolor="#FF0EA5A3" /></VBox>
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFF8EEF1"><Label text="Tile 07" height="22" align="center" /><Progress value="69" forecolor="#FFDB5A7D" /></VBox>
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFEFF3F7"><Label text="Tile 08" height="22" align="center" /><Progress value="78" forecolor="#FF667789" /></VBox>
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFFFF1DF"><Label text="Tile 09" height="22" align="center" /><Progress value="87" forecolor="#FFB66A4C" /></VBox>
+            <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFEAF0F6"><Label text="Tile 10" height="22" align="center" /><Progress value="96" forecolor="#FF2EA97D" /></VBox>
+          </TileBox>
+          <ChildBox name="child_layout_demo" style="Panel" xmlfile="fytest_child_layout.xml" />
+        </HBox>
+
+        <VBox style="Panel" height="320" inset="16,16,16,16" childpadding="10">
+          <Label text="List layout with container rows, child progress bars and scroll" height="28" font="1" />
+          <List name="layout_progress_list" height="250" header="hidden" itembkcolor="#FFFFFFFF" itemhotbkcolor="#FFF4F8FC" itemselectedbkcolor="#FFE8F0F8" bordercolor="#FFE0E7EF" bordersize="1" borderround="18,18" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+            <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 01" width="140" /><Progress value="12" /></HBox></ListContainerElement>
+            <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 02" width="140" /><Progress value="24" forecolor="#FF3E8ED0" /></HBox></ListContainerElement>
+            <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 03" width="140" /><Progress value="36" forecolor="#FFE6A23C" /></HBox></ListContainerElement>
+            <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 04" width="140" /><Progress value="48" forecolor="#FF8E5AD7" /></HBox></ListContainerElement>
+            <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 05" width="140" /><Progress value="60" forecolor="#FF0EA5A3" /></HBox></ListContainerElement>
+            <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 06" width="140" /><Progress value="72" forecolor="#FFDB5A7D" /></HBox></ListContainerElement>
+            <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 07" width="140" /><Progress value="84" forecolor="#FF667789" /></HBox></ListContainerElement>
+            <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 08" width="140" /><Progress value="96" forecolor="#FF2EA97D" /></HBox></ListContainerElement>
+          </List>
+        </VBox>
+
+        <VBox name="layout_scroll_runway" style="Panel" height="2600" inset="16,16,16,16" childpadding="12">
+          <Label text="Long scroll runway for sustained wheel performance testing" height="30" font="1" />
+          <Label text="This low-cost section keeps page_layouts away from the top/bottom boundary during long 120Hz wheel tests, while the real layouts above still validate clipping, rounded panels and nested scroll handoff." height="58" wordbreak="true" textcolor="#FF667789" />
+          <HBox height="118" childpadding="12">
+            <VBox style="RoundProbe" width="240" inset="14,12,14,12" childpadding="8" bkcolor="#FFE8F3FF">
+              <Label text="Runway sample A" height="26" align="center" />
+              <Progress value="28" forecolor="#FF3E8ED0" />
+            </VBox>
+            <VBox style="RoundProbe" width="240" inset="14,12,14,12" childpadding="8" bkcolor="#FFEAF7EE">
+              <Label text="Runway sample B" height="26" align="center" />
+              <Progress value="64" forecolor="#FF2EA97D" />
+            </VBox>
+            <VBox style="RoundProbe" width="240" inset="14,12,14,12" childpadding="8" bkcolor="#FFFFF7E5">
+              <Label text="Runway sample C" height="26" align="center" />
+              <Progress value="88" forecolor="#FFE6A23C" />
+            </VBox>
+          </HBox>
+        </VBox>
+      </VBox>
+
+      <VBox name="page_media" childpadding="12" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+        <HBox height="250" childpadding="12">
+          <VBox style="Panel" width="400" inset="12,12,12,12" childpadding="10">
+            <Label text="Image and GIF resources" height="26" font="1" />
+            <HBox height="92" childpadding="10">
+              <Control width="88" bkimage="file='VideoConverter_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="8,8" />
+              <Control width="88" bkimage="file='VideoCut_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="8,8" />
+              <Control width="88" bkimage="file='VideoMerge_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="8,8" />
+            </HBox>
+            <GifAnim name="gif_demo" height="86" bkimage="file='GifConvert.gif'" autoplay="true" autosize="false" bordercolor="#FFE0E7EF" bordersize="1" />
+          </VBox>
+          <VBox style="Panel" width="360" inset="12,12,12,12" childpadding="10">
+            <Label text="ColorPalette" height="26" font="1" />
+            <ColorPalette name="palette_demo" height="190" palletheight="150" barheight="20" bordercolor="#FFE0E7EF" bordersize="1" />
+          </VBox>
+          <VBox style="Panel" inset="12,12,12,12" childpadding="10">
+            <Label text="Animated Ring and Countdown class" height="26" font="1" />
+            <HBox height="96" childpadding="12">
+              <Ring name="ring_demo" width="88" height="88" bkimage="loading.gif" />
+              <Countdown name="countdown_demo" width="180" height="64" text="Countdown idle" imgdir="frames" framecount="10" frameid="903" ellapse="90" loop="true" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="6,6" align="center" valign="vcenter" />
+            </HBox>
+            <Label text="Countdown is present without autostart so missing frame folders are easy to catch during library tests." height="52" wordbreak="true" textcolor="#FF667789" />
+          </VBox>
+        </HBox>
+      </VBox>
+
+      <VBox name="page_stress" childpadding="12" vscrollbar="true" vscrollbarstyle="ScrollSkin" scrollstepsize="120" smooth="true">
+        <Label text="Dense controls for repaint, hit-test and scroll stability" height="30" font="1" />
+        <TileBox name="stress_tiles" style="Panel" inset="12,12,12,12" itemsize="132,58" columns="7" hor_spacing="8" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+          <Button text="Button 01" style="ActionButton" width="120" />
+          <Button text="Button 02" style="ActionButton" width="120" />
+          <Button text="Button 03" style="ActionButton" width="120" />
+          <Button text="Button 04" style="ActionButton" width="120" />
+          <Button text="Button 05" style="ActionButton" width="120" />
+          <Button text="Button 06" style="ActionButton" width="120" />
+          <Button text="Button 07" style="ActionButton" width="120" />
+          <Button text="Button 08" style="ActionButton" width="120" />
+          <Button text="Button 09" style="ActionButton" width="120" />
+          <Button text="Button 10" style="ActionButton" width="120" />
+          <Button text="Button 11" style="ActionButton" width="120" />
+          <Button text="Button 12" style="ActionButton" width="120" />
+          <Button text="Button 13" style="ActionButton" width="120" />
+          <Button text="Button 14" style="ActionButton" width="120" />
+          <Button text="Button 15" style="ActionButton" width="120" />
+          <Button text="Button 16" style="ActionButton" width="120" />
+          <Button text="Button 17" style="ActionButton" width="120" />
+          <Button text="Button 18" style="ActionButton" width="120" />
+          <Button text="Button 19" style="ActionButton" width="120" />
+          <Button text="Button 20" style="ActionButton" width="120" />
+          <Button text="Button 21" style="ActionButton" width="120" />
+          <Button text="Button 22" style="ActionButton" width="120" />
+          <Button text="Button 23" style="ActionButton" width="120" />
+          <Button text="Button 24" style="ActionButton" width="120" />
+          <Button text="Button 25" style="ActionButton" width="120" />
+          <Button text="Button 26" style="ActionButton" width="120" />
+          <Button text="Button 27" style="ActionButton" width="120" />
+          <Button text="Button 28" style="ActionButton" width="120" />
+        </TileBox>
+      </VBox>
+    </TabBox>
+
+    <HBox height="34" bkcolor="#FFFFFFFF" bordercolor="#FFE2E8EF" topbordersize="1" childvalign="vcenter" inset="16,0,16,0">
+      <Label name="event_status" text="Ready." textcolor="#FF526477" />
+    </HBox>
+  </VBox>
+</Window>

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "..\Control\UIScrollBar.h"
-#include "..\Core\UIRenderContext.h"
+#include "..\Core\Render\UIRenderContext.h"
 #include <limits>
 
 
@@ -33,7 +33,7 @@ namespace FYUI
 
 	IMPLEMENT_DUICONTROL(CScrollBarUI)
 
-		CScrollBarUI::CScrollBarUI() : m_bHorizontal(false), m_nRange(0), m_nScrollPos(0), m_nLineSize(8),
+		CScrollBarUI::CScrollBarUI() : m_bHorizontal(false), m_nRange(0), m_nScrollPos(0), m_nLineSize(8), m_nMinThumbSize(80),
 		m_pOwner(NULL), m_nLastScrollPos(0), m_nLastScrollOffset(0), m_nScrollRepeatDelay(0), m_uButton1State(0), \
 		m_uButton2State(0), m_uThumbState(0), m_bShowButton1(true), m_bShowButton2(true), m_bShow(true), m_nSpaceX(0), m_nSpaceY(0)
 	{
@@ -156,6 +156,17 @@ namespace FYUI
 	void CScrollBarUI::SetLineSize(int nSize)
 	{
 		m_nLineSize = nSize;
+	}
+
+	int CScrollBarUI::GetMinThumbSize() const
+	{
+		return m_nMinThumbSize;
+	}
+
+	void CScrollBarUI::SetMinThumbSize(int nSize)
+	{
+		m_nMinThumbSize = (std::max)(1, nSize);
+		SetPos(m_rcItem);
 	}
 
 	bool CScrollBarUI::GetShowButton1()
@@ -419,7 +430,7 @@ namespace FYUI
 		if (m_pManager != NULL) {
 			cxyFixed = GetManager()->ScaleSize(cxyFixed);
 		}
-		int nMinSize = 80;
+		int nMinSize = m_nMinThumbSize;
 		if (m_pManager != NULL)
 		{
 			nMinSize = GetManager()->ScaleValue(nMinSize);
@@ -857,6 +868,10 @@ namespace FYUI
 		else if (StringUtil::CompareNoCase(pstrName, _T("linesize")) == 0) {
 			int value = 0;
 			if (StringUtil::TryParseInt(pstrValue, value)) SetLineSize(value);
+		}
+		else if (StringUtil::CompareNoCase(pstrName, _T("minthumbsize")) == 0) {
+			int value = 0;
+			if (StringUtil::TryParseInt(pstrValue, value)) SetMinThumbSize(value);
 		}
 		else if (StringUtil::CompareNoCase(pstrName, _T("range")) == 0) {
 			int value = 0;

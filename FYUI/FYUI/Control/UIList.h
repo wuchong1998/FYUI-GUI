@@ -228,7 +228,6 @@ namespace FYUI
 		BOOL SortItems(PULVCompareFunc pfnCompare, UINT_PTR dwData);
 
 		virtual BOOL CheckColumEditable(int nColum) { return FALSE; };
-		virtual CRichEditUI* GetEditUI() { return NULL; };
 		virtual BOOL CheckColumComboBoxable(int nColum) { return FALSE; };
 		virtual CComboBoxUI* GetComboBoxUI() { return NULL; };
 

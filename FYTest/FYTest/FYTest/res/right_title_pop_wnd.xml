@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window  showshadow="true" bktrans="true" >
+<Font name="微软雅黑" id="1"  size="12"  shared="true"  />
+
+<!-- Menu样式 -->
+<Default name="Menu" value="bktrans=&quot;true&quot;  inset=&quot;5,10,5,12&quot; itemtextpadding=&quot;15,0,0,0&quot; bkimage=&quot;file='loginmenubk.png' corner='40,40,40,40' &quot; itemtextcolor=&quot;ff333333&quot; itemselectedbkcolor=&quot;00333333&quot; itemselectedtextcolor=&quot;ff333333&quot; itemfont=&quot;30&quot;" shared="true" />
+
+
+<Default name="ExplandIcon"  bkimage="file='loginmenubk.png' corner='40,40,40,40' "  shared="true"/>
+  <Menu  bkimage="loginmenubk.png' corner='40,40,40,40' " cursor="hand" itemfont="30" itemtextpadding="40,0,20,0" 
+ itemselectedbkcolor="#00000ffff" inset="12,9,5,18"   >
+	<MenuElement name ="menu" height="245" width="220" >
+     	<VerticalLayout height="450" name="home_sort_ver_layout" >
+			<Button  name="home_rename_file" padding="15,10,40"  hotimage="file='115.svg' corner='5,5,5,5' " pushedimage="file='219.svg' corner='5,5,5,5' " align="left" textpadding="40"  height="32"  text="重命名"  font="1" cursor="hand"  textcolor="0xff181818" />
+			<Button  name="close_pdf_file"  padding="15,1,40" align="left"  hotimage="file='115.svg' corner='5,5,5,5' " pushedimage="file='219.svg' corner='5,5,5,5' "  textpadding="40" height="32"  text="关闭标签"  font="1" cursor="hand" textcolor="0xff181818" />
+			<Button  name="cloes_other_pdf_file"  padding="15,1,40" align="left"  hotimage="file='115.svg' corner='5,5,5,5' " pushedimage="file='219.svg' corner='5,5,5,5' "   textpadding="40" height="32"  text="关闭其它标签页"  font="1" cursor="hand" textcolor="0xff181818" />
+			
+			<Label  width="155" padding="22,10" height="1"  bkcolor="0xffd6d6d6" />
+			
+			<Button  name="menu_close_wnd"  padding="15,10,40" align="left"  hotimage="file='115.svg' corner='5,5,5,5' " pushedimage="file='219.svg' corner='5,5,5,5' "   textpadding="40" height="32"  text="关闭窗口"  font="1" cursor="hand" textcolor="0xff181818" />
+			<Button  name="move_new_wnd"  padding="15,1,40" align="left"  hotimage="file='115.svg' corner='5,5,5,5' " pushedimage="file='219.svg' corner='5,5,5,5' "   textpadding="40" height="32"  text="将标签页移到新窗口"  font="1" cursor="hand" textcolor="0xff181818" />
+			<Button  name="home_open_in_folder"  padding="15,1,40" align="left"  hotimage="file='115.svg' corner='5,5,5,5' " pushedimage="file='219.svg' corner='5,5,5,5' "   textpadding="40" height="32"  text="在文件夹中显示"  font="1" cursor="hand" textcolor="0xff181818" />
+		
+		</VerticalLayout>
+		
+    </MenuElement>
+	
+	
+  </Menu>
+</Window>

@@ -1,11 +1,11 @@
 ﻿#include "pch.h"
 #include "UIManager.h"
 #include "UIContainer.h"
-#include "UIRenderBatchInternal.h"
-#include "UIRenderContext.h"
-#include "UIRenderImageRuntimeInternal.h"
-#include "UIRenderSurfaceInternal.h"
-#include "UIRenderTextSharedInternal.h"
+#include "Render/UIRenderBatchInternal.h"
+#include "Render/UIRenderContext.h"
+#include "Render/UIRenderImageRuntimeInternal.h"
+#include "Render/UIRenderSurfaceInternal.h"
+#include "Render/UIRenderTextSharedInternal.h"
 #include "UIResourceData.h"
 #include <zmouse.h>
 #include <cwctype>
@@ -1817,7 +1817,7 @@ namespace FYUI {
 
 	CPaintManagerUI::CPaintManagerUI() :
 		m_hWndPaint(NULL),
-		m_bOffscreenPaint(true),
+		m_bOffscreenPaint(false),
 		m_hwndTooltip(NULL),
 		m_uTimerID(0x1000),
 		m_pRoot(NULL),
@@ -1833,8 +1833,9 @@ namespace FYUI {
 		m_bMouseTracking(false),
 		m_bMouseCapture(false),
 		m_bIsPainting(false),
-		m_bAsyncNotifyPosted(false),
 		m_bUsedVirtualWnd(false),
+		m_bAsyncNotifyPosted(false),
+		m_bAnimationFramePosted(false),
 		m_bForceUseSharedRes(false),
 		m_nOpacity(0xFF),
 		m_bLayered(false),
@@ -1873,8 +1874,6 @@ namespace FYUI {
 		m_nDirect2DStandaloneDraws(0),
 		m_nSampleDirect2DBatchFlushes(0),
 		m_nSampleDirect2DStandaloneDraws(0),
-		m_bUseGdiplusText(false),
-		m_trh(0),
 		m_bDragDrop(false),
 		m_bDragMode(false),
 		m_hDragBitmap(NULL),
@@ -2518,6 +2517,10 @@ namespace FYUI {
 			if ((uStyle & WS_CHILD) != 0) return;
 
 			m_bLayered = bLayered;
+			m_bOffscreenPaint = bLayered;
+			if (!m_bOffscreenPaint) {
+				ResetRenderSurfaces();
+			}
 			if (m_pRoot != NULL) m_pRoot->NeedUpdate();
 			Invalidate();
 		}
@@ -2562,8 +2565,10 @@ namespace FYUI {
 
 	void CPaintManagerUI::SetRenderBackend(RenderBackendType backend)
 	{
-		if (m_renderBackend == backend) return;
-		m_renderBackend = backend;
+		const RenderBackendType resolvedBackend =
+			backend == RenderBackendAuto ? RenderBackendAuto : RenderBackendDirect2D;
+		if (m_renderBackend == resolvedBackend) return;
+		m_renderBackend = resolvedBackend;
 		if (IsValid()) Invalidate();
 	}
 
@@ -2903,26 +2908,6 @@ namespace FYUI {
 		return true;
 	}
 
-	void CPaintManagerUI::SetUseGdiplusText(bool bUse)
-	{
-		m_bUseGdiplusText = bUse;
-	}
-
-	bool CPaintManagerUI::IsUseGdiplusText() const
-	{
-		return m_bUseGdiplusText;
-	}
-
-	void CPaintManagerUI::SetGdiplusTextRenderingHint(int trh)
-	{
-		m_trh = trh;
-	}
-
-	int CPaintManagerUI::GetGdiplusTextRenderingHint() const
-	{
-		return m_trh;
-	}
-
 	bool CPaintManagerUI::PreMessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lRes)
 	{
 		for (int i = 0; i < m_aPreMessageFilters.GetSize(); i++)
@@ -2946,9 +2931,6 @@ namespace FYUI {
 			// Tabbing between controls
 			if (wParam == VK_TAB)
 			{
-				if (m_pFocus && m_pFocus->IsVisible() && m_pFocus->IsEnabled() && StringUtil::Find(m_pFocus->GetClass(), _T("RichEditUI")) != -1) {
-					if (static_cast<CRichEditUI*>(m_pFocus)->IsWantTab()) return false;
-				}
 				if (m_pFocus && m_pFocus->IsVisible() && m_pFocus->IsEnabled() && StringUtil::Find(m_pFocus->GetClass(), _T("WkeWebkitUI")) != -1) {
 					return false;
 				}
@@ -3062,6 +3044,14 @@ namespace FYUI {
 			}
 		}
 		break;
+		case UIMSG_ANIMATION_FRAME:
+		{
+			m_bAnimationFramePosted = false;
+			if (::GetUpdateRect(m_hWndPaint, NULL, FALSE)) {
+				::UpdateWindow(m_hWndPaint);
+			}
+		}
+		return true;
 		
 		case WM_CLOSE:
 		{
@@ -3860,7 +3850,9 @@ namespace FYUI {
 		if (m_hWndPaint == NULL || !::IsWindow(m_hWndPaint)) return;
 		RECT rcClient = { 0 };
 		if (!::GetClientRect(m_hWndPaint, &rcClient)) return;
-		AccumulateLayeredUpdateRect(rcClient);
+		if (m_bLayered) {
+			AccumulateLayeredUpdateRect(rcClient);
+		}
 		::InvalidateRect(m_hWndPaint, NULL, FALSE);
 	}
 
@@ -3871,8 +3863,29 @@ namespace FYUI {
 		if (rcItem.top < 0) rcItem.top = 0;
 		if (rcItem.right < rcItem.left) rcItem.right = rcItem.left;
 		if (rcItem.bottom < rcItem.top) rcItem.bottom = rcItem.top;
-		AccumulateLayeredUpdateRect(rcItem);
+		if (m_bLayered) {
+			AccumulateLayeredUpdateRect(rcItem);
+		}
 		::InvalidateRect(m_hWndPaint, &rcItem, FALSE);
+	}
+
+	void CPaintManagerUI::RequestAnimationFrame(CControlUI* pControl)
+	{
+		if (m_hWndPaint == NULL || !::IsWindow(m_hWndPaint)) {
+			return;
+		}
+
+		if (pControl != NULL && pControl->GetManager() == this && pControl->IsVisible()) {
+			RECT rcFrame = pControl->GetPos();
+			Invalidate(rcFrame);
+		}
+		else {
+			Invalidate();
+		}
+
+		if (!m_bAnimationFramePosted) {
+			m_bAnimationFramePosted = ::PostMessage(m_hWndPaint, UIMSG_ANIMATION_FRAME, 0, 0) != FALSE;
+		}
 	}
 
 	bool CPaintManagerUI::ScrollRenderCacheRect(const RECT& rcScrollInput, int dx, int dy)
@@ -4319,16 +4332,6 @@ namespace FYUI {
 			RebuildFont(entry.second);
 		}
 		RebuildFont(&m_SharedResInfo.m_DefaultFontInfo);
-
-		CStdPtrArray* richEditList = FindSubControlsByClass(GetRoot(), _T("RichEditUI"));
-		if (richEditList == nullptr)
-			return;
-		for (int i = 0; i < richEditList->GetSize(); i++)
-		{
-			CRichEditUI* pT = static_cast<CRichEditUI*>((*richEditList)[i]);
-			pT->SetFont(pT->GetFont());
-
-		}
 	}
 
 	void FYUI::CPaintManagerUI::RebuildFont(TFontInfo* pFontInfo)

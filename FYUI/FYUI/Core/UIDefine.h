@@ -322,6 +322,7 @@ protected:                                                                \
 #define  DUI_CTR_BOX							 (_T("Box")) //
 
 #define  DUI_CTR_EDIT                            (_T("Edit"))
+#define  DUI_CTR_RICHEDIT                        (_T("RichEdit"))
 #define  DUI_CTR_LIST                            (_T("List"))
 #define  DUI_CTR_TEXT                            (_T("Text"))
 #define  DUI_CTR_HBOX                            (_T("HBox"))
@@ -334,6 +335,7 @@ protected:                                                                \
 
 #define  DUI_CTR_BUTTON                          (_T("Button"))
 #define  DUI_CTR_BUTTONEX                        (_T("ButtonEx"))
+#define  DUI_CTR_FRAMETEST                       (_T("FrameTest"))
 #define  DUI_CTR_OPTION                          (_T("Option"))
 #define  DUI_CTR_SLIDER                          (_T("Slider"))
 #define  DUI_CTR_TAB_BOX					     (_T("TabBox")) //
@@ -346,7 +348,6 @@ protected:                                                                \
 
 #define  DUI_CTR_LISTITEM                        (_T("ListItem"))
 #define  DUI_CTR_PROGRESS                        (_T("Progress"))
-#define  DUI_CTR_RICHEDIT                        (_T("RichEdit"))
 #define  DUI_CTR_CHECKBOX                        (_T("CheckBox"))
 #define  DUI_CTR_COMBOBOX                        (_T("ComboBox"))
 #define  DUI_CTR_DATETIME                        (_T("DateTime"))

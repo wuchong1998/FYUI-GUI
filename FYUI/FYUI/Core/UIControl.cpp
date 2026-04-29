@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "UIControl.h"
-#include "UIRenderContext.h"
+#include "Render/UIRenderContext.h"
 #include <cwctype>
 
 namespace FYUI
@@ -1264,19 +1264,6 @@ namespace FYUI
 		return m_bFloat;
 	}
 
-	void CControlUI::SetGdiPlusDrawText (bool bGDIPlusDrawText)
-	{
-		if(bGDIPlusDrawText ==  m_bGdiPlusDrawText)
-			return;
-		m_bGdiPlusDrawText = bGDIPlusDrawText;
-		NeedUpdate ();
-	}
-
-	bool CControlUI::GetGdiPlusDrawText () const
-	{
-		return m_bGdiPlusDrawText;
-	}
-
 	CControlUI* CControlUI::FindControl(FINDCONTROLPROC Proc, LPVOID pData, UINT uFlags)
 	{
 		if( (uFlags & UIFIND_VISIBLE) != 0 && !IsVisible() ) return NULL;
@@ -1576,11 +1563,6 @@ namespace FYUI
 
 		if (IsAttributeName(name, L"innerstyle")) {
 			ApplyAttributeList(pstrValueView);
-		}
-		else if (IsAttributeName(name, L"gdiplustext")) {
-			if (StringUtil::ParseBool(pstrValueView)) {
-				SetGdiPlusDrawText(true);
-			}
 		}
 		else if (IsAttributeName(name, L"pos")) {
 			RECT position = { 0 };

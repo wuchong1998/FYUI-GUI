@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "UIMenu.h"
-#include "../Core/UIRenderContext.h"
+#include "../Core/Render/UIRenderContext.h"
 
 namespace FYUI {
 
@@ -102,8 +102,9 @@ namespace FYUI {
 
 	SIZE CMenuUI::EstimateSize(SIZE szAvailable)
 	{
-		int cxFixed = 0;
-		int cyFixed = 0;
+		SIZE szRootFixed = GetManager()->ScaleSize(m_cxyFixed);
+		int cxFixed = szRootFixed.cx;
+		int cyFixed = szRootFixed.cy;
 		for( int it = 0; it < GetCount(); it++ ) {
 			CControlUI* pControl = static_cast<CControlUI*>(GetItemAt(it));
 			if( !pControl->IsVisible() ) continue;
@@ -374,7 +375,7 @@ namespace FYUI {
 			}
 			CDialogBuilder builder;
 
-				CControlUI* pRoot = builder.Create(m_xml, {}, this, &m_pm);
+			CControlUI* pRoot = builder.Create(m_xml, {}, this, &m_pm);
 			bShowShadow = m_pm.GetShadow()->IsShowShadow();
 			m_pm.GetShadow()->ShowShadow(false);
 			m_pm.AttachDialog(pRoot);
@@ -396,6 +397,7 @@ namespace FYUI {
 	void CMenuWnd::ResizeMenu()
 	{
 		CControlUI* pRoot = m_pm.GetRoot();
+		CMenuUI* pMenuRoot = static_cast<CMenuUI*>(pRoot);
 
 #if defined(WIN32) && !defined(UNDER_CE)
 		MONITORINFO oMonitor = {}; 
@@ -411,7 +413,7 @@ namespace FYUI {
 		m_pm.SetInitSize(szAvailable.cx, szAvailable.cy);
 
 		//韫囧懘銆忛弰鐤nu閺嶅洨顒锋担婊€璐焫ml閻ㄥ嫭鐗撮懞鍌滃仯
-		CMenuUI *pMenuRoot = static_cast<CMenuUI*>(pRoot);
+		pMenuRoot = static_cast<CMenuUI*>(pRoot);
 		ASSERT(pMenuRoot);
 
 		SIZE szInit = m_pm.GetInitSize();
@@ -709,6 +711,28 @@ namespace FYUI {
 		return CListContainerElementUI::GetInterface(pstrName);
 	}
 
+	void CMenuElementUI::SetOwner(CControlUI* pOwner)
+	{
+		if (pOwner != NULL) {
+			CListContainerElementUI::SetOwner(pOwner);
+		}
+		else {
+			m_pOwner = NULL;
+		}
+
+		for (int i = 0; i < GetCount(); ++i) {
+			CControlUI* pChild = GetItemAt(i);
+			if (pChild == NULL) {
+				continue;
+			}
+
+			CMenuElementUI* pMenuChild = static_cast<CMenuElementUI*>(pChild->GetInterface(_T("MenuElement")));
+			if (pMenuChild != NULL) {
+				pMenuChild->SetOwner(pOwner);
+			}
+		}
+	}
+
 	bool CMenuElementUI::DoPaint(CPaintRenderContext& renderContext, CControlUI* pStopControl)
 	{
 		const RECT& rcPaint = renderContext.GetPaintRect();
@@ -806,6 +830,7 @@ namespace FYUI {
 	void CMenuElementUI::DrawItemIcon(CPaintRenderContext& renderContext, const RECT& rcItem)
 	{
 		if (!m_strIcon.empty() && !(m_bCheckItem && !GetChecked())) {
+			if (m_pOwner == NULL) return;
 			SIZE cxyFixed = GetFixedSize();
 			SIZE szIconSize = GetIconSize();
 			TListInfoUI* pInfo = m_pOwner->GetListInfo();
@@ -886,6 +911,9 @@ namespace FYUI {
 	SIZE CMenuElementUI::EstimateSize(SIZE szAvailable)
 	{
 		SIZE cxyFixed = GetManager()->ScaleSize(m_cxyFixed);
+		if (m_pOwner == NULL) {
+			return cxyFixed;
+		}
 		SIZE cXY = {0};
 		for( int it = 0; it < GetCount(); it++ ) {
 			CControlUI* pControl = static_cast<CControlUI*>(GetItemAt(it));
@@ -940,6 +968,7 @@ namespace FYUI {
 			}
 			if( hasSubMenu )
 			{
+				if (m_pOwner == NULL) return;
 				m_pOwner->SelectItem(GetIndex(), true);
 				CreateMenuWnd();
 			}
@@ -949,6 +978,7 @@ namespace FYUI {
 				param.hWnd = m_pManager->GetPaintWindow();
 				param.wParam = 2;
 				CMenuWnd::GetGlobalContextMenuObserver().RBroadcast(param);
+				if (m_pOwner == NULL) return;
 				m_pOwner->SelectItem(GetIndex(), true);
 			}
 			return;
@@ -968,6 +998,7 @@ namespace FYUI {
 			}
 
 			if (!hasSubMenu) {
+				if (m_pOwner == NULL) return;
 				m_pOwner->SelectItem(-1, true);
 			}
 		}
@@ -1034,6 +1065,7 @@ namespace FYUI {
 				}
 			}
 			if( hasSubMenu ) {
+				if (m_pOwner == NULL) return;
 				m_pOwner->SelectItem(GetIndex(), true);
 				CreateMenuWnd();
 			}
@@ -1043,6 +1075,7 @@ namespace FYUI {
 				param.hWnd = m_pManager->GetPaintWindow();
 				param.wParam = 2;
 				CMenuWnd::GetGlobalContextMenuObserver().RBroadcast(param);
+				if (m_pOwner == NULL) return;
 				m_pOwner->SelectItem(GetIndex(), true);
 			}
 

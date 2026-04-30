@@ -34,6 +34,13 @@ namespace FYUI
 	enum DuiSig
 	{
 		DuiSig_end = 0, // [marks end of message map]
+		/**
+		 * @brief 执行 LRESULT 操作
+		 * @details 用于执行 LRESULT 操作。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param WPARAM [in] WPARAM参数
+		 * @param LPARAM [in] LPARAM参数
+		 * @return DuiSig_lwl, // 返回 执行 LRESULT 操作 的结果
+		 */
 		DuiSig_lwl,     // LRESULT (WPARAM, LPARAM)
 		DuiSig_vn,      // void (TNotifyUI)
 	};
@@ -71,6 +78,10 @@ namespace FYUI
 		int				nDpi;			// current DPI
 
 		// 榛樿鏋勯€犲嚱鏁?
+		/**
+		 * @brief 构造 TooltipInfo 对象
+		 * @details 用于构造 TooltipInfo 对象。具体行为由当前对象状态以及传入参数共同决定。
+		 */
 		TooltipInfo()
 			: emToolTipType(Tool_Left)
 			, nMaxWidth(0)
@@ -81,6 +92,11 @@ namespace FYUI
 		}
 
 		// 鎷疯礉鏋勯€犲嚱鏁?
+		/**
+		 * @brief 构造 TooltipInfo 对象
+		 * @details 用于构造 TooltipInfo 对象。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param other [in] 其他参数
+		 */
 		TooltipInfo(const TooltipInfo& other)
 			: strText(other.strText)
 			, rcPos(other.rcPos)
@@ -92,6 +108,12 @@ namespace FYUI
 		}
 
 		// 鎷疯礉璧嬪€艰繍绠楃
+		/**
+		 * @brief 执行 operator= 运算
+		 * @details 用于执行 operator= 运算。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param other [in] 其他参数
+		 * @return TooltipInfo& 返回 执行 operator= 运算 的结果
+		 */
 		TooltipInfo& operator=(const TooltipInfo& other)
 		{
 			if (this != &other)
@@ -113,7 +135,17 @@ namespace FYUI
 	union DuiMessageMapFunctions
 	{
 		DUI_PMSG pfn;   // generic member function pointer
+		/**
+		 * @brief 执行 LRESULT 操作
+		 * @details 用于执行 LRESULT 操作。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param pfn_Notify_lwl [in] pfn通知lwl参数
+		 */
 		LRESULT(CNotifyPump::*pfn_Notify_lwl)(WPARAM, LPARAM);
+		/**
+		 * @brief 执行 void 操作
+		 * @details 用于执行 void 操作。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param pfn_Notify_vn [in] pfn通知vn参数
+		 */
 		void (CNotifyPump::*pfn_Notify_vn)(TNotifyUI&);
 	};
 

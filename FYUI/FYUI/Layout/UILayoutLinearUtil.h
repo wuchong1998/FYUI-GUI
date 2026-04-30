@@ -18,6 +18,10 @@ namespace FYUI
 		int iControlMaxWidth;
 		int iControlMaxHeight;
 
+		/**
+		 * @brief 构造 LinearLayoutInfo 对象
+		 * @details 用于构造 LinearLayoutInfo 对象。具体行为由当前对象状态以及传入参数共同决定。
+		 */
 		LinearLayoutInfo()
 			: pControl(nullptr),
 			sz{ 0, 0 },
@@ -30,12 +34,26 @@ namespace FYUI
 		}
 	};
 
+	/**
+	 * @brief 执行 ClampLinearLayoutAvailableSize 操作
+	 * @details 用于执行 ClampLinearLayoutAvailableSize 操作。具体行为由当前对象状态以及传入参数共同决定。
+	 * @param szAvailable [in,out] 可用尺寸
+	 * @param info [in] 信息参数
+	 */
 	inline void ClampLinearLayoutAvailableSize(SIZE& szAvailable, const LinearLayoutInfo& info)
 	{
 		if (szAvailable.cx > info.iControlMaxWidth) szAvailable.cx = info.iControlMaxWidth;
 		if (szAvailable.cy > info.iControlMaxHeight) szAvailable.cy = info.iControlMaxHeight;
 	}
 
+	/**
+	 * @brief 执行 ClampLinearMeasuredSize 操作
+	 * @details 用于执行 ClampLinearMeasuredSize 操作。具体行为由当前对象状态以及传入参数共同决定。
+	 * @param pControl [in] 控件对象
+	 * @param sz [in,out] 尺寸参数
+	 * @param axis [in] axis参数
+	 * @param nAdjustables [in,out] Adjustables数值
+	 */
 	inline void ClampLinearMeasuredSize(CControlUI* pControl, SIZE& sz, LinearLayoutAxis axis, int& nAdjustables)
 	{
 		LONG& iPrimarySize = (axis == LinearLayoutAxis::Vertical) ? sz.cy : sz.cx;
@@ -63,6 +81,18 @@ namespace FYUI
 		}
 	}
 
+	/**
+	 * @brief 执行 CollectLinearLayoutInfo 操作
+	 * @details 用于执行 CollectLinearLayoutInfo 操作。具体行为由当前对象状态以及传入参数共同决定。
+	 * @param pControl [in] 控件对象
+	 * @param szAvailable [in] 可用尺寸
+	 * @param axis [in] axis参数
+	 * @param info [in,out] 信息参数
+	 * @param iPrimaryFixed [in,out] Primary固定值
+	 * @param iSecondaryNeeded [in,out] SecondaryNeeded值
+	 * @param nAdjustables [in,out] Adjustables数值
+	 * @param nEstimateNum [in,out] 估算Num数值
+	 */
 	inline void CollectLinearLayoutInfo(CControlUI* pControl, const SIZE& szAvailable, LinearLayoutAxis axis,
 		LinearLayoutInfo& info, int& iPrimaryFixed, int& iSecondaryNeeded, int& nAdjustables, int& nEstimateNum)
 	{

@@ -17,6 +17,12 @@ namespace FYUI
 			HBITMAP bitmap = NULL;
 			bool useAlpha = false;
 
+			/**
+			 * @brief 执行 operator== 运算
+			 * @details 用于执行 operator== 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @param other [in] 其他参数
+			 * @return bool 操作成功返回 true，否则返回 false
+			 */
 			bool operator==(const D2DBitmapCacheKey& other) const
 			{
 				return bitmap == other.bitmap && useAlpha == other.useAlpha;
@@ -25,6 +31,11 @@ namespace FYUI
 
 		struct D2DBitmapCacheKeyHasher
 		{
+			/**
+			 * @brief 执行 operator 运算
+			 * @details 用于执行 operator 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @return size_t 返回对应的数值结果
+			 */
 			size_t operator()(const D2DBitmapCacheKey& key) const
 			{
 				const UINT_PTR handleValue = reinterpret_cast<UINT_PTR>(key.bitmap);
@@ -44,6 +55,12 @@ namespace FYUI
 			UINT paragraphAlignment = 0;
 			UINT wordWrapping = 0;
 
+			/**
+			 * @brief 执行 operator== 运算
+			 * @details 用于执行 operator== 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @param other [in] 其他参数
+			 * @return bool 操作成功返回 true，否则返回 false
+			 */
 			bool operator==(const D2DTextFormatCacheKey& other) const
 			{
 				return fontFamily == other.fontFamily
@@ -60,6 +77,11 @@ namespace FYUI
 
 		struct D2DTextFormatCacheKeyHasher
 		{
+			/**
+			 * @brief 执行 operator 运算
+			 * @details 用于执行 operator 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @return size_t 返回对应的数值结果
+			 */
 			size_t operator()(const D2DTextFormatCacheKey& key) const
 			{
 				size_t hash = std::hash<std::wstring>()(key.fontFamily);
@@ -86,6 +108,12 @@ namespace FYUI
 			bool strikeout = false;
 			bool noPrefix = false;
 
+			/**
+			 * @brief 执行 operator== 运算
+			 * @details 用于执行 operator== 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @param other [in] 其他参数
+			 * @return bool 操作成功返回 true，否则返回 false
+			 */
 			bool operator==(const D2DTextLayoutCacheKey& other) const
 			{
 				return formatKey == other.formatKey
@@ -101,6 +129,11 @@ namespace FYUI
 
 		struct D2DTextLayoutCacheKeyHasher
 		{
+			/**
+			 * @brief 执行 operator 运算
+			 * @details 用于执行 operator 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @return size_t 返回对应的数值结果
+			 */
 			size_t operator()(const D2DTextLayoutCacheKey& key) const
 			{
 				size_t hash = D2DTextFormatCacheKeyHasher()(key.formatKey);
@@ -120,6 +153,12 @@ namespace FYUI
 			std::wstring text;
 			bool noPrefix = false;
 
+			/**
+			 * @brief 执行 operator== 运算
+			 * @details 用于执行 operator== 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @param other [in] 其他参数
+			 * @return bool 操作成功返回 true，否则返回 false
+			 */
 			bool operator==(const PlainTextNormalizationCacheKey& other) const
 			{
 				return text == other.text && noPrefix == other.noPrefix;
@@ -128,6 +167,11 @@ namespace FYUI
 
 		struct PlainTextNormalizationCacheKeyHasher
 		{
+			/**
+			 * @brief 执行 operator 运算
+			 * @details 用于执行 operator 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @return size_t 返回对应的数值结果
+			 */
 			size_t operator()(const PlainTextNormalizationCacheKey& key) const
 			{
 				size_t hash = std::hash<std::wstring>()(key.text);
@@ -151,6 +195,12 @@ namespace FYUI
 			int fontId = 0;
 			UINT uStyle = 0;
 
+			/**
+			 * @brief 执行 operator== 运算
+			 * @details 用于执行 operator== 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @param other [in] 其他参数
+			 * @return bool 操作成功返回 true，否则返回 false
+			 */
 			bool operator==(const HtmlParseCacheKey& other) const
 			{
 				return managerId == other.managerId
@@ -164,6 +214,11 @@ namespace FYUI
 
 		struct HtmlParseCacheKeyHasher
 		{
+			/**
+			 * @brief 执行 operator 运算
+			 * @details 用于执行 operator 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @return size_t 返回对应的数值结果
+			 */
 			size_t operator()(const HtmlParseCacheKey& key) const
 			{
 				size_t hash = std::hash<UINT_PTR>()(key.managerId);
@@ -185,6 +240,12 @@ namespace FYUI
 			LONG maxHeight100 = 0;
 			bool endEllipsis = false;
 
+			/**
+			 * @brief 执行 operator== 运算
+			 * @details 用于执行 operator== 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @param other [in] 其他参数
+			 * @return bool 操作成功返回 true，否则返回 false
+			 */
 			bool operator==(const HtmlTextLayoutCacheKey& other) const
 			{
 				return formatKey == other.formatKey
@@ -198,6 +259,11 @@ namespace FYUI
 
 		struct HtmlTextLayoutCacheKeyHasher
 		{
+			/**
+			 * @brief 执行 operator 运算
+			 * @details 用于执行 operator 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @return size_t 返回对应的数值结果
+			 */
 			size_t operator()(const HtmlTextLayoutCacheKey& key) const
 			{
 				size_t hash = D2DTextFormatCacheKeyHasher()(key.formatKey);
@@ -223,6 +289,12 @@ namespace FYUI
 			UINT32 start = 0;
 			UINT32 length = 0;
 
+			/**
+			 * @brief 执行 operator== 运算
+			 * @details 用于执行 operator== 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @param other [in] 其他参数
+			 * @return bool 操作成功返回 true，否则返回 false
+			 */
 			bool operator==(const HtmlHitTestMetricsCacheKey& other) const
 			{
 				return layoutId == other.layoutId
@@ -233,6 +305,11 @@ namespace FYUI
 
 		struct HtmlHitTestMetricsCacheKeyHasher
 		{
+			/**
+			 * @brief 执行 operator 运算
+			 * @details 用于执行 operator 运算。具体行为由当前对象状态以及传入参数共同决定。
+			 * @return size_t 返回对应的数值结果
+			 */
 			size_t operator()(const HtmlHitTestMetricsCacheKey& key) const
 			{
 				size_t hash = std::hash<UINT_PTR>()(key.layoutId);

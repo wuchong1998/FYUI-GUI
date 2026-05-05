@@ -263,6 +263,17 @@ namespace FYUI {
 		 * @return TImageInfo* 返回结果对象指针，失败时返回 nullptr
 		 */
 		static TImageInfo* LoadImage(UINT nID, int nScale, std::wstring_view type = {}, DWORD mask = 0, HINSTANCE instance = NULL);
+		/**
+		 * @brief 从内存数据加载图像
+		 * @details 直接从内存中的 PNG、JPG、BMP、WebP 等图像二进制数据创建 `TImageInfo`，适合自定义控件先缓存、后反复绘制的场景。
+		 * 加载成功后可结合 `DrawImage(renderContext, pImageInfo, ...)` 使用，图像生命周期结束时请调用 `FreeImage` 释放。
+		 * @param pData [in] 图像二进制数据起始地址
+		 * @param dwSize [in] 图像二进制数据长度，单位为字节
+		 * @param nScale [in] 缩放基准，100 表示按原始尺寸加载
+		 * @param mask [in] 颜色掩码，命中该颜色的像素会被视为透明
+		 * @return TImageInfo* 加载成功返回图像信息对象，失败返回 nullptr
+		 */
+		static TImageInfo* LoadImageFromMemory(const void* pData, DWORD dwSize, int nScale = 100, DWORD mask = 0);
 
 		/**
 		 * @brief 绘制图像
@@ -280,6 +291,34 @@ namespace FYUI {
 		 */
 		static void DrawImage(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, const RECT& rcBmpPart,
 			const RECT& rcCorners, bool bAlpha, UINT uFade = 255, bool hole = false, bool xtiled = false, bool ytiled = false);
+		/**
+		 * @brief 绘制已加载图像
+		 * @details 将 `LoadImage` 或 `LoadImageFromMemory` 返回的图像对象绘制到目标区域。默认使用整张图像作为源区域，
+		 * 也可以通过 `prcBmpPart` 指定局部源区域。该接口适合在自定义控件的 `DoPaint` 中重复使用已缓存的内存图片。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param pImageInfo [in] 图像信息对象
+		 * @param rc [in] 目标绘制区域
+		 * @param prcBmpPart [in] 可选的源区域，传 nullptr 表示绘制整张图片
+		 * @param uFade [in] 淡入淡出透明度，0 表示完全透明，255 表示不透明
+		 * @return bool 绘制成功返回 true，参数无效或图像未加载成功时返回 false
+		 */
+		static bool DrawImage(CPaintRenderContext& renderContext, const TImageInfo* pImageInfo, const RECT& rc,
+			const RECT* prcBmpPart = nullptr, UINT uFade = 255);
+		/**
+		 * @brief 从内存数据直接绘制图像
+		 * @details 该接口会在内部临时解码内存图片并立即绘制，支持 PNG、JPG、BMP、WebP 等常见格式，适合一次性绘制场景。
+		 * 若同一张图片会在多个帧中重复使用，建议优先调用 `LoadImageFromMemory` 缓存后再绘制，以减少重复解码开销。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param rc [in] 目标绘制区域
+		 * @param pData [in] 图像二进制数据起始地址
+		 * @param dwSize [in] 图像二进制数据长度，单位为字节
+		 * @param nScale [in] 缩放基准，100 表示按原始尺寸解码
+		 * @param mask [in] 颜色掩码，命中该颜色的像素会被视为透明
+		 * @param uFade [in] 淡入淡出透明度，0 表示完全透明，255 表示不透明
+		 * @return bool 绘制成功返回 true，解码失败或参数无效时返回 false
+		 */
+		static bool DrawImageFromMemory(CPaintRenderContext& renderContext, const RECT& rc, const void* pData,
+			DWORD dwSize, int nScale = 100, DWORD mask = 0, UINT uFade = 255);
 
 		/**
 		 * @brief 绘制Rotate图像
@@ -377,7 +416,8 @@ namespace FYUI {
 		 * @param rc [in] 矩形区域
 		 * @param nSize [in] 尺寸数值
 		 * @param dwPenColor [in] Pen颜色数值
-		 * @param nStyle [in] 样式数值
+		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`。
+		 * 其它 `PS_*` 标志当前不会单独生效，最终按最接近的虚线样式或实线处理。
 		 */
 		static void DrawLine(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor,int nStyle = PS_SOLID);
 		/**
@@ -387,7 +427,7 @@ namespace FYUI {
 		 * @param rc [in] 矩形区域
 		 * @param nSize [in] 尺寸数值
 		 * @param dwPenColor [in] Pen颜色数值
-		 * @param nStyle [in] 样式数值
+		 * @param nStyle [in] 边框样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`。
 		 */
 		static void DrawRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor,int nStyle = PS_SOLID);
 		/**
@@ -399,10 +439,89 @@ namespace FYUI {
 		 * @param width [in] 宽度参数
 		 * @param height [in] 高度参数
 		 * @param dwPenColor [in] Pen颜色数值
-		 * @param nStyle [in] 样式数值
+		 * @param nStyle [in] 边框样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`。
 		 */
 		static void DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int width, 
 									int height, DWORD dwPenColor,int nStyle = PS_SOLID);
+		/**
+		 * @brief 绘制椭圆边框
+		 * @details 按目标矩形外接椭圆绘制边框，适合绘制圆点、头像边框、状态灯、胶囊按钮装饰等元素。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param rc [in] 椭圆外接矩形
+		 * @param nSize [in] 线宽，单位为像素
+		 * @param dwPenColor [in] 边框颜色
+		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
+		 */
+		static void DrawEllipse(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		/**
+		 * @brief 填充椭圆
+		 * @details 按目标矩形外接椭圆进行纯色填充，适合绘制徽标圆点、选中状态、圆形按钮底色等场景。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param rc [in] 椭圆外接矩形
+		 * @param dwFillColor [in] 填充颜色
+		 */
+		static void FillEllipse(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFillColor);
+		/**
+		 * @brief 绘制贝塞尔曲线
+		 * @details 使用 4 个控制点绘制三次贝塞尔曲线，适合绘制平滑连线、流程图曲线、波形或图表趋势线。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param ptStart [in] 起点
+		 * @param ptControl1 [in] 第一控制点
+		 * @param ptControl2 [in] 第二控制点
+		 * @param ptEnd [in] 终点
+		 * @param nSize [in] 线宽，单位为像素
+		 * @param dwPenColor [in] 线条颜色
+		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
+		 */
+		static void DrawBezier(CPaintRenderContext& renderContext, const POINT& ptStart, const POINT& ptControl1,
+			const POINT& ptControl2, const POINT& ptEnd, int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		/**
+		 * @brief 绘制折线
+		 * @details 按给定点序列顺次连线但不自动闭合，适合折线图、分隔折角、路径轨迹等 GUI 场景。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param pPoints [in] 点数组首地址
+		 * @param nCount [in] 点数量，至少为 2
+		 * @param nSize [in] 线宽，单位为像素
+		 * @param dwPenColor [in] 线条颜色
+		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
+		 */
+		static void DrawPolyline(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, int nSize,
+			DWORD dwPenColor, int nStyle = PS_SOLID);
+		/**
+		 * @brief 绘制多边形边框
+		 * @details 按给定点序列首尾闭合绘制多边形边框，适合气泡、提示箭头、标签角标、自定义裁片等场景。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param pPoints [in] 点数组首地址
+		 * @param nCount [in] 点数量，至少为 3
+		 * @param nSize [in] 线宽，单位为像素
+		 * @param dwPenColor [in] 边框颜色
+		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
+		 */
+		static void DrawPolygon(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, int nSize,
+			DWORD dwPenColor, int nStyle = PS_SOLID);
+		/**
+		 * @brief 填充多边形
+		 * @details 按给定点序列首尾闭合填充纯色，适合绘制三角箭头、气泡尖角、标记面片和自定义区域高亮。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param pPoints [in] 点数组首地址
+		 * @param nCount [in] 点数量，至少为 3
+		 * @param dwFillColor [in] 填充颜色
+		 */
+		static void FillPolygon(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, DWORD dwFillColor);
+		/**
+		 * @brief 绘制圆弧
+		 * @details 按椭圆外接矩形与角度范围绘制圆弧，常用于进度环、仪表盘、加载动画和趋势刻度等场景。
+		 * 角度以右侧水平方向为 0 度，正值按顺时针方向增长。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param rc [in] 圆弧所在椭圆的外接矩形
+		 * @param fStartAngle [in] 起始角度，单位为度
+		 * @param fSweepAngle [in] 扫过角度，单位为度，正值顺时针，负值逆时针
+		 * @param nSize [in] 线宽，单位为像素
+		 * @param dwPenColor [in] 线条颜色
+		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
+		 */
+		static void DrawArc(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle,
+			int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 
 		// 鐎涙ぞ缍嬬紒妯哄煑
 		/**
@@ -413,7 +532,12 @@ namespace FYUI {
 		 * @param text [in] 文本内容
 		 * @param dwTextColor [in] 文本颜色值
 		 * @param iFont [in] 字体值
-		 * @param uStyle [in] 样式标志
+		 * @param uStyle [in] 文本格式标志，可组合使用常见 `DT_*` 标志。
+		 * 常用支持项包括：`DT_LEFT`/`DT_CENTER`/`DT_RIGHT` 水平对齐，
+		 * `DT_TOP`/`DT_VCENTER`/`DT_BOTTOM` 垂直对齐，
+		 * `DT_SINGLELINE` 单行显示，`DT_WORDBREAK` 多行自动换行，
+		 * `DT_END_ELLIPSIS` 末尾省略，`DT_NOPREFIX` 忽略 `&` 助记符，
+		 * `DT_NOCLIP` 不按 `rc` 裁剪，`DT_CALCRECT` 仅测量文本并回写矩形。
 		 * @param dwTextBKColor [in] 文本背景颜色数值
 		 */
 		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, 
@@ -426,7 +550,9 @@ namespace FYUI {
 		 * @param text [in] 文本内容
 		 * @param dwTextColor [in] 文本颜色值
 		 * @param iFont [in] 字体值
-		 * @param uStyle [in] 样式标志
+		 * @param uStyle [in] 文本格式标志，支持组合使用 `DT_LEFT`、`DT_CENTER`、`DT_RIGHT`、
+		 * `DT_TOP`、`DT_VCENTER`、`DT_BOTTOM`、`DT_SINGLELINE`、`DT_WORDBREAK`、
+		 * `DT_END_ELLIPSIS`、`DT_NOPREFIX`、`DT_NOCLIP`、`DT_CALCRECT` 等常用标志
 		 */
 		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, 
 			int iFont, UINT uStyle);
@@ -473,7 +599,8 @@ namespace FYUI {
 		 * @param sLinks [in] sLinks参数
 		 * @param nLinkRects [in,out] LinkRects数值
 		 * @param iFont [in] 字体值
-		 * @param uStyle [in] 样式标志
+		 * @param uStyle [in] 文本格式标志，语义与 `DrawText` 基本一致，常用为 `DT_SINGLELINE`、
+		 * `DT_WORDBREAK`、`DT_END_ELLIPSIS`、`DT_NOPREFIX`、`DT_NOCLIP`、`DT_CALCRECT`
 		 */
 		static void DrawHtmlText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor,
 			RECT* pLinks, std::wstring* sLinks, int& nLinkRects, int iFont, UINT uStyle);
@@ -532,7 +659,8 @@ namespace FYUI {
 		 * @param renderContext [in,out] 绘制上下文
 		 * @param text [in] 文本内容
 		 * @param iFont [in] 字体值
-		 * @param uStyle [in] 样式标志
+		 * @param uStyle [in] 文本格式标志，支持组合使用 `DT_SINGLELINE`、`DT_WORDBREAK`、
+		 * `DT_END_ELLIPSIS`、`DT_NOPREFIX`、`DT_CALCRECT` 及对齐相关 `DT_*` 标志
 		 * @return 返回对应的几何结果
 		 */
 		static SIZE GetTextSize(CPaintRenderContext& renderContext, std::wstring_view text, int iFont, UINT uStyle);

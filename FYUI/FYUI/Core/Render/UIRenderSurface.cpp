@@ -33,6 +33,14 @@ namespace FYUI
 
 	namespace
 	{
+		bool IsFullSurfaceDirtyRect(const RECT& rcDirty, const SIZE& size)
+		{
+			return rcDirty.left <= 0
+				&& rcDirty.top <= 0
+				&& rcDirty.right >= size.cx
+				&& rcDirty.bottom >= size.cy;
+		}
+
 		HDC AcquireLayeredWindowPresentNativeDC(HWND hWnd, HDC hFallbackTargetNativeDC, bool& bReleasePresentDC)
 		{
 			bReleasePresentDC = false;
@@ -191,7 +199,7 @@ namespace FYUI
 			rop) != FALSE;
 	}
 
-	bool UpdateLayeredWindowFromRenderSurfaceInternal(const CPaintRenderSurface& surface, HWND hWnd, CPaintRenderContext& targetContext, const POINT& ptDst, const SIZE& size, BYTE alpha)
+	bool UpdateLayeredWindowFromRenderSurfaceInternal(const CPaintRenderSurface& surface, HWND hWnd, CPaintRenderContext& targetContext, const POINT& ptDst, const SIZE& size, BYTE alpha, const RECT* pDirtyRect)
 	{
 		HDC hSurfaceNativeDC = CPaintRenderSurfaceInternalAccess::GetNativeDC(surface);
 		if (hSurfaceNativeDC == NULL || hWnd == NULL) {

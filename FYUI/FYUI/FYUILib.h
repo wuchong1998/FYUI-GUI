@@ -66,6 +66,7 @@
 #include "Control/UITreeView.h"
 #include "Control/UILabel.h"
 #include "Control/UIGifAnim.h"
+#include "Control/UIWebpAnim.h"
 #include "Control/UIAnimation.h"
 #include "Layout/UIAnimationTabLayout.h"
 #include "Control/UIButton.h"

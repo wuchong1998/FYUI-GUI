@@ -58,8 +58,9 @@ namespace FYUI {
 
 		/**
 		 * @brief 设置文本样式
-		 * @details 用于设置文本样式。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param uStyle [in] 样式标志
+		 * @details 设置组合框当前文本的 `DT_*` 文本格式标志，支持对齐、单行/换行、省略号、
+		 * 助记符处理和测量等常见选项，具体语义与 `CRenderEngine::DrawText` 的 `uStyle` 保持一致。
+		 * @param uStyle [in] 文本样式标志
 		 */
 		void SetTextStyle(UINT uStyle);
 		/**
@@ -405,8 +406,9 @@ namespace FYUI {
 		void SetItemFont(int index);
 		/**
 		 * @brief 设置子项文本样式
-		 * @details 用于设置子项文本样式。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param uStyle [in] 样式标志
+		 * @details 设置下拉子项文本的 `DT_*` 文本格式标志，常用于控制左右对齐、垂直对齐、
+		 * 单行显示、多行换行和省略号行为，具体语义与 `CRenderEngine::DrawText` 的 `uStyle` 保持一致。
+		 * @param uStyle [in] 文本样式标志
 		 */
 		void SetItemTextStyle(UINT uStyle);
 		/**

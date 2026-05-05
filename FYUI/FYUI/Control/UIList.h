@@ -536,8 +536,9 @@ namespace FYUI
 		void SetItemFont(int index);
 		/**
 		 * @brief 设置子项文本样式
-		 * @details 用于设置子项文本样式。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param uStyle [in] 样式标志
+		 * @details 设置列表子项文本的 `DT_*` 文本格式标志，常见用法包括控制水平/垂直对齐、
+		 * 单行显示、自动换行、末尾省略和助记符处理。具体语义与 `CRenderEngine::DrawText` 的 `uStyle` 保持一致。
+		 * @param uStyle [in] 文本样式标志
 		 */
 		void SetItemTextStyle(UINT uStyle);
 		/**
@@ -1354,8 +1355,9 @@ namespace FYUI
 		DWORD GetTextStyle() const;
 		/**
 		 * @brief 设置文本样式
-		 * @details 用于设置文本样式。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param uStyle [in] 样式标志
+		 * @details 设置列表头文本的 `DT_*` 文本格式标志，支持对齐、单行/换行、省略号等常见排版控制，
+		 * 具体语义与 `CRenderEngine::DrawText` 的 `uStyle` 保持一致。
+		 * @param uStyle [in] 文本样式标志
 		 */
 		void SetTextStyle(UINT uStyle);
 		/**

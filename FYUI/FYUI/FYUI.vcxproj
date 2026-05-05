@@ -74,13 +74,14 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;FYUI_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;FYUI_EXPORTS;HAVE_CONFIG_H;WEBP_USE_THREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\..\third_party\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -94,7 +95,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;FYUI_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;FYUI_EXPORTS;HAVE_CONFIG_H;WEBP_USE_THREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -102,6 +103,7 @@
       <Optimization>Full</Optimization>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\..\third_party\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -113,13 +115,14 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;FYUI_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;FYUI_STATIC;HAVE_CONFIG_H;WEBP_USE_THREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\..\third_party\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -133,12 +136,13 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;FYUI_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;FYUI_STATIC;HAVE_CONFIG_H;WEBP_USE_THREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/std:c++20 /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\..\third_party\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -158,6 +162,7 @@
     <ClInclude Include="Control\UICountdown.h" />
     <ClInclude Include="Control\UIFadeButton.h" />
     <ClInclude Include="Control\UIGifAnim.h" />
+    <ClInclude Include="Control\UIWebpAnim.h" />
     <ClInclude Include="Control\UILabel.h" />
     <ClInclude Include="Control\UIList.h" />
     <ClInclude Include="Control\UIListEx.h" />
@@ -181,6 +186,7 @@
     <ClInclude Include="Core\Render\UIRenderHtmlParseInternal.h" />
     <ClInclude Include="Core\Render\UIRenderImageD2DInternal.h" />
     <ClInclude Include="Core\Render\UIRenderImageDispatchInternal.h" />
+    <ClInclude Include="Core\Render\UIRenderImageCodecInternal.h" />
     <ClInclude Include="Core\Render\UIRenderImageLegacyInternal.h" />
     <ClInclude Include="Core\Render\UIRenderImageRuntimeInternal.h" />
     <ClInclude Include="Core\Render\UIRenderPrimitiveInternal.h" />
@@ -221,6 +227,14 @@
     <ClInclude Include="Utils\unzip.h" />
     <ClInclude Include="Utils\Utils.h" />
     <ClInclude Include="Utils\WinimplBase.h" />
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\config.h" />
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\decode.h" />
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\demux.h" />
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\encode.h" />
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\format_constants.h" />
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\mux.h" />
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\mux_types.h" />
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Control\UIAnimation.cpp" />
@@ -234,6 +248,7 @@
     <ClCompile Include="Control\UICountdown.cpp" />
     <ClCompile Include="Control\UIFadeButton.cpp" />
     <ClCompile Include="Control\UIGifAnim.cpp" />
+    <ClCompile Include="Control\UIWebpAnim.cpp" />
     <ClCompile Include="Control\UILabel.cpp" />
     <ClCompile Include="Control\UIList.cpp" />
     <ClCompile Include="Control\UIListEx.cpp" />
@@ -308,6 +323,40 @@
     <ClCompile Include="Utils\unzip.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
     <ClCompile Include="Utils\WinimplBase.cpp" />
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\alpha_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\buffer_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\frame_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\idec_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\io_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\quant_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\tree_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\vp8_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\vp8l_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\webp_dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\demux\anim_decode.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\demux\demux.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\alpha_processing.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\cpu.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\dec.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\dec_clip_tables.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\filters.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\lossless.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\rescaler.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\upsampling.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\yuv.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\bit_reader_utils.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\color_cache_utils.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\filters_utils.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\huffman_utils.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\palette.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\quant_levels_dec_utils.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\random_utils.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\rescaler_utils.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\thread_utils.c"><PrecompiledHeader>NotUsing</PrecompiledHeader></ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\utils.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ObjectFileName>$(IntDir)libwebp_utils.obj</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="FYUI_D2D_EXECUTION_BATCH_PLAN.md" />

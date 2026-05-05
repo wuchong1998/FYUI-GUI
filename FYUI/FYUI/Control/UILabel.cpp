@@ -131,7 +131,8 @@ namespace FYUI
 		if(GetFollowSize()) 
 			return CControlUI::EstimateSize(szAvailable);
 		RECT rcTextPadding = GetTextPadding();
-		if (m_cxyFixed.cx > 0 && m_cxyFixed.cy > 0) {
+		const SIZE szFixed = GetFixedSize();
+		if (szFixed.cx > 0 && szFixed.cy > 0) {
 			return GetFixedSize();
 		}
 
@@ -148,7 +149,7 @@ namespace FYUI
 			if ((m_uTextStyle & DT_SINGLELINE) != 0) {
 				// 妤傛ê瀹?
 				if (m_cxyFixedLast.cy == 0) {
-					m_cxyFixedLast.cy = m_pManager->GetFontInfo(m_iFont)->tm.tmHeight + 8;
+					m_cxyFixedLast.cy = m_pManager->GetFontInfo(m_iFont)->tm.tmHeight + GetManager()->ScaleValue(8);
 					m_cxyFixedLast.cy += rcTextPadding.top + rcTextPadding.bottom;
 				}
 				// 鐎硅棄瀹?
@@ -163,7 +164,7 @@ namespace FYUI
 						else {
 		CRenderEngine::DrawText(measureContext, rcText, sText, 0, m_iFont, DT_CALCRECT | m_uTextStyle & ~DT_RIGHT & ~DT_CENTER);
 						}
-						m_cxyFixedLast.cx = rcText.right - rcText.left + GetManager()->ScaleValue(m_rcTextPadding.left + m_rcTextPadding.right);
+						m_cxyFixedLast.cx = rcText.right - rcText.left + rcTextPadding.left + rcTextPadding.right;
 					}
 				}
 			}
@@ -305,12 +306,11 @@ namespace FYUI
 		if( m_dwDisabledTextColor == 0 ) m_dwDisabledTextColor = m_pManager->GetDefaultDisabledColor();
 
 		RECT rc = m_rcItem;
-		RECT m_rcTextPadding = CLabelUI::m_rcTextPadding;
-		m_rcTextPadding = ScaleRect(m_rcTextPadding);
-		rc.left += m_rcTextPadding.left;
-		rc.right -= m_rcTextPadding.right;
-		rc.top += m_rcTextPadding.top;
-		rc.bottom -= m_rcTextPadding.bottom;
+		RECT rcTextPadding = GetTextPadding();
+		rc.left += rcTextPadding.left;
+		rc.right -= rcTextPadding.right;
+		rc.top += rcTextPadding.top;
+		rc.bottom -= rcTextPadding.bottom;
 
 		std::wstring sText = GetText();
 		if( sText.empty() ) return;

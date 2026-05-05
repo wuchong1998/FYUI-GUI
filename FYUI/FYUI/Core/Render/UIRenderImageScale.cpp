@@ -57,10 +57,6 @@ namespace FYUI
 
 		const bool useAlpha = pManager->IsLayered() ? true : data->bAlpha;
 		const RECT rcDrawPaint = bHasPaintRect ? rcPaint : rcItem;
-		if (pDrawInfoCache != NULL && pDrawInfoCache->hCachedScaledBitmap != NULL) {
-			pDrawInfoCache->ClearCachedBitmap();
-		}
-
 		DrawImageInternal(renderContext, data->hBitmap, rcItem, rcDrawPaint, rcBmpPart, rcCorner, useAlpha, uFade, bHole, bTiledX, bTiledY);
 	}
 

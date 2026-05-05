@@ -489,7 +489,8 @@ namespace FYUI
 	{
 		SIZE sz = GetFixedSize();
 		if (sz.cx == 0) sz.cx = szAvailable.cx;
-		if (sz.cy == 0) sz.cy = static_cast<LONG>((std::max<int>)(GetLineHeight() + GetTextPadding().top + GetTextPadding().bottom, 24));
+		const int minHeight = m_pManager != NULL ? m_pManager->ScaleValue(24) : 24;
+		if (sz.cy == 0) sz.cy = static_cast<LONG>((std::max<int>)(GetLineHeight() + GetTextPadding().top + GetTextPadding().bottom, minHeight));
 		return sz;
 	}
 
@@ -519,8 +520,11 @@ namespace FYUI
 			return;
 		}
 		if (event.Type == UIEVENT_TIMER && event.wParam == DEFAULT_TIMERID) {
+			if (!IsFocused() || !IsVisible() || !IsEnabled() || m_bReadOnly) {
+				return;
+			}
 			m_bDrawCaret = !m_bDrawCaret;
-			Invalidate();
+			InvalidateCaretRect();
 			return;
 		}
 		if (event.Type == UIEVENT_BUTTONDOWN) {
@@ -907,7 +911,7 @@ namespace FYUI
 	int CRichEditUI::MeasureTextWidth(std::wstring_view text) const
 	{
 		if (text.empty() || m_pManager == NULL) return 0;
-		RECT rc = { 0, 0, 100000, GetLineHeight() + 8 };
+		RECT rc = { 0, 0, 100000, GetLineHeight() + m_pManager->ScaleValue(8) };
 		CPaintRenderContext measureContext = m_pManager->CreateMeasureRenderContext(rc);
 		std::wstring value(text);
 		std::replace(value.begin(), value.end(), L'\t', L' ');
@@ -1046,10 +1050,11 @@ namespace FYUI
 		if (m_bLayoutDirty || m_lines.empty()) return false;
 
 		RECT rcView = m_rcItem;
-		rcView.left += m_rcTextPadding.left;
-		rcView.top += m_rcTextPadding.top;
-		rcView.right -= m_rcTextPadding.right;
-		rcView.bottom -= m_rcTextPadding.bottom;
+		const RECT textPadding = GetTextPadding();
+		rcView.left += textPadding.left;
+		rcView.top += textPadding.top;
+		rcView.right -= textPadding.right;
+		rcView.bottom -= textPadding.bottom;
 		if (m_pVerticalScrollBar != NULL && m_pVerticalScrollBar->IsVisible()) rcView.right -= m_pVerticalScrollBar->GetFixedWidth();
 		if (m_pHorizontalScrollBar != NULL && m_pHorizontalScrollBar->IsVisible()) rcView.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
 		if (rcView.right < rcView.left) rcView.right = rcView.left;
@@ -1072,6 +1077,39 @@ namespace FYUI
 		ptCaret.x = rcView.left;
 		ptCaret.y = rcView.top;
 		return true;
+	}
+
+	bool CRichEditUI::TryGetCaretInvalidateRect(RECT& rcCaret) const
+	{
+		rcCaret = {};
+		if (!IsFocused() || !GetVisible() || !IsEnabled() || m_bReadOnly) {
+			return false;
+		}
+
+		POINT ptCaret = {};
+		if (!TryGetCachedCaretPoint(ptCaret)) {
+			return false;
+		}
+
+		const RECT rcView = GetViewRect();
+		RECT rcLocalCaret = { ptCaret.x, ptCaret.y, ptCaret.x + 2, ptCaret.y + GetLineHeight() };
+		return ::IntersectRect(&rcCaret, &rcLocalCaret, &rcView) != FALSE;
+	}
+
+	void CRichEditUI::InvalidateCaretRect()
+	{
+		if (m_pManager == NULL) {
+			Invalidate();
+			return;
+		}
+
+		RECT rcCaret = {};
+		if (TryGetCaretInvalidateRect(rcCaret)) {
+			m_pManager->Invalidate(rcCaret);
+			return;
+		}
+
+		Invalidate();
 	}
 
 	void CRichEditUI::UpdateImeCompositionWindow()

@@ -97,10 +97,13 @@ namespace FYUI
 		{
 			if ((m_uButtonState & UISTATE_CAPTURED) != 0)
 			{
+				const UINT previousState = m_uButtonState;
 				if (::PtInRect(&m_rcItem, event.ptMouse))
 					m_uButtonState |= UISTATE_PUSHED;
 				else m_uButtonState &= ~UISTATE_PUSHED;
-				Invalidate();
+				if (previousState != m_uButtonState) {
+					Invalidate();
+				}
 			}
 
 			return;
@@ -125,21 +128,25 @@ namespace FYUI
 		{
 			if( IsEnabled() ) 
 			{
-				m_uButtonState |= UISTATE_HOT;
-				Invalidate();
-				if(IsRichEvent()) 
-					m_pManager->SendNotify(this, DUI_MSGTYPE_MOUSEENTER);
+				if ((m_uButtonState & UISTATE_HOT) == 0) {
+					m_uButtonState |= UISTATE_HOT;
+					Invalidate();
+					if(IsRichEvent()) 
+						m_pManager->SendNotify(this, DUI_MSGTYPE_MOUSEENTER);
+				}
 			}
 		}
 		if( event.Type == UIEVENT_MOUSELEAVE )
 		{
 			if( IsEnabled() ) 
 			{
-				m_uButtonState &= ~UISTATE_HOT;
-				Invalidate();
+				if ((m_uButtonState & UISTATE_HOT) != 0) {
+					m_uButtonState &= ~UISTATE_HOT;
+					Invalidate();
 
-				if(IsRichEvent())
-					m_pManager->SendNotify(this, DUI_MSGTYPE_MOUSELEAVE);
+					if(IsRichEvent())
+						m_pManager->SendNotify(this, DUI_MSGTYPE_MOUSELEAVE);
+				}
 			}
 		}
 		CLabelUI::DoEvent(event);

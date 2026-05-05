@@ -84,10 +84,11 @@ namespace FYUI
 	void CComboBoxUI::PaintText(CPaintRenderContext& renderContext)
 	{
 		RECT rcText = m_rcItem;
-		rcText.left += m_rcTextPadding.left;
-		rcText.right -= m_rcTextPadding.right;
-		rcText.top += m_rcTextPadding.top;
-		rcText.bottom -= m_rcTextPadding.bottom;
+		const RECT rcTextPadding = GetTextPadding();
+		rcText.left += rcTextPadding.left;
+		rcText.right -= rcTextPadding.right;
+		rcText.top += rcTextPadding.top;
+		rcText.bottom -= rcTextPadding.bottom;
 
 		rcText.right -= m_nArrowWidth; // add this line than CComboUI::PaintText
 

@@ -607,9 +607,10 @@ namespace FYUI {
 		if( event.Type == UIEVENT_MOUSEENTER )
 		{
 			if( ::PtInRect(&m_rcItem, event.ptMouse ) ) {
-				if( (m_uButtonState & UISTATE_HOT) == 0  )
+				if( (m_uButtonState & UISTATE_HOT) == 0  ) {
 					m_uButtonState |= UISTATE_HOT;
-				Invalidate();
+					Invalidate();
+				}
 			}
 			return;
 		}
@@ -626,7 +627,8 @@ namespace FYUI {
 
 	SIZE CComboUI::EstimateSize(SIZE szAvailable)
 	{
-		if( m_cxyFixed.cy == 0 ) return CDuiSize(m_cxyFixed.cx, m_pManager->GetDefaultFontInfo()->tm.tmHeight + 12);
+		const SIZE fixedSize = GetFixedSize();
+		if( fixedSize.cy == 0 ) return CDuiSize(fixedSize.cx, m_pManager->GetDefaultFontInfo()->tm.tmHeight + ScaleValue(12));
 		return CControlUI::EstimateSize(szAvailable);
 	}
 
@@ -1317,10 +1319,11 @@ namespace FYUI {
 		if( m_dwDisabledTextColor == 0 ) m_dwDisabledTextColor = m_pManager->GetDefaultDisabledColor();
 
 		RECT rc = m_rcItem;
-		rc.left += m_rcTextPadding.left;
-		rc.right -= m_rcTextPadding.right;
-		rc.top += m_rcTextPadding.top;
-		rc.bottom -= m_rcTextPadding.bottom;
+		const RECT rcTextPadding = GetTextPadding();
+		rc.left += rcTextPadding.left;
+		rc.right -= rcTextPadding.right;
+		rc.top += rcTextPadding.top;
+		rc.bottom -= rcTextPadding.bottom;
 
 		std::wstring sText = GetText();
 		if( sText.empty() ) return;

@@ -38,8 +38,11 @@ namespace FYUI
 
 		/**
 		 * @brief 设置文本样式
-		 * @details 用于设置文本样式。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param uStyle [in] 样式标志
+		 * @details 设置标签文本绘制时的 `DT_*` 文本格式标志。常用组合包括：
+		 * `DT_LEFT`/`DT_CENTER`/`DT_RIGHT`、`DT_TOP`/`DT_VCENTER`/`DT_BOTTOM`、
+		 * `DT_SINGLELINE`、`DT_WORDBREAK`、`DT_END_ELLIPSIS`、`DT_NOPREFIX`、`DT_CALCRECT`。
+		 * 具体语义与 `CRenderEngine::DrawText` 的 `uStyle` 保持一致。
+		 * @param uStyle [in] 文本样式标志
 		 */
 		void SetTextStyle(UINT uStyle);
 		/**

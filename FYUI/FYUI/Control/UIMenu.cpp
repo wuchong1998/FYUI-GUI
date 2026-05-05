@@ -102,7 +102,7 @@ namespace FYUI {
 
 	SIZE CMenuUI::EstimateSize(SIZE szAvailable)
 	{
-		SIZE szRootFixed = GetManager()->ScaleSize(m_cxyFixed);
+		SIZE szRootFixed = GetFixedSize();
 		int cxFixed = szRootFixed.cx;
 		int cyFixed = szRootFixed.cy;
 		for( int it = 0; it < GetCount(); it++ ) {
@@ -910,7 +910,7 @@ namespace FYUI {
 
 	SIZE CMenuElementUI::EstimateSize(SIZE szAvailable)
 	{
-		SIZE cxyFixed = GetManager()->ScaleSize(m_cxyFixed);
+		SIZE cxyFixed = GetFixedSize();
 		if (m_pOwner == NULL) {
 			return cxyFixed;
 		}
@@ -926,7 +926,7 @@ namespace FYUI {
 			std::wstring sText = GetText();
 			TListInfoUI* pInfo = m_pOwner->GetListInfo();
 			DWORD iTextColor = pInfo->dwTextColor;
-			RECT rcText = { 0, 0, MAX(szAvailable.cx, m_cxyFixed.cx), 9999999 };
+			RECT rcText = { 0, 0, MAX(szAvailable.cx, cxyFixed.cx), 9999999 };
 			RECT rcTextPadding = GetManager()->ScaleRect(pInfo->rcTextPadding);
 			rcText.left += rcTextPadding.left;
 			rcText.right -= rcTextPadding.right;

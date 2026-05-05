@@ -97,6 +97,36 @@ namespace FYUI
 		DrawImageInternal(renderContext, hBitmap, rc, renderContext.GetPaintRect(), rcBmpPart, rcCorners, bAlpha, uFade, hole, xtiled, ytiled);
 	}
 
+	bool CRenderEngine::DrawImage(CPaintRenderContext& renderContext, const TImageInfo* pImageInfo, const RECT& rc, const RECT* prcBmpPart, UINT uFade)
+	{
+		if (pImageInfo == NULL || pImageInfo->hBitmap == NULL) {
+			return false;
+		}
+
+		const int imageWidth = pImageInfo->nDestWidth > 0 ? pImageInfo->nDestWidth : pImageInfo->nX;
+		const int imageHeight = pImageInfo->nDestHeight > 0 ? pImageInfo->nDestHeight : pImageInfo->nY;
+		if (imageWidth <= 0 || imageHeight <= 0) {
+			return false;
+		}
+
+		const RECT rcBmpPart = prcBmpPart != nullptr ? *prcBmpPart : RECT{ 0, 0, imageWidth, imageHeight };
+		const RECT rcCorners = { 0, 0, 0, 0 };
+		DrawImageInternal(renderContext, pImageInfo->hBitmap, rc, renderContext.GetPaintRect(), rcBmpPart, rcCorners, pImageInfo->bAlpha, uFade, false, false, false);
+		return true;
+	}
+
+	bool CRenderEngine::DrawImageFromMemory(CPaintRenderContext& renderContext, const RECT& rc, const void* pData, DWORD dwSize, int nScale, DWORD mask, UINT uFade)
+	{
+		TImageInfo* pImageInfo = LoadImageFromMemory(pData, dwSize, nScale, mask);
+		if (pImageInfo == NULL) {
+			return false;
+		}
+
+		const bool bDrawn = DrawImage(renderContext, pImageInfo, rc, nullptr, uFade);
+		FreeImage(pImageInfo);
+		return bDrawn;
+	}
+
 	void DrawRotateImageInternal(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, const RECT& rcPaint, const RECT& rcBmpPart, bool bAlpha, UINT uFade, UINT uRotate)
 	{
 		if (hBitmap == NULL) {

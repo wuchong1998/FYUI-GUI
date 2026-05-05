@@ -578,29 +578,39 @@ namespace FYUI {
 			{
 				if( ::PtInRect(&rcCheckBox, event.ptMouse)) 
 				{
+					const UINT previousState = m_uCheckBoxState;
 					m_uCheckBoxState |= UISTATE_PUSHED | UISTATE_CAPTURED;
-					Invalidate();
+					if (previousState != m_uCheckBoxState) {
+						Invalidate();
+					}
 				}
 			}
 			else if( event.Type == UIEVENT_MOUSEMOVE )
 			{
 				if( (m_uCheckBoxState & UISTATE_CAPTURED) != 0 ) 
 				{
+					const UINT previousState = m_uCheckBoxState;
 					if( ::PtInRect(&rcCheckBox, event.ptMouse) ) 
 						m_uCheckBoxState |= UISTATE_PUSHED;
 					else 
 						m_uCheckBoxState &= ~UISTATE_PUSHED;
-					Invalidate();
+					if (previousState != m_uCheckBoxState) {
+						Invalidate();
+					}
 				}
 				else if (::PtInRect(&rcCheckBox, event.ptMouse))
 				{
-					m_uCheckBoxState |= UISTATE_HOT;
-					Invalidate();
+					if ((m_uCheckBoxState & UISTATE_HOT) == 0) {
+						m_uCheckBoxState |= UISTATE_HOT;
+						Invalidate();
+					}
 				}
 				else
 				{
-					m_uCheckBoxState &= ~UISTATE_HOT;
-					Invalidate();
+					if ((m_uCheckBoxState & UISTATE_HOT) != 0) {
+						m_uCheckBoxState &= ~UISTATE_HOT;
+						Invalidate();
+					}
 				}
 			}
 			else if( event.Type == UIEVENT_BUTTONUP )
@@ -617,8 +627,11 @@ namespace FYUI {
 						}
 
 					}
+					const UINT previousState = m_uCheckBoxState;
 					m_uCheckBoxState &= ~(UISTATE_PUSHED | UISTATE_CAPTURED);
-					Invalidate();
+					if (previousState != m_uCheckBoxState) {
+						Invalidate();
+					}
 				}
 				else if (::PtInRect(&rcCheckBox, event.ptMouse))
 				{
@@ -629,14 +642,18 @@ namespace FYUI {
 			{
 				if( ::PtInRect(&rcCheckBox, event.ptMouse) ) 
 				{
-					m_uCheckBoxState |= UISTATE_HOT;
-					Invalidate();
+					if ((m_uCheckBoxState & UISTATE_HOT) == 0) {
+						m_uCheckBoxState |= UISTATE_HOT;
+						Invalidate();
+					}
 				}
 			}
 			else if( event.Type == UIEVENT_MOUSELEAVE )
 			{
-				m_uCheckBoxState &= ~UISTATE_HOT;
-				Invalidate();
+				if ((m_uCheckBoxState & UISTATE_HOT) != 0) {
+					m_uCheckBoxState &= ~UISTATE_HOT;
+					Invalidate();
+				}
 			}
 		}
 
@@ -652,10 +669,11 @@ namespace FYUI {
 		{
 			if( !IsEnabled() ) return;
 			RECT rcSeparator = GetThumbRect();
+			const int separatorExpand = ScaleValue(4);
 			if (m_iSepWidth>=0)
-				rcSeparator.left-=4;
+				rcSeparator.left-=separatorExpand;
 			else
-				rcSeparator.right+=4;
+				rcSeparator.right+=separatorExpand;
 			if( ::PtInRect(&rcSeparator, event.ptMouse) ) {
 				if( m_bDragable ) {
 					m_uButtonState |= UISTATE_CAPTURED;
@@ -694,7 +712,7 @@ namespace FYUI {
 				}
 
 				if( rc.right - rc.left > GetMinWidth() ) {
-					m_cxyFixed.cx = rc.right - rc.left;
+					SetFixedWidthFromPixels(rc.right - rc.left, false);
 					ptLastMouse = event.ptMouse;
 					if( GetParent() ) 
 						GetParent()->NeedParentUpdate();
@@ -705,10 +723,11 @@ namespace FYUI {
 		if( event.Type == UIEVENT_SETCURSOR )
 		{
 			RECT rcSeparator = GetThumbRect();
+			const int separatorExpand = ScaleValue(4);
 			if (m_iSepWidth>=0)
-				rcSeparator.left-=4;
+				rcSeparator.left-=separatorExpand;
 			else
-				rcSeparator.right+=4;
+				rcSeparator.right+=separatorExpand;
 			if( IsEnabled() && m_bDragable && ::PtInRect(&rcSeparator, event.ptMouse) ) {
 				::SetCursor(::LoadCursor(NULL, IDC_SIZEWE));
 				return;
@@ -717,16 +736,20 @@ namespace FYUI {
 		if( event.Type == UIEVENT_MOUSEENTER )
 		{
 			if( IsEnabled() ) {
-				m_uButtonState |= UISTATE_HOT;
-				Invalidate();
+				if ((m_uButtonState & UISTATE_HOT) == 0) {
+					m_uButtonState |= UISTATE_HOT;
+					Invalidate();
+				}
 			}
 			return;
 		}
 		if( event.Type == UIEVENT_MOUSELEAVE )
 		{
 			if( IsEnabled() ) {
-				m_uButtonState &= ~UISTATE_HOT;
-				Invalidate();
+				if ((m_uButtonState & UISTATE_HOT) != 0) {
+					m_uButtonState &= ~UISTATE_HOT;
+					Invalidate();
+				}
 			}
 			return;
 		}
@@ -735,14 +758,16 @@ namespace FYUI {
 
 	SIZE CListContainerHeaderItemUI::EstimateSize(SIZE szAvailable)
 	{
-		if( m_cxyFixed.cy == 0 ) return CDuiSize(m_cxyFixed.cx, m_pManager->GetDefaultFontInfo()->tm.tmHeight + 14);
+		const SIZE fixedSize = GetFixedSize();
+		if( fixedSize.cy == 0 ) return CDuiSize(fixedSize.cx, m_pManager->GetDefaultFontInfo()->tm.tmHeight + ScaleValue(14));
 		return CContainerUI::EstimateSize(szAvailable);
 	}
 
 	RECT CListContainerHeaderItemUI::GetThumbRect() const
 	{
-		if( m_iSepWidth >= 0 ) return CDuiRect(m_rcItem.right - m_iSepWidth, m_rcItem.top, m_rcItem.right, m_rcItem.bottom);
-		else return CDuiRect(m_rcItem.left, m_rcItem.top, m_rcItem.left - m_iSepWidth, m_rcItem.bottom);
+		const int sepWidth = ScaleValue(m_iSepWidth);
+		if( m_iSepWidth >= 0 ) return CDuiRect(m_rcItem.right - sepWidth, m_rcItem.top, m_rcItem.right, m_rcItem.bottom);
+		else return CDuiRect(m_rcItem.left, m_rcItem.top, m_rcItem.left - sepWidth, m_rcItem.bottom);
 	}
 
 	void CListContainerHeaderItemUI::PaintStatusImage(CPaintRenderContext& renderContext)
@@ -838,10 +863,11 @@ namespace FYUI {
 		if( m_dwTextColor == 0 ) m_dwTextColor = m_pManager->GetDefaultFontColor();
 
 		RECT rcText = m_rcItem;
-		rcText.left += m_rcTextPadding.left;
-		rcText.top += m_rcTextPadding.top;
-		rcText.right -= m_rcTextPadding.right;
-		rcText.bottom -= m_rcTextPadding.bottom;
+		const RECT rcTextPadding = GetTextPadding();
+		rcText.left += rcTextPadding.left;
+		rcText.top += rcTextPadding.top;
+		rcText.right -= rcTextPadding.right;
+		rcText.bottom -= rcTextPadding.bottom;
 		if (m_bCheckBoxable) {
 			RECT rcCheck;
 			GetCheckBoxRect(rcCheck);
@@ -1195,19 +1221,25 @@ namespace FYUI {
 			{
 				if( ::PtInRect(&rcCheckBox, event.ptMouse) )
 				{
+					const UINT previousState = m_uCheckBoxState;
 					m_uCheckBoxState |= UISTATE_PUSHED | UISTATE_CAPTURED;
-					Invalidate();
+					if (previousState != m_uCheckBoxState) {
+						Invalidate();
+					}
 				}
 			}
 			else if( event.Type == UIEVENT_MOUSEMOVE )
 			{
 				if( (m_uCheckBoxState & UISTATE_CAPTURED) != 0 )
 				{
+					const UINT previousState = m_uCheckBoxState;
 					if( ::PtInRect(&rcCheckBox, event.ptMouse) )
 						m_uCheckBoxState |= UISTATE_PUSHED;
 					else
 						m_uCheckBoxState &= ~UISTATE_PUSHED;
-					Invalidate();
+					if (previousState != m_uCheckBoxState) {
+						Invalidate();
+					}
 				}
 			}
 			else if( event.Type == UIEVENT_BUTTONUP )
@@ -1222,22 +1254,29 @@ namespace FYUI {
 							m_pManager->SendNotify(this, DUI_MSGTYPE_LISTITEMCHECKED, MAKEWPARAM(GetIndex(), 0), m_bChecked);
 						}
 					}
+					const UINT previousState = m_uCheckBoxState;
 					m_uCheckBoxState &= ~(UISTATE_PUSHED | UISTATE_CAPTURED);
-					Invalidate();
+					if (previousState != m_uCheckBoxState) {
+						Invalidate();
+					}
 				}
 			}
 			else if( event.Type == UIEVENT_MOUSEENTER )
 			{
 				if( ::PtInRect(&rcCheckBox, event.ptMouse) )
 				{
-					m_uCheckBoxState |= UISTATE_HOT;
-					Invalidate();
+					if ((m_uCheckBoxState & UISTATE_HOT) == 0) {
+						m_uCheckBoxState |= UISTATE_HOT;
+						Invalidate();
+					}
 				}
 			}
 			else if( event.Type == UIEVENT_MOUSELEAVE )
 			{
-				m_uCheckBoxState &= ~UISTATE_HOT;
-				Invalidate();
+				if ((m_uCheckBoxState & UISTATE_HOT) != 0) {
+					m_uCheckBoxState &= ~UISTATE_HOT;
+					Invalidate();
+				}
 			}
 		}
 	}
@@ -1266,10 +1305,11 @@ namespace FYUI {
 		TListInfoUI* pInfo = NULL;
 		if( m_pOwner ) pInfo = m_pOwner->GetListInfo();
 
-		SIZE cXY = m_cxyFixed;
+		SIZE cXY = GetFixedSize();
 		if( cXY.cy == 0 && m_pManager != NULL && pInfo != NULL) {
-			cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + 8;
-			cXY.cy += pInfo->rcTextPadding.top + pInfo->rcTextPadding.bottom;
+			const RECT rcTextPadding = GetManager()->ScaleRect(pInfo->rcTextPadding);
+			cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + ScaleValue(8);
+			cXY.cy += rcTextPadding.top + rcTextPadding.bottom;
 		}
 
 		return cXY;

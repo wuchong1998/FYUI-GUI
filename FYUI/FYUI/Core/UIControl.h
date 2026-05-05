@@ -454,8 +454,9 @@ namespace FYUI
 		int GetBorderStyle() const;
 		/**
 		 * @brief 设置边框样式
-		 * @details 用于设置边框样式。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param nStyle [in] 样式数值
+		 * @details 设置控件边框绘制时使用的线条样式。当前支持 `PS_SOLID`、`PS_DASH`、`PS_DOT`、
+		 * `PS_DASHDOT`、`PS_DASHDOTDOT`，其它样式会按最接近的虚线样式或实线处理。
+		 * @param nStyle [in] 边框样式标志
 		 */
 		void SetBorderStyle(int nStyle);
 

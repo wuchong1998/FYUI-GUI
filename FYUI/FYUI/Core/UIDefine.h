@@ -209,6 +209,7 @@ namespace FYUI
 #define DUI_MSGTYPE_SPLITMOVE_UP			(_T("splitmoveup"))
 
 #define DUI_MSGTYPE_PAGECHANED				(_T("page_selected_changed"))
+#define DUI_MSGTYPE_WEBPPLAYCOMPLETE        (_T("webpplaycomplete"))
 
 
 	//////////////////////////////////////////////////////////////////////////
@@ -375,6 +376,7 @@ protected:                                                                \
 #define  DUI_CTR_CONTROL                         (_T("Control"))
 #define  DUI_CTR_ACTIVEX                         (_T("ActiveX"))
 #define  DUI_CTR_GIFANIM                         (_T("GifAnim"))
+#define  DUI_CTR_WEBPANIM                        (_T("WebpAnim"))
 #define	 DUI_CTR_TILE_BOX						 (_T("TileBox")) //
 #define  DUI_CTR_LOADINGCIRCLE					 (_T("Loading")) //
 

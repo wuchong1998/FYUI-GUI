@@ -158,7 +158,11 @@ namespace FYUI
 			if( IsEnabled() ) {
 				m_uButtonState |= UISTATE_CAPTURED;
 
-				const int nValue = CalculateSliderValueFromPoint(m_rcItem, m_szThumb, m_bHorizontal, event.ptMouse, m_nMin, m_nMax);
+				SIZE szThumb = m_szThumb;
+				if (m_pManager != NULL) {
+					szThumb = m_pManager->ScaleSize(szThumb);
+				}
+				const int nValue = CalculateSliderValueFromPoint(m_rcItem, szThumb, m_bHorizontal, event.ptMouse, m_nMin, m_nMax);
 				if(m_nValue != nValue && nValue >= m_nMin && nValue <= m_nMax) {
 					m_nValue = nValue;
 					Invalidate();
@@ -171,23 +175,30 @@ namespace FYUI
 		if( event.Type == UIEVENT_BUTTONUP || event.Type == UIEVENT_RBUTTONUP) {
 			if( IsEnabled() ) {
 				int nValue = 0;
+				const int previousValue = m_nValue;
+				SIZE szThumb = m_szThumb;
+				if (m_pManager != NULL) {
+					szThumb = m_pManager->ScaleSize(szThumb);
+				}
 				if( (m_uButtonState & UISTATE_CAPTURED) != 0 ) {
 					m_uButtonState &= ~UISTATE_CAPTURED;
 				}
 				if( m_bHorizontal ) {
-					if( event.ptMouse.x >= m_rcItem.right - m_szThumb.cx / 2 ) nValue = m_nMax;
-					else if( event.ptMouse.x <= m_rcItem.left + m_szThumb.cx / 2 ) nValue = m_nMin;
-					else nValue = m_nMin + (m_nMax - m_nMin) * (event.ptMouse.x - m_rcItem.left - m_szThumb.cx / 2 ) / (m_rcItem.right - m_rcItem.left - m_szThumb.cx);
+					if( event.ptMouse.x >= m_rcItem.right - szThumb.cx / 2 ) nValue = m_nMax;
+					else if( event.ptMouse.x <= m_rcItem.left + szThumb.cx / 2 ) nValue = m_nMin;
+					else nValue = m_nMin + (m_nMax - m_nMin) * (event.ptMouse.x - m_rcItem.left - szThumb.cx / 2 ) / (m_rcItem.right - m_rcItem.left - szThumb.cx);
 				}
 				else {
-					if( event.ptMouse.y >= m_rcItem.bottom - m_szThumb.cy / 2 ) nValue = m_nMin;
-					else if( event.ptMouse.y <= m_rcItem.top + m_szThumb.cy / 2  ) nValue = m_nMax;
-					else nValue = m_nMin + (m_nMax - m_nMin) * (m_rcItem.bottom - event.ptMouse.y - m_szThumb.cy / 2 ) / (m_rcItem.bottom - m_rcItem.top - m_szThumb.cy);
+					if( event.ptMouse.y >= m_rcItem.bottom - szThumb.cy / 2 ) nValue = m_nMin;
+					else if( event.ptMouse.y <= m_rcItem.top + szThumb.cy / 2  ) nValue = m_nMax;
+					else nValue = m_nMin + (m_nMax - m_nMin) * (m_rcItem.bottom - event.ptMouse.y - szThumb.cy / 2 ) / (m_rcItem.bottom - m_rcItem.top - szThumb.cy);
 				}
 				if(nValue >= m_nMin && nValue <= m_nMax) {
 					m_nValue =nValue;
-					m_pManager->SendNotify(this, DUI_MSGTYPE_VALUECHANGED);
-					Invalidate();
+					if (m_nValue != previousValue) {
+						m_pManager->SendNotify(this, DUI_MSGTYPE_VALUECHANGED);
+						Invalidate();
+					}
 				}
 				UpdateText();
 				return;
@@ -214,22 +225,31 @@ namespace FYUI
 		}
 		if( event.Type == UIEVENT_MOUSEMOVE ) {
 			if( (m_uButtonState & UISTATE_CAPTURED) != 0 ) {
-				m_nValue = CalculateSliderValueFromPoint(m_rcItem, m_szThumb, m_bHorizontal, event.ptMouse, m_nMin, m_nMax);
-				if (m_bSendMove) {
+				SIZE szThumb = m_szThumb;
+				if (m_pManager != NULL) {
+					szThumb = m_pManager->ScaleSize(szThumb);
+				}
+				const int previousValue = m_nValue;
+				m_nValue = CalculateSliderValueFromPoint(m_rcItem, szThumb, m_bHorizontal, event.ptMouse, m_nMin, m_nMax);
+				if (m_nValue != previousValue && m_bSendMove) {
 					UpdateText();
 					m_pManager->SendNotify(this, DUI_MSGTYPE_VALUECHANGED_MOVE);
 				}
-				Invalidate();
+				if (m_nValue != previousValue) {
+					Invalidate();
+				}
 			}
 
 			POINT pt = event.ptMouse;
 			RECT rcThumb = GetThumbRect();
+			const UINT previousState = m_uButtonState;
 			if( IsEnabled() && ::PtInRect(&rcThumb, event.ptMouse) ) {
 				m_uButtonState |= UISTATE_HOT;
-				Invalidate();
 			}
 			else {
 				m_uButtonState &= ~UISTATE_HOT;
+			}
+			if (previousState != m_uButtonState) {
 				Invalidate();
 			}
 			return;
@@ -245,8 +265,10 @@ namespace FYUI
 		if( event.Type == UIEVENT_MOUSELEAVE )
 		{
 			if( IsEnabled() ) {
-				m_uButtonState &= ~UISTATE_HOT;
-				Invalidate();
+				if ((m_uButtonState & UISTATE_HOT) != 0) {
+					m_uButtonState &= ~UISTATE_HOT;
+					Invalidate();
+				}
 			}
 			return;
 		}

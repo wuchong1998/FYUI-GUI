@@ -111,26 +111,38 @@ namespace FYUI
 			return;
 		}
 		if( event.Type == UIEVENT_MOUSEENTER ) {
+			DWORD textColor = 0;
 			if( IsEnabled()) {
 				if(m_bSelected && GetSelItemHotTextColor())
-					pItemButton->SetTextColor(GetSelItemHotTextColor());
+					textColor = GetSelItemHotTextColor();
 				else
-					pItemButton->SetTextColor(GetItemHotTextColor());
+					textColor = GetItemHotTextColor();
 			}
 			else 
-				pItemButton->SetTextColor(pItemButton->GetDisabledTextColor());
+				textColor = pItemButton->GetDisabledTextColor();
+
+			if (pItemButton->GetTextColor() != textColor) {
+				pItemButton->SetTextColor(textColor);
+			}
 
 			return;
 		}
 		if( event.Type == UIEVENT_MOUSELEAVE ) {
+			DWORD textColor = 0;
 			if( IsEnabled()) {
 				if(m_bSelected && GetSelItemTextColor())
-					pItemButton->SetTextColor(GetSelItemTextColor());
+					textColor = GetSelItemTextColor();
 				else if(!m_bSelected)
-					pItemButton->SetTextColor(GetItemTextColor());
+					textColor = GetItemTextColor();
+				else
+					textColor = pItemButton->GetTextColor();
 			}
 			else 
-				pItemButton->SetTextColor(pItemButton->GetDisabledTextColor());
+				textColor = pItemButton->GetDisabledTextColor();
+
+			if (pItemButton->GetTextColor() != textColor) {
+				pItemButton->SetTextColor(textColor);
+			}
 
 			return;
 		}
@@ -194,10 +206,10 @@ namespace FYUI
 	bool CTreeNodeUI::Select( bool bSelect /*= true*/ )
 	{
 		bool nRet = CListContainerElementUI::Select(bSelect);
-		if(m_bSelected)
-			pItemButton->SetTextColor(GetSelItemTextColor());
-		else 
-			pItemButton->SetTextColor(GetItemTextColor());
+		const DWORD textColor = m_bSelected ? GetSelItemTextColor() : GetItemTextColor();
+		if (pItemButton->GetTextColor() != textColor) {
+			pItemButton->SetTextColor(textColor);
+		}
 
 		return nRet;
 	}
@@ -205,10 +217,10 @@ namespace FYUI
 	bool CTreeNodeUI::SelectMulti(bool bSelect)
 	{
 		bool nRet = CListContainerElementUI::SelectMulti(bSelect);
-		if(m_bSelected)
-			pItemButton->SetTextColor(GetSelItemTextColor());
-		else 
-			pItemButton->SetTextColor(GetItemTextColor());
+		const DWORD textColor = m_bSelected ? GetSelItemTextColor() : GetItemTextColor();
+		if (pItemButton->GetTextColor() != textColor) {
+			pItemButton->SetTextColor(textColor);
+		}
 
 		return nRet;
 	}

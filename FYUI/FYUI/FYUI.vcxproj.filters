@@ -46,6 +46,12 @@
     <Filter Include="源文件\Core\Render">
       <UniqueIdentifier>{cd43e6fd-b254-40ca-8b0c-f98943b4a6c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="third_party">
+      <UniqueIdentifier>{d63d2b2c-d1e4-4209-ab2a-c6430c89a0d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="third_party\libwebp">
+      <UniqueIdentifier>{f0a3871c-69c4-4f9d-8992-7ec1535f0f5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -186,6 +192,9 @@
     <ClInclude Include="Control\UIGifAnim.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
+    <ClInclude Include="Control\UIWebpAnim.h">
+      <Filter>头文件\Control</Filter>
+    </ClInclude>
     <ClInclude Include="Control\UICountdown.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
@@ -249,6 +258,9 @@
     <ClInclude Include="Core\Render\UIRenderImageDispatchInternal.h">
       <Filter>头文件\Core\Render</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderImageCodecInternal.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
     <ClInclude Include="Core\Render\UIRenderImageLegacyInternal.h">
       <Filter>头文件\Core\Render</Filter>
     </ClInclude>
@@ -269,6 +281,30 @@
     </ClInclude>
     <ClInclude Include="Core\Render\UIRenderTypes.h">
       <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\config.h">
+      <Filter>third_party\libwebp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\decode.h">
+      <Filter>third_party\libwebp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\demux.h">
+      <Filter>third_party\libwebp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\encode.h">
+      <Filter>third_party\libwebp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\format_constants.h">
+      <Filter>third_party\libwebp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\mux.h">
+      <Filter>third_party\libwebp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\mux_types.h">
+      <Filter>third_party\libwebp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\third_party\libwebp\src\webp\types.h">
+      <Filter>third_party\libwebp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -404,6 +440,9 @@
     <ClCompile Include="Control\UIGifAnim.cpp">
       <Filter>源文件\Control</Filter>
     </ClCompile>
+    <ClCompile Include="Control\UIWebpAnim.cpp">
+      <Filter>源文件\Control</Filter>
+    </ClCompile>
     <ClCompile Include="Control\VirtualListUI.cpp">
       <Filter>源文件\Control</Filter>
     </ClCompile>
@@ -487,6 +526,99 @@
     </ClCompile>
     <ClCompile Include="Core\Render\UIRenderTextSharedInternal.cpp">
       <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\alpha_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\alpha_processing.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\demux\anim_decode.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\bit_reader_utils.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\buffer_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\color_cache_utils.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\cpu.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\dec_clip_tables.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\demux\demux.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\filters.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\filters_utils.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\frame_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\huffman_utils.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\idec_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\io_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\lossless.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\palette.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\quant_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\quant_levels_dec_utils.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\random_utils.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\rescaler.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\rescaler_utils.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\thread_utils.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\upsampling.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\tree_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\utils\utils.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\vp8_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\vp8l_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dec\webp_dec.c">
+      <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\libwebp\src\dsp\yuv.c">
+      <Filter>third_party\libwebp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

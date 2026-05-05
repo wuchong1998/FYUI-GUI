@@ -490,9 +490,14 @@ namespace FYUI
 		int GetVSpace() const;
 
 	protected:
+		bool UseBuiltInScrollBarStyle() const;
+		int GetEffectiveMinThumbSize(int nMainAxisLength) const;
+		void PaintBuiltInThumb(CPaintRenderContext& renderContext, const RECT& rcThumb) const;
+		void PaintBuiltInButton(CPaintRenderContext& renderContext, const RECT& rcButton, bool firstButton, UINT buttonState) const;
+
 		enum
 		{
-			DEFAULT_SCROLLBAR_SIZE = 16,
+			DEFAULT_SCROLLBAR_SIZE = 8,
 			DEFAULT_TIMERID = 10,
 		};
 
@@ -504,6 +509,7 @@ namespace FYUI
 		__int64 m_nScrollPos;
 		int m_nLineSize;
 		int m_nMinThumbSize;
+		bool m_bMinThumbSizeExplicit = false;
 		CContainerUI* m_pOwner;
 		POINT m_ptLastMouse;
 		int m_nLastScrollPos;

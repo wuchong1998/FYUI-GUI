@@ -359,8 +359,9 @@ namespace FYUI {
 		DWORD GetTextStyle() const;
 		/**
 		 * @brief 设置文本样式
-		 * @details 用于设置文本样式。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param uStyle [in] 样式标志
+		 * @details 设置扩展列表头文本的 `DT_*` 文本格式标志，支持对齐、换行、省略号和助记符处理等常见文本布局选项。
+		 * 具体语义与 `CRenderEngine::DrawText` 的 `uStyle` 保持一致。
+		 * @param uStyle [in] 文本样式标志
 		 */
 		void SetTextStyle(UINT uStyle);
 		/**

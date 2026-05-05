@@ -199,7 +199,14 @@ namespace FYUI
 			rop) != FALSE;
 	}
 
-	bool UpdateLayeredWindowFromRenderSurfaceInternal(const CPaintRenderSurface& surface, HWND hWnd, CPaintRenderContext& targetContext, const POINT& ptDst, const SIZE& size, BYTE alpha, const RECT* pDirtyRect)
+	bool UpdateLayeredWindowFromRenderSurfaceInternal(
+		const CPaintRenderSurface& surface,
+		HWND hWnd,
+		CPaintRenderContext& targetContext,
+		const POINT& ptDst,
+		const SIZE& size,
+		BYTE alpha,
+		const RECT* pDirtyRect)
 	{
 		HDC hSurfaceNativeDC = CPaintRenderSurfaceInternalAccess::GetNativeDC(surface);
 		if (hSurfaceNativeDC == NULL || hWnd == NULL) {
@@ -211,6 +218,28 @@ namespace FYUI
 		SIZE sizeCopy = size;
 		BLENDFUNCTION blendPixelFunction = { AC_SRC_OVER, 0, alpha, AC_SRC_ALPHA };
 		CScopedLayeredWindowPresentNativeDC presentWindowDC(hWnd, targetContext.GetDC());
+
+		RECT rcSurface = { 0, 0, size.cx, size.cy };
+		RECT rcDirty = { 0, 0, 0, 0 };
+		if (pDirtyRect != nullptr && ::IntersectRect(&rcDirty, pDirtyRect, &rcSurface) && !IsFullSurfaceDirtyRect(rcDirty, size)) {
+			using UpdateLayeredWindowIndirectFn = BOOL(WINAPI*)(HWND, const UPDATELAYEREDWINDOWINFO*);
+			static UpdateLayeredWindowIndirectFn s_updateLayeredWindowIndirect =
+				reinterpret_cast<UpdateLayeredWindowIndirectFn>(::GetProcAddress(::GetModuleHandleW(L"user32.dll"), "UpdateLayeredWindowIndirect"));
+			if (s_updateLayeredWindowIndirect != nullptr) {
+				UPDATELAYEREDWINDOWINFO info = {};
+				info.cbSize = sizeof(info);
+				info.hdcDst = presentWindowDC.GetNativeDC();
+				info.pptDst = &ptDstCopy;
+				info.psize = &sizeCopy;
+				info.hdcSrc = hSurfaceNativeDC;
+				info.pptSrc = &ptSrc;
+				info.pblend = &blendPixelFunction;
+				info.dwFlags = ULW_ALPHA;
+				info.prcDirty = &rcDirty;
+				return s_updateLayeredWindowIndirect(hWnd, &info) != FALSE;
+			}
+		}
+
 		return ::UpdateLayeredWindow(
 			hWnd,
 			presentWindowDC.GetNativeDC(),

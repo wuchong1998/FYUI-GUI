@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "UIVerticalLayout.h"
+#include "UILayoutContentUtil.h"
 #include "UILayoutLinearUtil.h"
 
 namespace FYUI
@@ -54,15 +55,8 @@ namespace FYUI
 
 		// Adjust for inset
 		RECT rcInset = GetInset();
-		rc.left += rcInset.left;
-		rc.top += rcInset.top;
-		rc.right -= rcInset.right;
-		rc.bottom -= rcInset.bottom;
-
-		if( m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible() ) 
-			rc.right -= m_pVerticalScrollBar->GetFixedWidth();
-		if( m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible() ) 
-			rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+		rc = ApplyLayoutInsetRect(rc, rcInset);
+		rc = AdjustLayoutRectForVisibleScrollBars(rc, m_pVerticalScrollBar, m_pHorizontalScrollBar);
 
 		const int nItemCount = m_items.GetSize();
 		if( nItemCount == 0) {

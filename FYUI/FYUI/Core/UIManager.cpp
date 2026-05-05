@@ -1579,10 +1579,9 @@ namespace FYUI {
 			static_cast<LONG>(paintFrame.dwWidth),
 			paintFrame.rcClient,
 			paintFrame.rcPaint);
-		const RECT rcRenderPaint = m_bLayered ? paintFrame.rcClient : paintFrame.rcPaint;
 		CPaintRenderContext renderContext = m_offscreenSurface.CreateRenderContext(
 			this,
-			rcRenderPaint,
+			paintFrame.rcPaint,
 			GetActiveRenderBackend(),
 			GetActiveDirect2DRenderMode());
 		return ExecuteBatchedControlRenderPass(renderContext, true, true);
@@ -1624,7 +1623,14 @@ namespace FYUI {
 
 		POINT ptPos = { rcWnd.left, rcWnd.top };
 		SIZE sizeWnd = { static_cast<LONG>(paintFrame.dwWidth), static_cast<LONG>(paintFrame.dwHeight) };
-		return UpdateLayeredWindowFromRenderSurfaceInternal(m_offscreenSurface, m_hWndPaint, targetContext, ptPos, sizeWnd, static_cast<BYTE>(m_nOpacity));
+		return UpdateLayeredWindowFromRenderSurfaceInternal(
+			m_offscreenSurface,
+			m_hWndPaint,
+			targetContext,
+			ptPos,
+			sizeWnd,
+			static_cast<BYTE>(m_nOpacity),
+			&paintFrame.rcPaint);
 	}
 
 	void CPaintManagerUI::PresentWindowSurface(CPaintRenderContext& targetContext, const TPaintFrameState& paintFrame)

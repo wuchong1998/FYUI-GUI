@@ -489,15 +489,23 @@ namespace FYUI
 		 */
 		int GetVSpace() const;
 
-	protected:
-		bool UseBuiltInScrollBarStyle() const;
-		int GetEffectiveMinThumbSize(int nMainAxisLength) const;
-		void PaintBuiltInThumb(CPaintRenderContext& renderContext, const RECT& rcThumb) const;
-		void PaintBuiltInButton(CPaintRenderContext& renderContext, const RECT& rcButton, bool firstButton, UINT buttonState) const;
+		/**
+		 * @brief 应用默认滚动条样式
+		 * @details 当容器未在皮肤中为 VScrollBar/HScrollBar 提供默认属性列表时使用：
+		 *          滑块为浮动覆盖式，宽度 6px、距离边缘 3px、最小高度 70px（均自动适配 DPI），
+		 *          颜色 #d4d4d4 正常 / #b0b0ae 悬停或拖动，无按钮、无 rail、无背景。
+		 */
+		void ApplyDefaultStyle();
+		/**
+		 * @brief 是否使用默认样式
+		 * @return bool 启用默认样式时返回 true
+		 */
+		bool IsDefaultStyle() const;
 
+	protected:
 		enum
 		{
-			DEFAULT_SCROLLBAR_SIZE = 8,
+			DEFAULT_SCROLLBAR_SIZE = 16,
 			DEFAULT_TIMERID = 10,
 		};
 
@@ -505,11 +513,11 @@ namespace FYUI
 
 		bool m_bShow;
 		bool m_bHorizontal;
+		bool m_bDefaultStyle = false;
 		__int64 m_nRange;
 		__int64 m_nScrollPos;
 		int m_nLineSize;
 		int m_nMinThumbSize;
-		bool m_bMinThumbSizeExplicit = false;
 		CContainerUI* m_pOwner;
 		POINT m_ptLastMouse;
 		int m_nLastScrollPos;

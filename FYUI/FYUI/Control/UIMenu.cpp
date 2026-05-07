@@ -102,7 +102,7 @@ namespace FYUI {
 
 	SIZE CMenuUI::EstimateSize(SIZE szAvailable)
 	{
-		SIZE szRootFixed = GetFixedSize();
+		SIZE szRootFixed = GetManager()->ScaleSize(m_cxyFixed);
 		int cxFixed = szRootFixed.cx;
 		int cyFixed = szRootFixed.cy;
 		for( int it = 0; it < GetCount(); it++ ) {
@@ -764,8 +764,8 @@ namespace FYUI {
 				rc.top += rcInset.top;
 				rc.right -= rcInset.right;
 				rc.bottom -= rcInset.bottom;
-				if( m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible() ) rc.right -= m_pVerticalScrollBar->GetFixedWidth();
-				if( m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible() ) rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+				if( !m_bScrollFloat && m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible() ) rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+				if( !m_bScrollFloat && m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible() ) rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
 
 				if( !::IntersectRect(&rcTemp, &rcPaint, &rc) ) {
 					for( int it = 0; it < m_items.GetSize(); it++ ) {
@@ -910,7 +910,7 @@ namespace FYUI {
 
 	SIZE CMenuElementUI::EstimateSize(SIZE szAvailable)
 	{
-		SIZE cxyFixed = GetFixedSize();
+		SIZE cxyFixed = GetManager()->ScaleSize(m_cxyFixed);
 		if (m_pOwner == NULL) {
 			return cxyFixed;
 		}
@@ -926,7 +926,7 @@ namespace FYUI {
 			std::wstring sText = GetText();
 			TListInfoUI* pInfo = m_pOwner->GetListInfo();
 			DWORD iTextColor = pInfo->dwTextColor;
-			RECT rcText = { 0, 0, MAX(szAvailable.cx, cxyFixed.cx), 9999999 };
+			RECT rcText = { 0, 0, MAX(szAvailable.cx, m_cxyFixed.cx), 9999999 };
 			RECT rcTextPadding = GetManager()->ScaleRect(pInfo->rcTextPadding);
 			rcText.left += rcTextPadding.left;
 			rcText.right -= rcTextPadding.right;

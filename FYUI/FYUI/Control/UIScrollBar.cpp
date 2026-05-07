@@ -35,13 +35,33 @@ namespace FYUI
 
 		CScrollBarUI::CScrollBarUI() : m_bHorizontal(false), m_nRange(0), m_nScrollPos(0), m_nLineSize(8), m_nMinThumbSize(80),
 		m_pOwner(NULL), m_nLastScrollPos(0), m_nLastScrollOffset(0), m_nScrollRepeatDelay(0), m_uButton1State(0), \
-		m_uButton2State(0), m_uThumbState(0), m_bShowButton1(false), m_bShowButton2(false), m_bShow(true), m_nSpaceX(3), m_nSpaceY(3)
+		m_uButton2State(0), m_uThumbState(0), m_bShowButton1(true), m_bShowButton2(true), m_bShow(true), m_nSpaceX(0), m_nSpaceY(0)
 	{
 		m_cxyFixed.cx = DEFAULT_SCROLLBAR_SIZE;
 		m_ptLastMouse.x = m_ptLastMouse.y = 0;
 		::ZeroMemory(&m_rcThumb, sizeof(m_rcThumb));
 		::ZeroMemory(&m_rcButton1, sizeof(m_rcButton1));
 		::ZeroMemory(&m_rcButton2, sizeof(m_rcButton2));
+	}
+
+	void CScrollBarUI::ApplyDefaultStyle()
+	{
+		m_bDefaultStyle = true;
+		SetShowButton1(false);
+		SetShowButton2(false);
+		if (m_bHorizontal) {
+			SetFixedHeight(6);
+			SetHSpace(3);
+		} else {
+			SetFixedWidth(6);
+			SetVSpace(3);
+		}
+		SetMinThumbSize(70);
+	}
+
+	bool CScrollBarUI::IsDefaultStyle() const
+	{
+		return m_bDefaultStyle;
 	}
 
 	std::wstring_view CScrollBarUI::GetClass() const
@@ -165,136 +185,8 @@ namespace FYUI
 
 	void CScrollBarUI::SetMinThumbSize(int nSize)
 	{
-		m_bMinThumbSizeExplicit = true;
 		m_nMinThumbSize = (std::max)(1, nSize);
 		SetPos(m_rcItem);
-	}
-
-	bool CScrollBarUI::UseBuiltInScrollBarStyle() const
-	{
-		return m_sBkNormalImage.empty() &&
-			m_sBkHotImage.empty() &&
-			m_sBkPushedImage.empty() &&
-			m_sBkDisabledImage.empty() &&
-			m_sButton1NormalImage.empty() &&
-			m_sButton1HotImage.empty() &&
-			m_sButton1PushedImage.empty() &&
-			m_sButton1DisabledImage.empty() &&
-			m_sButton2NormalImage.empty() &&
-			m_sButton2HotImage.empty() &&
-			m_sButton2PushedImage.empty() &&
-			m_sButton2DisabledImage.empty() &&
-			m_sThumbNormalImage.empty() &&
-			m_sThumbHotImage.empty() &&
-			m_sThumbPushedImage.empty() &&
-			m_sThumbDisabledImage.empty() &&
-			m_sRailNormalImage.empty() &&
-			m_sRailHotImage.empty() &&
-			m_sRailPushedImage.empty() &&
-			m_sRailDisabledImage.empty();
-	}
-
-	int CScrollBarUI::GetEffectiveMinThumbSize(int nMainAxisLength) const
-	{
-		int nMinSize = m_nMinThumbSize;
-		if (m_pManager != NULL) {
-			nMinSize = m_pManager->ScaleValue(nMinSize);
-		}
-
-		if (!m_bMinThumbSizeExplicit && UseBuiltInScrollBarStyle()) {
-			const int nThreshold = m_pManager != NULL ? m_pManager->ScaleValue(130) : 130;
-			if (nMainAxisLength > nThreshold) {
-				const int nBuiltInMinSize = m_pManager != NULL ? m_pManager->ScaleValue(90) : 90;
-				nMinSize = (std::max)(nMinSize, nBuiltInMinSize);
-			}
-		}
-		return nMinSize;
-	}
-
-	void CScrollBarUI::PaintBuiltInThumb(CPaintRenderContext& renderContext, const RECT& rcThumb) const
-	{
-		RECT rcPaintThumb = rcThumb;
-		const int nCrossPadding = 0;
-		const int nMainPadding = 0;
-		if (m_bHorizontal) {
-			rcPaintThumb.left += nMainPadding;
-			rcPaintThumb.right -= nMainPadding;
-			rcPaintThumb.top += nCrossPadding;
-			rcPaintThumb.bottom -= nCrossPadding;
-		}
-		else {
-			rcPaintThumb.left += nCrossPadding;
-			rcPaintThumb.right -= nCrossPadding;
-			rcPaintThumb.top += nMainPadding;
-			rcPaintThumb.bottom -= nMainPadding;
-		}
-
-		if (rcPaintThumb.right <= rcPaintThumb.left || rcPaintThumb.bottom <= rcPaintThumb.top) {
-			return;
-		}
-
-		DWORD dwThumbColor = 0xFFD4D4D4;
-		if (!IsEnabled()) {
-			dwThumbColor = 0xFFE6E6E6;
-		}
-		else if ((m_uThumbState & (UISTATE_PUSHED | UISTATE_HOT)) != 0) {
-			dwThumbColor = 0xFFD4D4D4;
-		}
-
-		const int nThumbWidth = static_cast<int>(rcPaintThumb.right - rcPaintThumb.left);
-		const int nThumbHeight = static_cast<int>(rcPaintThumb.bottom - rcPaintThumb.top);
-		const int nRadius = (std::max)(1, (std::min)(nThumbWidth, nThumbHeight));
-		CRenderEngine::DrawRoundColor(renderContext, rcPaintThumb, nRadius, nRadius, dwThumbColor);
-	}
-
-	void CScrollBarUI::PaintBuiltInButton(CPaintRenderContext& renderContext, const RECT& rcButton, bool firstButton, UINT buttonState) const
-	{
-		if (rcButton.right <= rcButton.left || rcButton.bottom <= rcButton.top) {
-			return;
-		}
-
-		DWORD dwArrowColor = 0xFFD1D1D1;
-		if (!IsEnabled() || (buttonState & UISTATE_DISABLED) != 0) {
-			dwArrowColor = 0xFFE6E6E6;
-		}
-		else if ((buttonState & UISTATE_PUSHED) != 0) {
-			dwArrowColor = 0xFF5A5A5A;
-		}
-
-		const int nWidth = rcButton.right - rcButton.left;
-		const int nHeight = rcButton.bottom - rcButton.top;
-		const int nArrowHalfWidth = (std::max)(ScaleValue(3), nWidth / 5);
-		const int nArrowHalfHeight = (std::max)(ScaleValue(2), nHeight / 7);
-		const int nCenterX = (rcButton.left + rcButton.right) / 2;
-		const int nCenterY = (rcButton.top + rcButton.bottom) / 2;
-
-		POINT triangle[3] = {};
-		if (!m_bHorizontal) {
-			if (firstButton) {
-				triangle[0] = { nCenterX, nCenterY - nArrowHalfHeight };
-				triangle[1] = { nCenterX - nArrowHalfWidth, nCenterY + nArrowHalfHeight };
-				triangle[2] = { nCenterX + nArrowHalfWidth, nCenterY + nArrowHalfHeight };
-			}
-			else {
-				triangle[0] = { nCenterX, nCenterY + nArrowHalfHeight };
-				triangle[1] = { nCenterX - nArrowHalfWidth, nCenterY - nArrowHalfHeight };
-				triangle[2] = { nCenterX + nArrowHalfWidth, nCenterY - nArrowHalfHeight };
-			}
-		}
-		else {
-			if (firstButton) {
-				triangle[0] = { nCenterX - nArrowHalfHeight, nCenterY };
-				triangle[1] = { nCenterX + nArrowHalfHeight, nCenterY - nArrowHalfWidth };
-				triangle[2] = { nCenterX + nArrowHalfHeight, nCenterY + nArrowHalfWidth };
-			}
-			else {
-				triangle[0] = { nCenterX + nArrowHalfHeight, nCenterY };
-				triangle[1] = { nCenterX - nArrowHalfHeight, nCenterY - nArrowHalfWidth };
-				triangle[2] = { nCenterX - nArrowHalfHeight, nCenterY + nArrowHalfWidth };
-			}
-		}
-
-		CRenderEngine::FillPolygon(renderContext, triangle, 3, dwArrowColor);
 	}
 
 	bool CScrollBarUI::GetShowButton1()
@@ -546,9 +438,6 @@ namespace FYUI
 
 	void CScrollBarUI::SetShow(bool bShow)
 	{
-		if (m_bShow == bShow) {
-			return;
-		}
 		m_bShow = bShow;
 		Invalidate();
 	}
@@ -561,9 +450,20 @@ namespace FYUI
 		if (m_pManager != NULL) {
 			cxyFixed = GetManager()->ScaleSize(cxyFixed);
 		}
+		int nMinSize = m_nMinThumbSize;
+		if (m_bDefaultStyle) {
+			const int rcLong = m_bHorizontal ? (rc.right - rc.left) : (rc.bottom - rc.top);
+			const int threshold = (m_pManager != NULL) ? m_pManager->ScaleValue(80) : 80;
+			if (rcLong <= threshold) {
+				nMinSize = 16;
+			}
+		}
+		if (m_pManager != NULL)
+		{
+			nMinSize = GetManager()->ScaleValue(nMinSize);
+		}
+
 		rc = m_rcItem;
-		const int nMainAxisLength = m_bHorizontal ? (rc.right - rc.left) : (rc.bottom - rc.top);
-		const int nMinSize = GetEffectiveMinThumbSize(nMainAxisLength);
 		if (m_bHorizontal) {
 			int cx = rc.right - rc.left;
 			if (m_bShowButton1) cx -= cxyFixed.cy;
@@ -815,13 +715,12 @@ namespace FYUI
 		{
 			if ((m_uThumbState & UISTATE_CAPTURED) != 0)
 			{
-				const SIZE cxyFixed = GetFixedSize();
 				if (!m_bHorizontal)
 				{
 					__int64 fMouseRange = (event.ptMouse.y - m_ptLastMouse.y) * m_nRange;
 					int nBtnSize = 0;
-					if (GetShowButton1()) nBtnSize += cxyFixed.cx;
-					if (GetShowButton2()) nBtnSize += cxyFixed.cx;
+					if (GetShowButton1()) nBtnSize += m_cxyFixed.cx;
+					if (GetShowButton2()) nBtnSize += m_cxyFixed.cx;
 					int vRange = m_rcItem.bottom - m_rcItem.top - (m_rcThumb.bottom - m_rcThumb.top) - nBtnSize;
 					if (vRange != 0) {
 						m_nLastScrollOffset = ClampInt64ToInt(fMouseRange / abs(vRange));
@@ -830,8 +729,8 @@ namespace FYUI
 				else {
 					__int64 fMouseRange = (event.ptMouse.x - m_ptLastMouse.x) * m_nRange;
 					int nBtnSize = 0;
-					if (GetShowButton1()) nBtnSize += cxyFixed.cy;
-					if (GetShowButton2()) nBtnSize += cxyFixed.cy;
+					if (GetShowButton1()) nBtnSize += m_cxyFixed.cy;
+					if (GetShowButton2()) nBtnSize += m_cxyFixed.cy;
 					int hRange = m_rcItem.right - m_rcItem.left - m_rcThumb.right + m_rcThumb.left - nBtnSize;
 					if (hRange != 0) m_nLastScrollOffset = ClampInt64ToInt(fMouseRange / abs(hRange));
 				}
@@ -945,34 +844,20 @@ namespace FYUI
 		if (event.Type == UIEVENT_MOUSEENTER)
 		{
 			if (IsEnabled()) {
-				const UINT previousButton1State = m_uButton1State;
-				const UINT previousButton2State = m_uButton2State;
-				const UINT previousThumbState = m_uThumbState;
 				m_uButton1State |= UISTATE_HOT;
 				m_uButton2State |= UISTATE_HOT;
 				if (::PtInRect(&m_rcThumb, event.ptMouse)) m_uThumbState |= UISTATE_HOT;
-				if (previousButton1State != m_uButton1State ||
-					previousButton2State != m_uButton2State ||
-					previousThumbState != m_uThumbState) {
-					Invalidate();
-				}
+				Invalidate();
 			}
 			return;
 		}
 		if (event.Type == UIEVENT_MOUSELEAVE)
 		{
 			if (IsEnabled()) {
-				const UINT previousButton1State = m_uButton1State;
-				const UINT previousButton2State = m_uButton2State;
-				const UINT previousThumbState = m_uThumbState;
 				m_uButton1State &= ~UISTATE_HOT;
 				m_uButton2State &= ~UISTATE_HOT;
 				m_uThumbState &= ~UISTATE_HOT;
-				if (previousButton1State != m_uButton1State ||
-					previousButton2State != m_uButton2State ||
-					previousThumbState != m_uThumbState) {
-					Invalidate();
-				}
+				Invalidate();
 			}
 			return;
 		}
@@ -1045,6 +930,7 @@ namespace FYUI
 
 	void CScrollBarUI::PaintBk(CPaintRenderContext& renderContext)
 	{
+		if (m_bDefaultStyle) return;
 		if (!IsEnabled()) m_uThumbState |= UISTATE_DISABLED;
 		else m_uThumbState &= ~UISTATE_DISABLED;
 
@@ -1071,14 +957,11 @@ namespace FYUI
 			if (!DrawImage(renderContext, m_sBkNormalImage)) {}
 			else return;
 		}
-
-		if (UseBuiltInScrollBarStyle()) {
-			return;
-		}
 	}
 
 	void CScrollBarUI::PaintButton1(CPaintRenderContext& renderContext)
 	{
+		if (m_bDefaultStyle) return;
 		if (!m_bShowButton1) return;
 
 		if (!IsEnabled()) m_uButton1State |= UISTATE_DISABLED;
@@ -1117,11 +1000,6 @@ namespace FYUI
 			else return;
 		}
 
-		if (UseBuiltInScrollBarStyle()) {
-			PaintBuiltInButton(renderContext, m_rcButton1, true, m_uButton1State);
-			return;
-		}
-
 		DWORD dwBorderColor = 0xFF85E4FF;
 		int nBorderSize = 2;
 		CRenderEngine::DrawRect(renderContext, m_rcButton1, nBorderSize, dwBorderColor);
@@ -1129,6 +1007,7 @@ namespace FYUI
 
 	void CScrollBarUI::PaintButton2(CPaintRenderContext& renderContext)
 	{
+		if (m_bDefaultStyle) return;
 		if (!m_bShowButton2) return;
 
 		if (!IsEnabled()) m_uButton2State |= UISTATE_DISABLED;
@@ -1166,11 +1045,6 @@ namespace FYUI
 			else return;
 		}
 
-		if (UseBuiltInScrollBarStyle()) {
-			PaintBuiltInButton(renderContext, m_rcButton2, false, m_uButton2State);
-			return;
-		}
-
 		DWORD dwBorderColor = 0xFF85E4FF;
 		int nBorderSize = 2;
 		CRenderEngine::DrawRect(renderContext, m_rcButton2, nBorderSize, dwBorderColor);
@@ -1181,6 +1055,20 @@ namespace FYUI
 		if (m_rcThumb.left == 0 && m_rcThumb.top == 0 && m_rcThumb.right == 0 && m_rcThumb.bottom == 0) return;
 		if (!IsEnabled()) m_uThumbState |= UISTATE_DISABLED;
 		else m_uThumbState &= ~UISTATE_DISABLED;
+
+		if (m_bDefaultStyle) {
+			const bool bActive = ((m_uThumbState & UISTATE_HOT) != 0)
+				|| ((m_uThumbState & UISTATE_PUSHED) != 0)
+				|| ((m_uThumbState & UISTATE_CAPTURED) != 0)
+				|| m_bMouseDown;
+			const DWORD color = bActive ? 0xFFB0B0AE : 0xFFD4D4D4;
+			const int thickness = m_bHorizontal
+				? (m_rcThumb.bottom - m_rcThumb.top)
+				: (m_rcThumb.right - m_rcThumb.left);
+			const int round = (thickness > 0) ? thickness : 6;
+			CRenderEngine::DrawRoundColor(renderContext, m_rcThumb, round, round, color);
+			return;
+		}
 		RECT rcDest = {
 			m_rcThumb.left - m_rcItem.left,
 			m_rcThumb.top - m_rcItem.top,
@@ -1214,11 +1102,6 @@ namespace FYUI
 			else return;
 		}
 
-		if (UseBuiltInScrollBarStyle()) {
-			PaintBuiltInThumb(renderContext, m_rcThumb);
-			return;
-		}
-
 		DWORD dwBorderColor = 0xFF85E4FF;
 		int nBorderSize = 2;
 		CRenderEngine::DrawRect(renderContext, m_rcThumb, nBorderSize, dwBorderColor);
@@ -1226,27 +1109,27 @@ namespace FYUI
 
 	void CScrollBarUI::PaintRail(CPaintRenderContext& renderContext)
 	{
+		if (m_bDefaultStyle) return;
 		if (m_rcThumb.left == 0 && m_rcThumb.top == 0 && m_rcThumb.right == 0 && m_rcThumb.bottom == 0) return;
 		if (!IsEnabled()) m_uThumbState |= UISTATE_DISABLED;
 		else m_uThumbState &= ~UISTATE_DISABLED;
 
 		m_sImageModify.clear();
-		const SIZE cxyFixed = GetFixedSize();
 		if (!m_bHorizontal) {
 			RECT rcDest = {
 				m_rcThumb.left - m_rcItem.left,
-				(m_rcThumb.top + m_rcThumb.bottom) / 2 - m_rcItem.top - cxyFixed.cx / 2,
+				(m_rcThumb.top + m_rcThumb.bottom) / 2 - m_rcItem.top - m_cxyFixed.cx / 2,
 				m_rcThumb.right - m_rcItem.left,
-				(m_rcThumb.top + m_rcThumb.bottom) / 2 - m_rcItem.top + cxyFixed.cx - cxyFixed.cx / 2
+				(m_rcThumb.top + m_rcThumb.bottom) / 2 - m_rcItem.top + m_cxyFixed.cx - m_cxyFixed.cx / 2
 			};
 			rcDest = PixelsToLogical(rcDest);
 			m_sImageModify = StringUtil::Format(L"dest='{},{},{},{}'", rcDest.left, rcDest.top, rcDest.right, rcDest.bottom);
 		}
 		else {
 			RECT rcDest = {
-				(m_rcThumb.left + m_rcThumb.right) / 2 - m_rcItem.left - cxyFixed.cy / 2,
+				(m_rcThumb.left + m_rcThumb.right) / 2 - m_rcItem.left - m_cxyFixed.cy / 2,
 				m_rcThumb.top - m_rcItem.top,
-				(m_rcThumb.left + m_rcThumb.right) / 2 - m_rcItem.left + cxyFixed.cy - cxyFixed.cy / 2,
+				(m_rcThumb.left + m_rcThumb.right) / 2 - m_rcItem.left + m_cxyFixed.cy - m_cxyFixed.cy / 2,
 				m_rcThumb.bottom - m_rcItem.top
 			};
 			rcDest = PixelsToLogical(rcDest);
@@ -1275,10 +1158,6 @@ namespace FYUI
 		if (!m_sRailNormalImage.empty()) {
 			if (!DrawImage(renderContext, m_sRailNormalImage, m_sImageModify)) {}
 			else return;
-		}
-
-		if (UseBuiltInScrollBarStyle()) {
-			return;
 		}
 	}
 

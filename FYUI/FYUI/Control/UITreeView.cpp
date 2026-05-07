@@ -111,38 +111,26 @@ namespace FYUI
 			return;
 		}
 		if( event.Type == UIEVENT_MOUSEENTER ) {
-			DWORD textColor = 0;
 			if( IsEnabled()) {
 				if(m_bSelected && GetSelItemHotTextColor())
-					textColor = GetSelItemHotTextColor();
+					pItemButton->SetTextColor(GetSelItemHotTextColor());
 				else
-					textColor = GetItemHotTextColor();
+					pItemButton->SetTextColor(GetItemHotTextColor());
 			}
 			else 
-				textColor = pItemButton->GetDisabledTextColor();
-
-			if (pItemButton->GetTextColor() != textColor) {
-				pItemButton->SetTextColor(textColor);
-			}
+				pItemButton->SetTextColor(pItemButton->GetDisabledTextColor());
 
 			return;
 		}
 		if( event.Type == UIEVENT_MOUSELEAVE ) {
-			DWORD textColor = 0;
 			if( IsEnabled()) {
 				if(m_bSelected && GetSelItemTextColor())
-					textColor = GetSelItemTextColor();
+					pItemButton->SetTextColor(GetSelItemTextColor());
 				else if(!m_bSelected)
-					textColor = GetItemTextColor();
-				else
-					textColor = pItemButton->GetTextColor();
+					pItemButton->SetTextColor(GetItemTextColor());
 			}
 			else 
-				textColor = pItemButton->GetDisabledTextColor();
-
-			if (pItemButton->GetTextColor() != textColor) {
-				pItemButton->SetTextColor(textColor);
-			}
+				pItemButton->SetTextColor(pItemButton->GetDisabledTextColor());
 
 			return;
 		}
@@ -167,10 +155,11 @@ namespace FYUI
 				rc.top += rcInset.top;
 				rc.right -= rcInset.right;
 				rc.bottom -= rcInset.bottom;
+				const bool bParentScrollFloat = pParentContainer->IsScrollFloat();
 				CScrollBarUI* pVerticalScrollBar = pParentContainer->GetVerticalScrollBar();
-				if( pVerticalScrollBar && pVerticalScrollBar->IsVisible() ) rc.right -= pVerticalScrollBar->GetFixedWidth();
+				if( !bParentScrollFloat && pVerticalScrollBar && pVerticalScrollBar->IsVisible() ) rc.right -= pVerticalScrollBar->GetFixedWidth();
 				CScrollBarUI* pHorizontalScrollBar = pParentContainer->GetHorizontalScrollBar();
-				if( pHorizontalScrollBar && pHorizontalScrollBar->IsVisible() ) rc.bottom -= pHorizontalScrollBar->GetFixedHeight();
+				if( !bParentScrollFloat && pHorizontalScrollBar && pHorizontalScrollBar->IsVisible() ) rc.bottom -= pHorizontalScrollBar->GetFixedHeight();
 
 				RECT invalidateRc = m_rcItem;
 				if( !::IntersectRect(&invalidateRc, &m_rcItem, &rc) ) 
@@ -206,10 +195,10 @@ namespace FYUI
 	bool CTreeNodeUI::Select( bool bSelect /*= true*/ )
 	{
 		bool nRet = CListContainerElementUI::Select(bSelect);
-		const DWORD textColor = m_bSelected ? GetSelItemTextColor() : GetItemTextColor();
-		if (pItemButton->GetTextColor() != textColor) {
-			pItemButton->SetTextColor(textColor);
-		}
+		if(m_bSelected)
+			pItemButton->SetTextColor(GetSelItemTextColor());
+		else 
+			pItemButton->SetTextColor(GetItemTextColor());
 
 		return nRet;
 	}
@@ -217,10 +206,10 @@ namespace FYUI
 	bool CTreeNodeUI::SelectMulti(bool bSelect)
 	{
 		bool nRet = CListContainerElementUI::SelectMulti(bSelect);
-		const DWORD textColor = m_bSelected ? GetSelItemTextColor() : GetItemTextColor();
-		if (pItemButton->GetTextColor() != textColor) {
-			pItemButton->SetTextColor(textColor);
-		}
+		if(m_bSelected)
+			pItemButton->SetTextColor(GetSelItemTextColor());
+		else 
+			pItemButton->SetTextColor(GetItemTextColor());
 
 		return nRet;
 	}

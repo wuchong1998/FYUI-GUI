@@ -202,7 +202,7 @@ namespace FYUI
 			return;
 		}
 
-		rc = AdjustLayoutRectForVisibleScrollBars(rc, m_pVerticalScrollBar, m_pHorizontalScrollBar);
+		rc = AdjustLayoutRectForVisibleScrollBars(rc, m_pVerticalScrollBar, m_pHorizontalScrollBar, m_bScrollFloat);
 
 		const SIZE szItem = GetItemSize();
 		const int nHorSpacing = m_pManager != NULL ? m_pManager->ScaleValue(m_nHorSpacing) : m_nHorSpacing;

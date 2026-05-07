@@ -312,8 +312,6 @@ namespace FYUI
 	{
 		if (index >= m_itemCount) return false;
 		const bool selectionChanged = !m_hasSelection || m_selectedIndex != index;
-		const bool hadSelection = m_hasSelection;
-		const ItemIndex previousSelection = m_selectedIndex;
 		m_selectedIndex = index;
 		m_hasSelection = true;
 		EnsureVisible(index);
@@ -322,7 +320,7 @@ namespace FYUI
 			if (notify && m_pManager != nullptr) {
 				m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, static_cast<WPARAM>(index));
 			}
-			InvalidateSelectionChange(previousSelection, hadSelection);
+			Refresh();
 		}
 		return true;
 	}
@@ -330,13 +328,12 @@ namespace FYUI
 	void CVirtualListUI::ClearSelection(bool notify)
 	{
 		if (!m_hasSelection) return;
-		const ItemIndex previousSelection = m_selectedIndex;
 		m_selectedIndex = kInvalidVirtualIndex;
 		m_hasSelection = false;
 		if (notify && m_pManager != nullptr) {
 			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMSELECT, static_cast<WPARAM>(-1));
 		}
-		InvalidateSelectionChange(previousSelection, true);
+		Refresh();
 	}
 
 	bool CVirtualListUI::HasSelection() const
@@ -528,8 +525,7 @@ namespace FYUI
 
 		CControlUI::DoPaint(renderContext, pStopControl);
 
-		RECT rcView = GetViewRect();
-		::IntersectRect(&rcView, &rcView, &m_rcItem);
+		const RECT rcView = GetViewRect();
 		if (::IntersectRect(&rcTemp, &rcPaint, &rcView)) {
 			CRenderClip clip;
 			CRenderClip::GenerateClip(renderContext, rcTemp, clip);
@@ -613,7 +609,7 @@ namespace FYUI
 		rc.top += inset.top;
 		rc.right -= inset.right;
 		rc.bottom -= inset.bottom;
-		if (m_pVerticalScrollBar != nullptr && m_pVerticalScrollBar->IsVisible()) rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+		if (!m_bScrollFloat && m_pVerticalScrollBar != nullptr && m_pVerticalScrollBar->IsVisible()) rc.right -= m_pVerticalScrollBar->GetFixedWidth();
 		if (rc.right < rc.left) rc.right = rc.left;
 		if (rc.bottom < rc.top) rc.bottom = rc.top;
 		return rc;
@@ -666,6 +662,9 @@ namespace FYUI
 		if (m_pVerticalScrollBar == nullptr) return;
 		m_pVerticalScrollBar->SetOwner(this);
 		m_pVerticalScrollBar->SetHorizontal(false);
+		m_pVerticalScrollBar->SetMinThumbSize(24);
+		m_pVerticalScrollBar->SetShowButton1(false);
+		m_pVerticalScrollBar->SetShowButton2(false);
 		if (m_pManager != nullptr) {
 			std::wstring_view style = m_sVerticalScrollBarStyle;
 			if (!style.empty()) {
@@ -680,6 +679,9 @@ namespace FYUI
 					m_pVerticalScrollBar->ApplyAttributeList(namedStyle.empty() ? style : namedStyle);
 				}
 			}
+			m_pVerticalScrollBar->SetMinThumbSize(24);
+			m_pVerticalScrollBar->SetShowButton1(false);
+			m_pVerticalScrollBar->SetShowButton2(false);
 			m_pVerticalScrollBar->SetShow(m_bShowScrollbar);
 		}
 	}
@@ -725,55 +727,13 @@ namespace FYUI
 		Invalidate();
 	}
 
-	void CVirtualListUI::InvalidateRealizedItem(ItemIndex index)
-	{
-		if (index == kInvalidVirtualIndex || m_pManager == nullptr) return;
-		for (const RealizedItem& item : m_realizedItems) {
-			if (!item.active || item.index != index) continue;
-			RECT invalidateRc = item.rect;
-			if (!::IsRectEmpty(&invalidateRc)) {
-				m_pManager->Invalidate(invalidateRc);
-			}
-			return;
-		}
-	}
-
-	void CVirtualListUI::InvalidateSelectionChange(ItemIndex previousIndex, bool hadPreviousSelection)
-	{
-		bool invalidated = false;
-		if (hadPreviousSelection) {
-			InvalidateRealizedItem(previousIndex);
-			invalidated = IsIndexRealized(previousIndex);
-		}
-		if (m_hasSelection) {
-			InvalidateRealizedItem(m_selectedIndex);
-			invalidated = invalidated || IsIndexRealized(m_selectedIndex);
-		}
-		if (!invalidated) {
-			Invalidate();
-		}
-	}
-
 	void CVirtualListUI::SetHotItem(ItemIndex index, bool hot)
 	{
 		if (!hot) index = kInvalidVirtualIndex;
 		if (m_hasHotItem == hot && m_hotIndex == index) return;
-		const bool hadHotItem = m_hasHotItem;
-		const ItemIndex previousHotIndex = m_hotIndex;
 		m_hasHotItem = hot;
 		m_hotIndex = index;
-		bool invalidated = false;
-		if (hadHotItem) {
-			InvalidateRealizedItem(previousHotIndex);
-			invalidated = IsIndexRealized(previousHotIndex);
-		}
-		if (m_hasHotItem) {
-			InvalidateRealizedItem(m_hotIndex);
-			invalidated = invalidated || IsIndexRealized(m_hotIndex);
-		}
-		if (!invalidated) {
-			Invalidate();
-		}
+		Invalidate();
 	}
 
 	void CVirtualListUI::UpdateHotItemFromPoint(POINT pt)

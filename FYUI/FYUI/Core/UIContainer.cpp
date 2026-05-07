@@ -48,6 +48,7 @@ namespace FYUI
         m_bCursorMouse(true),
         m_bShowScrollbar(true) {
         ::ZeroMemory(&m_rcInset, sizeof(m_rcInset));
+        m_bScrollFloat = true;
         m_smoothScrollLastTick = std::chrono::steady_clock::now();
     }
 
@@ -331,6 +332,7 @@ namespace FYUI
         m_bFixedScrollbar = pControl->m_bFixedScrollbar;
         m_bShowScrollbar = pControl->m_bShowScrollbar;
         m_bSmoothScrollbar = pControl->m_bSmoothScrollbar;
+        m_bScrollFloat = pControl->m_bScrollFloat;
         m_bCursorMouse = pControl->m_bCursorMouse;
         m_sVerticalScrollBarStyle = pControl->m_sVerticalScrollBarStyle;
         m_sHorizontalScrollBarStyle = pControl->m_sHorizontalScrollBarStyle;
@@ -414,6 +416,20 @@ namespace FYUI
     bool CContainerUI::IsSmoothScrollbar()
     {
         return m_bSmoothScrollbar;
+    }
+
+    bool CContainerUI::IsScrollFloat() const
+    {
+        return m_bScrollFloat;
+    }
+
+    void CContainerUI::SetScrollFloat(bool bFloat)
+    {
+        if (m_bScrollFloat == bFloat) {
+            return;
+        }
+        m_bScrollFloat = bFloat;
+        NeedUpdate();
     }
 
     void CContainerUI::SetQuickScrolling(bool bQuickScrolling)
@@ -622,10 +638,10 @@ namespace FYUI
         rcView.top += rcInset.top;
         rcView.right -= rcInset.right;
         rcView.bottom -= rcInset.bottom;
-        if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
+        if (!m_bScrollFloat && m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
             rcView.right -= m_pVerticalScrollBar->GetFixedWidth();
         }
-        if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
+        if (!m_bScrollFloat && m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
             rcView.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
         }
         if (rcView.right < rcView.left) rcView.right = rcView.left;
@@ -1000,7 +1016,7 @@ namespace FYUI
     void CContainerUI::PageUp() {
         int iOffset =
             m_rcItem.bottom - m_rcItem.top - m_rcInset.top - m_rcInset.bottom;
-        if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
+        if (!m_bScrollFloat && m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
             iOffset -= m_pHorizontalScrollBar->GetFixedHeight();
         }
         ScrollByDelta(0, -iOffset, true, true, true);
@@ -1009,7 +1025,7 @@ namespace FYUI
     void CContainerUI::PageDown() {
         int iOffset =
             m_rcItem.bottom - m_rcItem.top - m_rcInset.top - m_rcInset.bottom;
-        if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
+        if (!m_bScrollFloat && m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
             iOffset -= m_pHorizontalScrollBar->GetFixedHeight();
         }
         ScrollByDelta(0, iOffset, true, true, true);
@@ -1047,7 +1063,7 @@ namespace FYUI
     void CContainerUI::PageLeft() {
         RECT rcInset = GetInset();
         int iOffset = m_rcItem.right - m_rcItem.left - rcInset.left - rcInset.right;
-        if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
+        if (!m_bScrollFloat && m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
             iOffset -= m_pVerticalScrollBar->GetFixedWidth();
         }
         ScrollByDelta(-iOffset, 0, true, true, true);
@@ -1056,7 +1072,7 @@ namespace FYUI
     void CContainerUI::PageRight() {
         RECT rcInset = GetInset();
         int iOffset = m_rcItem.right - m_rcItem.left - rcInset.left - rcInset.right;
-        if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
+        if (!m_bScrollFloat && m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
             iOffset -= m_pVerticalScrollBar->GetFixedWidth();
         }
         ScrollByDelta(iOffset, 0, true, true, true);
@@ -1089,6 +1105,9 @@ namespace FYUI
                 if (!pDefaultAttributes.empty()) {
                     m_pVerticalScrollBar->ApplyAttributeList(pDefaultAttributes);
                 }
+                else {
+                    m_pVerticalScrollBar->ApplyDefaultStyle();
+                }
 
                 m_pVerticalScrollBar->SetShow(m_bShowScrollbar);
             }
@@ -1109,6 +1128,9 @@ namespace FYUI
                     m_pManager->GetDefaultAttributeList(L"HScrollBar");
                 if (!pDefaultAttributes.empty()) {
                     m_pHorizontalScrollBar->ApplyAttributeList(pDefaultAttributes);
+                }
+                else {
+                    m_pHorizontalScrollBar->ApplyDefaultStyle();
                 }
 
                 m_pHorizontalScrollBar->SetShow(m_bShowScrollbar);
@@ -1179,13 +1201,17 @@ namespace FYUI
             rc.top -= m_pVerticalScrollBar->GetScrollPos();
             rc.bottom -= m_pVerticalScrollBar->GetScrollPos();
             rc.bottom += m_pVerticalScrollBar->GetScrollRange();
-            rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+            if (!m_bScrollFloat) {
+                rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+            }
         }
         if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
             rc.left -= m_pHorizontalScrollBar->GetScrollPos();
             rc.right -= m_pHorizontalScrollBar->GetScrollPos();
             rc.right += m_pHorizontalScrollBar->GetScrollRange();
-            rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+            if (!m_bScrollFloat) {
+                rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+            }
         }
         return rc;
     }
@@ -1224,13 +1250,17 @@ namespace FYUI
             rc.top -= m_pVerticalScrollBar->GetScrollPos();
             rc.bottom -= m_pVerticalScrollBar->GetScrollPos();
             rc.bottom += m_pVerticalScrollBar->GetScrollRange();
-            rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+            if (!m_bScrollFloat) {
+                rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+            }
         }
         if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
             rc.left -= m_pHorizontalScrollBar->GetScrollPos();
             rc.right -= m_pHorizontalScrollBar->GetScrollPos();
             rc.right += m_pHorizontalScrollBar->GetScrollRange();
-            rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+            if (!m_bScrollFloat) {
+                rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+            }
         }
 
         for (int it = 0; it < m_items.GetSize(); it++) {
@@ -1372,6 +1402,10 @@ namespace FYUI
         else if (StringUtil::EqualsNoCase(name, L"smooth"))
         {
             SetSmoothScrollbar(StringUtil::ParseBool(pstrValueView));
+        }
+        else if (StringUtil::EqualsNoCase(name, L"scrollfloat"))
+        {
+            SetScrollFloat(StringUtil::ParseBool(pstrValueView));
         }
         else if (StringUtil::EqualsNoCase(name, L"quick_scroll"))
         {
@@ -1659,12 +1693,16 @@ namespace FYUI
         rc.bottom -= rcInset.bottom;
     
         if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
-          rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+          if (!m_bScrollFloat) {
+            rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+          }
         }
         if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
-          rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+          if (!m_bScrollFloat) {
+            rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+          }
         }
-        if ((uFlags & UIFIND_TOP_FIRST) != 0) 
+        if ((uFlags & UIFIND_TOP_FIRST) != 0)
         {
     		
           for (int it = m_items.GetSize() - 1; it >= 0; it--) 
@@ -1738,10 +1776,14 @@ namespace FYUI
             rc.right -= rcInset.right;
             rc.bottom -= rcInset.bottom;
             if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
-                rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+                if (!m_bScrollFloat) {
+                    rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+                }
             }
             if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
-                rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+                if (!m_bScrollFloat) {
+                    rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+                }
             }
 
             if (!::IntersectRect(&rcTemp, &rcPaint, &rc))
@@ -1930,9 +1972,20 @@ namespace FYUI
                 SetPos(m_rcItem);
             }
             else {
-                RECT rcScrollBarPos = {
-                    rc.left, rc.bottom, rc.right,
-                    rc.bottom + m_pHorizontalScrollBar->GetFixedHeight() };
+                RECT rcScrollBarPos;
+                int nHSpace = m_pHorizontalScrollBar->GetHSpace();
+                if (m_bScrollFloat) {
+                    rcScrollBarPos = {
+                        rc.left,
+                        rc.bottom - m_pHorizontalScrollBar->GetFixedHeight() - nHSpace,
+                        rc.right,
+                        rc.bottom - nHSpace };
+                }
+                else {
+                    rcScrollBarPos = {
+                        rc.left, rc.bottom, rc.right,
+                        rc.bottom + m_pHorizontalScrollBar->GetFixedHeight() };
+                }
                 m_pHorizontalScrollBar->SetPos(rcScrollBarPos);
 
                 if (m_pHorizontalScrollBar->GetScrollRange() != cxScroll) {
@@ -1973,9 +2026,19 @@ namespace FYUI
             }
 
             int nVSpace = m_pVerticalScrollBar->GetVSpace();
-            RECT rcScrollBarPos = { (rc.right - nVSpace), rc.top,
+            RECT rcScrollBarPos;
+            if (m_bScrollFloat) {
+                rcScrollBarPos = {
+                    rc.right - m_pVerticalScrollBar->GetFixedWidth() - nVSpace,
+                    rc.top,
+                    rc.right - nVSpace,
+                    rc.bottom };
+            }
+            else {
+                rcScrollBarPos = { (rc.right - nVSpace), rc.top,
                                    (rc.right + m_pVerticalScrollBar->GetFixedWidth() - nVSpace),
                                    rc.bottom };
+            }
 
 
             m_pVerticalScrollBar->SetPos(rcScrollBarPos);

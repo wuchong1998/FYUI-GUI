@@ -1565,9 +1565,11 @@ namespace FYUI
 		rc.right -= rcInset.right;
 		rc.bottom -= rcInset.bottom;
 
-		if (m_pOwner->IsFixedScrollbar() && m_pVerticalScrollBar) rc.right -= m_pVerticalScrollBar->GetFixedWidth();
-		else if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) rc.right -= m_pVerticalScrollBar->GetFixedWidth();
-		if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+		if (!m_bScrollFloat) {
+			if (m_pOwner->IsFixedScrollbar() && m_pVerticalScrollBar) rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+			else if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+			if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+		}
 
 		// Determine the minimum size
 		SIZE szAvailable = { rc.right - rc.left, rc.bottom - rc.top };
@@ -1682,7 +1684,9 @@ namespace FYUI
 					m_pHorizontalScrollBar->SetVisible(true);
 					m_pHorizontalScrollBar->SetScrollRange(cxNeeded - (rc.right - rc.left));
 					m_pHorizontalScrollBar->SetScrollPos(0);
-					rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+					if (!m_bScrollFloat) {
+						rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+					}
 				}
 			}
 			else {
@@ -1690,7 +1694,9 @@ namespace FYUI
 					m_pHorizontalScrollBar->SetVisible(false);
 					m_pHorizontalScrollBar->SetScrollRange(0);
 					m_pHorizontalScrollBar->SetScrollPos(0);
-					rc.bottom += m_pHorizontalScrollBar->GetFixedHeight();
+					if (!m_bScrollFloat) {
+						rc.bottom += m_pHorizontalScrollBar->GetFixedHeight();
+					}
 				}
 			}
 		}
@@ -1754,12 +1760,12 @@ namespace FYUI
 
 	SIZE CListHeaderUI::EstimateSize(SIZE szAvailable)
 	{
-		SIZE cXY = { 0, GetFixedHeight() };
+		SIZE cXY = { 0, m_cxyFixed.cy };
 		if (cXY.cy == 0 && m_pManager != NULL) {
 			for (int it = 0; it < m_items.GetSize(); it++) {
 				cXY.cy = MAX(cXY.cy, static_cast<CControlUI*>(m_items[it])->EstimateSize(szAvailable).cy);
 			}
-			int nMin = m_pManager->GetDefaultFontInfo()->tm.tmHeight + ScaleValue(6);
+			int nMin = m_pManager->GetDefaultFontInfo()->tm.tmHeight + 6;
 			cXY.cy = MAX(cXY.cy, nMin);
 		}
 
@@ -2177,11 +2183,10 @@ namespace FYUI
 		{
 			if (!IsEnabled()) return;
 			RECT rcSeparator = GetThumbRect();
-			const int separatorExpand = ScaleValue(4);
 			if (m_iSepWidth >= 0)
-				rcSeparator.left -= separatorExpand;
+				rcSeparator.left -= 4;
 			else
-				rcSeparator.right += separatorExpand;
+				rcSeparator.right += 4;
 			if (::PtInRect(&rcSeparator, event.ptMouse)) {
 				if (m_bDragable) {
 					m_uButtonState |= UISTATE_CAPTURED;
@@ -2221,7 +2226,7 @@ namespace FYUI
 				}
 
 				if (rc.right - rc.left - rcPadding.right > GetMinWidth()) {
-					SetFixedWidthFromPixels(rc.right - rc.left - rcPadding.right, false);
+					m_cxyFixed.cx = rc.right - rc.left - rcPadding.right;
 					ptLastMouse = event.ptMouse;
 					if (GetParent())
 						GetParent()->NeedParentUpdate();
@@ -2232,11 +2237,10 @@ namespace FYUI
 		if (event.Type == UIEVENT_SETCURSOR)
 		{
 			RECT rcSeparator = GetThumbRect();
-			const int separatorExpand = ScaleValue(4);
 			if (m_iSepWidth >= 0)
-				rcSeparator.left -= separatorExpand;
+				rcSeparator.left -= 4;
 			else
-				rcSeparator.right += separatorExpand;
+				rcSeparator.right += 4;
 			if (IsEnabled() && m_bDragable && ::PtInRect(&rcSeparator, event.ptMouse)) {
 				::SetCursor(::LoadCursor(NULL, IDC_SIZEWE));
 				return;
@@ -2245,20 +2249,16 @@ namespace FYUI
 		if (event.Type == UIEVENT_MOUSEENTER)
 		{
 			if (IsEnabled()) {
-				if ((m_uButtonState & UISTATE_HOT) == 0) {
-					m_uButtonState |= UISTATE_HOT;
-					Invalidate();
-				}
+				m_uButtonState |= UISTATE_HOT;
+				Invalidate();
 			}
 			return;
 		}
 		if (event.Type == UIEVENT_MOUSELEAVE)
 		{
 			if (IsEnabled()) {
-				if ((m_uButtonState & UISTATE_HOT) != 0) {
-					m_uButtonState &= ~UISTATE_HOT;
-					Invalidate();
-				}
+				m_uButtonState &= ~UISTATE_HOT;
+				Invalidate();
 			}
 			return;
 		}
@@ -2267,16 +2267,14 @@ namespace FYUI
 
 	SIZE CListHeaderItemUI::EstimateSize(SIZE szAvailable)
 	{
-		const SIZE fixedSize = GetFixedSize();
-		if (fixedSize.cy == 0) return CDuiSize(fixedSize.cx, m_pManager->GetDefaultFontInfo()->tm.tmHeight + ScaleValue(14));
+		if (m_cxyFixed.cy == 0) return CDuiSize(m_cxyFixed.cx, m_pManager->GetDefaultFontInfo()->tm.tmHeight + 14);
 		return CHorizontalLayoutUI::EstimateSize(szAvailable);
 	}
 
 	RECT CListHeaderItemUI::GetThumbRect() const
 	{
-		const int sepWidth = ScaleValue(m_iSepWidth);
-		if (m_iSepWidth >= 0) return CDuiRect(m_rcItem.right - sepWidth, m_rcItem.top, m_rcItem.right, m_rcItem.bottom);
-		else return CDuiRect(m_rcItem.left, m_rcItem.top, m_rcItem.left - sepWidth, m_rcItem.bottom);
+		if (m_iSepWidth >= 0) return CDuiRect(m_rcItem.right - m_iSepWidth, m_rcItem.top, m_rcItem.right, m_rcItem.bottom);
+		else return CDuiRect(m_rcItem.left, m_rcItem.top, m_rcItem.left - m_iSepWidth, m_rcItem.bottom);
 	}
 
 	void CListHeaderItemUI::PaintStatusImage(CPaintRenderContext& renderContext)
@@ -2319,11 +2317,10 @@ namespace FYUI
 		if (m_dwTextColor == 0) m_dwTextColor = m_pManager->GetDefaultFontColor();
 
 		RECT rcText = m_rcItem;
-		const RECT rcTextPadding = GetTextPadding();
-		rcText.left += rcTextPadding.left;
-		rcText.top += rcTextPadding.top;
-		rcText.right -= rcTextPadding.right;
-		rcText.bottom -= rcTextPadding.bottom;
+		rcText.left += m_rcTextPadding.left;
+		rcText.top += m_rcTextPadding.top;
+		rcText.right -= m_rcTextPadding.right;
+		rcText.bottom -= m_rcTextPadding.bottom;
 
 		std::wstring sText = GetText();
 		if (sText.empty()) return;
@@ -2446,10 +2443,11 @@ namespace FYUI
 				rc.top += rcInset.top;
 				rc.right -= rcInset.right;
 				rc.bottom -= rcInset.bottom;
+				const bool bParentScrollFloat = pParentContainer->IsScrollFloat();
 				CScrollBarUI* pVerticalScrollBar = pParentContainer->GetVerticalScrollBar();
-				if (pVerticalScrollBar && pVerticalScrollBar->IsVisible()) rc.right -= pVerticalScrollBar->GetFixedWidth();
+				if (!bParentScrollFloat && pVerticalScrollBar && pVerticalScrollBar->IsVisible()) rc.right -= pVerticalScrollBar->GetFixedWidth();
 				CScrollBarUI* pHorizontalScrollBar = pParentContainer->GetHorizontalScrollBar();
-				if (pHorizontalScrollBar && pHorizontalScrollBar->IsVisible()) rc.bottom -= pHorizontalScrollBar->GetFixedHeight();
+				if (!bParentScrollFloat && pHorizontalScrollBar && pHorizontalScrollBar->IsVisible()) rc.bottom -= pHorizontalScrollBar->GetFixedHeight();
 
 				RECT invalidateRc = m_rcItem;
 				if (!::IntersectRect(&invalidateRc, &m_rcItem, &rc))
@@ -2743,11 +2741,9 @@ namespace FYUI
 		if (event.Type == UIEVENT_MOUSEENTER)
 		{
 			if (IsEnabled()) {
-				if ((m_uButtonState & UISTATE_HOT) == 0) {
-					m_uButtonState |= UISTATE_HOT;
-					Invalidate();
-					if(IsRichEvent()) m_pManager->SendNotify(this, DUI_MSGTYPE_MOUSEENTER);
-				}
+				m_uButtonState |= UISTATE_HOT;
+				Invalidate();
+				if(IsRichEvent()) m_pManager->SendNotify(this, DUI_MSGTYPE_MOUSEENTER);
 			}
 			return;
 		}
@@ -2770,11 +2766,10 @@ namespace FYUI
 		std::wstring sText = GetText();
 
 		TListInfoUI* pInfo = m_pOwner->GetListInfo();
-		SIZE cXY = GetFixedSize();
-		if (cXY.cy == 0 && m_pManager != NULL && pInfo != NULL) {
-			const RECT rcTextPadding = GetManager()->ScaleRect(pInfo->rcTextPadding);
-			cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + ScaleValue(8);
-			cXY.cy += rcTextPadding.top + rcTextPadding.bottom;
+		SIZE cXY = m_cxyFixed;
+		if (cXY.cy == 0 && m_pManager != NULL) {
+			cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + 8;
+			cXY.cy += pInfo->rcTextPadding.top + pInfo->rcTextPadding.bottom;
 		}
 
 		if (cXY.cx == 0) {
@@ -2987,14 +2982,10 @@ namespace FYUI
 		TListInfoUI* pInfo = NULL;
 		if (m_pOwner) pInfo = m_pOwner->GetListInfo();
 
-		SIZE cXY = GetFixedSize();
+		SIZE cXY = m_cxyFixed;
 		if (cXY.cy == 0 && m_pManager != NULL) {
-			cXY.cy = 0;
-			if (pInfo != NULL) {
-				const RECT rcTextPadding = GetManager()->ScaleRect(pInfo->rcTextPadding);
-				cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + ScaleValue(8);
-				cXY.cy += rcTextPadding.top + rcTextPadding.bottom;
-			}
+			cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + 8;
+			if (pInfo) cXY.cy += pInfo->rcTextPadding.top + pInfo->rcTextPadding.bottom;
 		}
 
 		return cXY;
@@ -3185,10 +3176,11 @@ namespace FYUI
 				rc.top += rcInset.top;
 				rc.right -= rcInset.right;
 				rc.bottom -= rcInset.bottom;
+				const bool bParentScrollFloat = pParentContainer->IsScrollFloat();
 				CScrollBarUI* pVerticalScrollBar = pParentContainer->GetVerticalScrollBar();
-				if (pVerticalScrollBar && pVerticalScrollBar->IsVisible()) rc.right -= pVerticalScrollBar->GetFixedWidth();
+				if (!bParentScrollFloat && pVerticalScrollBar && pVerticalScrollBar->IsVisible()) rc.right -= pVerticalScrollBar->GetFixedWidth();
 				CScrollBarUI* pHorizontalScrollBar = pParentContainer->GetHorizontalScrollBar();
-				if (pHorizontalScrollBar && pHorizontalScrollBar->IsVisible()) rc.bottom -= pHorizontalScrollBar->GetFixedHeight();
+				if (!bParentScrollFloat && pHorizontalScrollBar && pHorizontalScrollBar->IsVisible()) rc.bottom -= pHorizontalScrollBar->GetFixedHeight();
 
 				RECT invalidateRc = m_rcItem;
 				if (!::IntersectRect(&invalidateRc, &m_rcItem, &rc))
@@ -3345,11 +3337,9 @@ namespace FYUI
 		if (event.Type == UIEVENT_MOUSEENTER)
 		{
 			if (IsEnabled()) {
-				if ((m_uButtonState & UISTATE_HOT) == 0) {
-					m_uButtonState |= UISTATE_HOT;
-					Invalidate();
-					if(IsRichEvent()) m_pManager->SendNotify(this, DUI_MSGTYPE_MOUSEENTER);
-				}
+				m_uButtonState |= UISTATE_HOT;
+				Invalidate();
+				if(IsRichEvent()) m_pManager->SendNotify(this, DUI_MSGTYPE_MOUSEENTER);
 			}
 			return;
 		}
@@ -3414,10 +3404,10 @@ namespace FYUI
 			rc.top += m_rcInset.top;
 			rc.right -= m_rcInset.right;
 			rc.bottom -= m_rcInset.bottom;
-			if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
+			if (!m_bScrollFloat && m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
 				rc.right -= m_pVerticalScrollBar->GetFixedWidth();
 			}
-			if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
+			if (!m_bScrollFloat && m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
 				rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
 			}
 

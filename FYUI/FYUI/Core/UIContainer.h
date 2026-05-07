@@ -378,6 +378,19 @@ namespace FYUI
 		bool IsSmoothScrollbar();
 
 		/**
+		 * @brief 判断滚动条是否使用Float布局
+		 * @details 为true时滚动条悬浮覆盖在内容之上，不占用子控件可用区域；为false时滚动条占用空间，子控件可用区域会减去滚动条尺寸。默认true。
+		 * @return bool 操作成功返回 true，否则返回 false
+		 */
+		bool IsScrollFloat() const;
+		/**
+		 * @brief 设置滚动条是否使用Float布局
+		 * @details 为true时滚动条悬浮覆盖在内容之上，不占用子控件可用区域；为false时滚动条占用空间，子控件可用区域会减去滚动条尺寸。默认true。
+		 * @param bFloat [in] 是否Float
+		 */
+		void SetScrollFloat(bool bFloat);
+
+		/**
 		 * @brief 设置QuickScrolling
 		 * @details 用于设置QuickScrolling。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param bQuickScrolling [in] 是否QuickScrolling
@@ -819,6 +832,7 @@ namespace FYUI
 		bool m_bSmoothScrollbar;
 		bool m_bCursorMouse;
 		bool m_bQuickScrolling = true;
+		bool m_bScrollFloat = true;
 
 
 

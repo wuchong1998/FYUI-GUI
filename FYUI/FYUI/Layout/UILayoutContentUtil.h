@@ -24,14 +24,15 @@ namespace FYUI
 	 * @param rc [in] 矩形区域
 	 * @param pVerticalScrollBar [in] 垂直滚动Bar对象
 	 * @param pHorizontalScrollBar [in] 水平滚动Bar对象
+	 * @param bScrollFloat [in] 滚动条是否Float布局；为true则不占用子控件可用区域
 	 * @return 返回对应的几何结果
 	 */
-	inline RECT AdjustLayoutRectForVisibleScrollBars(RECT rc, CScrollBarUI* pVerticalScrollBar, CScrollBarUI* pHorizontalScrollBar)
+	inline RECT AdjustLayoutRectForVisibleScrollBars(RECT rc, CScrollBarUI* pVerticalScrollBar, CScrollBarUI* pHorizontalScrollBar, bool bScrollFloat = false)
 	{
-		if( pVerticalScrollBar && pVerticalScrollBar->IsVisible() ) {
+		if( !bScrollFloat && pVerticalScrollBar && pVerticalScrollBar->IsVisible() ) {
 			rc.right -= pVerticalScrollBar->GetFixedWidth();
 		}
-		if( pHorizontalScrollBar && pHorizontalScrollBar->IsVisible() ) {
+		if( !bScrollFloat && pHorizontalScrollBar && pHorizontalScrollBar->IsVisible() ) {
 			rc.bottom -= pHorizontalScrollBar->GetFixedHeight();
 		}
 		return rc;

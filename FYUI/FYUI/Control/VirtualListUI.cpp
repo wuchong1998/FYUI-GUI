@@ -90,7 +90,7 @@ namespace FYUI
 			RebuildPrefixHeights();
 		}
 		else {
-			m_contentHeight = static_cast<long long>(m_itemCount) * ClampPositiveHeight(m_fixedItemHeight, 24);
+			m_contentHeight = static_cast<long long>(m_itemCount) * GetFixedItemHeightPx();
 		}
 		FinalizeDataChange(false);
 	}
@@ -106,7 +106,7 @@ namespace FYUI
 		m_useVariableHeights = false;
 		m_itemHeights.clear();
 		m_prefixHeights.clear();
-		m_contentHeight = static_cast<long long>(m_itemCount) * m_fixedItemHeight;
+		m_contentHeight = static_cast<long long>(m_itemCount) * GetFixedItemHeightPx();
 		FinalizeDataChange(false);
 	}
 
@@ -161,7 +161,7 @@ namespace FYUI
 		m_useVariableHeights = false;
 		m_itemHeights.clear();
 		m_prefixHeights.clear();
-		m_contentHeight = static_cast<long long>(m_itemCount) * ClampPositiveHeight(m_fixedItemHeight, 24);
+		m_contentHeight = static_cast<long long>(m_itemCount) * GetFixedItemHeightPx();
 		FinalizeDataChange(false);
 	}
 
@@ -175,6 +175,19 @@ namespace FYUI
 		if (index >= m_itemCount) return 0;
 		if (!m_useVariableHeights) return m_fixedItemHeight;
 		return ClampPositiveHeight(m_itemHeights[static_cast<size_t>(index)], m_fixedItemHeight);
+	}
+
+	int CVirtualListUI::GetFixedItemHeightPx() const
+	{
+		const int raw = ClampPositiveHeight(m_fixedItemHeight, 24);
+		return m_pManager ? m_pManager->ScaleValue(raw) : raw;
+	}
+
+	int CVirtualListUI::GetItemHeightPx(ItemIndex index) const
+	{
+		const int raw = GetItemHeight(index);
+		if (raw <= 0) return 0;
+		return m_pManager ? m_pManager->ScaleValue(raw) : raw;
 	}
 
 	void CVirtualListUI::SetOverscanItemCount(int count)
@@ -410,12 +423,12 @@ namespace FYUI
 
 	void CVirtualListUI::LineUp(bool)
 	{
-		SetScrollOffset(m_scrollOffset - GetItemHeight(FindItemByOffset(m_scrollOffset)));
+		SetScrollOffset(m_scrollOffset - GetItemHeightPx(FindItemByOffset(m_scrollOffset)));
 	}
 
 	void CVirtualListUI::LineDown(bool)
 	{
-		SetScrollOffset(m_scrollOffset + GetItemHeight(FindItemByOffset(m_scrollOffset)));
+		SetScrollOffset(m_scrollOffset + GetItemHeightPx(FindItemByOffset(m_scrollOffset)));
 	}
 
 	void CVirtualListUI::PageUp()
@@ -662,14 +675,13 @@ namespace FYUI
 		if (m_pVerticalScrollBar == nullptr) return;
 		m_pVerticalScrollBar->SetOwner(this);
 		m_pVerticalScrollBar->SetHorizontal(false);
-		m_pVerticalScrollBar->SetMinThumbSize(24);
-		m_pVerticalScrollBar->SetShowButton1(false);
-		m_pVerticalScrollBar->SetShowButton2(false);
 		if (m_pManager != nullptr) {
 			std::wstring_view style = m_sVerticalScrollBarStyle;
+			bool styleApplied = false;
 			if (!style.empty()) {
 				const std::wstring_view namedStyle = m_pManager->GetStyle(style);
 				m_pVerticalScrollBar->ApplyAttributeList(namedStyle.empty() ? style : namedStyle);
+				styleApplied = true;
 			}
 			else {
 				const std::wstring_view defaultStyle = m_pManager->GetDefaultAttributeList(L"VScrollBar");
@@ -677,12 +689,23 @@ namespace FYUI
 				if (!style.empty()) {
 					const std::wstring_view namedStyle = m_pManager->GetStyle(style);
 					m_pVerticalScrollBar->ApplyAttributeList(namedStyle.empty() ? style : namedStyle);
+					styleApplied = true;
 				}
 			}
+			if (!styleApplied) {
+				m_pVerticalScrollBar->ApplyDefaultStyle();
+			}
+			else {
+				m_pVerticalScrollBar->SetMinThumbSize(24);
+				m_pVerticalScrollBar->SetShowButton1(false);
+				m_pVerticalScrollBar->SetShowButton2(false);
+			}
+			m_pVerticalScrollBar->SetShow(m_bShowScrollbar);
+		}
+		else {
 			m_pVerticalScrollBar->SetMinThumbSize(24);
 			m_pVerticalScrollBar->SetShowButton1(false);
 			m_pVerticalScrollBar->SetShowButton2(false);
-			m_pVerticalScrollBar->SetShow(m_bShowScrollbar);
 		}
 	}
 
@@ -773,7 +796,9 @@ namespace FYUI
 		m_prefixHeights.assign(m_itemHeights.size() + 1, 0);
 		long long total = 0;
 		for (size_t i = 0; i < m_itemHeights.size(); ++i) {
-			total += ClampPositiveHeight(m_itemHeights[i], m_fixedItemHeight);
+			const int raw = ClampPositiveHeight(m_itemHeights[i], m_fixedItemHeight);
+			const int scaled = m_pManager ? m_pManager->ScaleValue(raw) : raw;
+			total += scaled;
 			m_prefixHeights[i + 1] = total;
 		}
 		m_contentHeight = total;
@@ -784,7 +809,8 @@ namespace FYUI
 		if (m_itemCount == 0) return 0;
 		offset = ClampScrollOffset(offset);
 		if (!m_useVariableHeights) {
-			return (std::min<ItemIndex>)(m_itemCount - 1, static_cast<ItemIndex>(offset / ClampPositiveHeight(m_fixedItemHeight, 24)));
+			const int fixedPx = (std::max)(1, GetFixedItemHeightPx());
+			return (std::min<ItemIndex>)(m_itemCount - 1, static_cast<ItemIndex>(offset / fixedPx));
 		}
 		auto it = std::upper_bound(m_prefixHeights.begin(), m_prefixHeights.end(), offset);
 		if (it == m_prefixHeights.begin()) return 0;
@@ -795,14 +821,14 @@ namespace FYUI
 	long long CVirtualListUI::GetItemTop(ItemIndex index) const
 	{
 		if (index >= m_itemCount) return GetContentHeight();
-		if (!m_useVariableHeights) return static_cast<long long>(index) * ClampPositiveHeight(m_fixedItemHeight, 24);
+		if (!m_useVariableHeights) return static_cast<long long>(index) * GetFixedItemHeightPx();
 		return m_prefixHeights[static_cast<size_t>(index)];
 	}
 
 	long long CVirtualListUI::GetItemBottom(ItemIndex index) const
 	{
 		if (index >= m_itemCount) return GetContentHeight();
-		return GetItemTop(index) + GetItemHeight(index);
+		return GetItemTop(index) + GetItemHeightPx(index);
 	}
 
 	void CVirtualListUI::UpdateScrollBar()
@@ -814,7 +840,7 @@ namespace FYUI
 		m_pVerticalScrollBar->SetVisible(visible);
 		m_pVerticalScrollBar->SetScrollRange(range);
 		m_pVerticalScrollBar->SetScrollPos(OffsetToScrollbarPos(m_scrollOffset));
-		m_pVerticalScrollBar->SetLineSize((std::max)(1, m_fixedItemHeight));
+		m_pVerticalScrollBar->SetLineSize((std::max)(1, GetFixedItemHeightPx()));
 		if (visible) {
 			RECT rcBar = m_rcItem;
 			RECT inset = GetInset();
@@ -860,7 +886,7 @@ namespace FYUI
 				--trailingOverscanRemaining;
 			}
 			++needed;
-			itemTop += GetItemHeight(index);
+			itemTop += GetItemHeightPx(index);
 			++index;
 		}
 		EnsurePoolSize(needed);
@@ -878,7 +904,7 @@ namespace FYUI
 			}
 
 			RealizedItem& item = m_realizedItems[slot];
-			const int height = GetItemHeight(index);
+			const int height = GetItemHeightPx(index);
 			item.index = index;
 			item.active = true;
 			item.rect = {
@@ -931,7 +957,9 @@ namespace FYUI
 	{
 		if (item.control == nullptr) return;
 		item.control->SetVisible(true, false);
-		item.control->SetFixedHeight(static_cast<int>(item.rect.bottom - item.rect.top), false);
+		const int rectHeightPx = static_cast<int>(item.rect.bottom - item.rect.top);
+		const int logicalHeight = m_pManager ? m_pManager->UnscaleValue(rectHeightPx) : rectHeightPx;
+		item.control->SetFixedHeight(logicalHeight, false);
 		item.control->SetPos(item.rect, false);
 		item.control->SetUserData(std::to_wstring(item.index));
 		if (m_bindItemCallback) {

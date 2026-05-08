@@ -599,6 +599,9 @@ namespace FYUI
 		void DispatchItemEvent(int realizedIndex, TEventUI& event, const ItemEventCallback& callback);
 
 	private:
+		int GetFixedItemHeightPx() const;
+		int GetItemHeightPx(ItemIndex index) const;
+
 		ItemIndex m_itemCount;
 		int m_fixedItemHeight;
 		int m_overscanItemCount;

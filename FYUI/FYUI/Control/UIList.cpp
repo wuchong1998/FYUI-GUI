@@ -1760,12 +1760,12 @@ namespace FYUI
 
 	SIZE CListHeaderUI::EstimateSize(SIZE szAvailable)
 	{
-		SIZE cXY = { 0, m_cxyFixed.cy };
+		SIZE cXY = { 0, GetFixedHeight() };
 		if (cXY.cy == 0 && m_pManager != NULL) {
 			for (int it = 0; it < m_items.GetSize(); it++) {
 				cXY.cy = MAX(cXY.cy, static_cast<CControlUI*>(m_items[it])->EstimateSize(szAvailable).cy);
 			}
-			int nMin = m_pManager->GetDefaultFontInfo()->tm.tmHeight + 6;
+			int nMin = m_pManager->GetDefaultFontInfo()->tm.tmHeight + m_pManager->ScaleValue(6);
 			cXY.cy = MAX(cXY.cy, nMin);
 		}
 
@@ -2267,7 +2267,10 @@ namespace FYUI
 
 	SIZE CListHeaderItemUI::EstimateSize(SIZE szAvailable)
 	{
-		if (m_cxyFixed.cy == 0) return CDuiSize(m_cxyFixed.cx, m_pManager->GetDefaultFontInfo()->tm.tmHeight + 14);
+		if (m_cxyFixed.cy == 0) {
+			const int extra = (m_pManager != NULL) ? m_pManager->ScaleValue(14) : 14;
+			return CDuiSize(GetFixedWidth(), m_pManager->GetDefaultFontInfo()->tm.tmHeight + extra);
+		}
 		return CHorizontalLayoutUI::EstimateSize(szAvailable);
 	}
 
@@ -2766,10 +2769,11 @@ namespace FYUI
 		std::wstring sText = GetText();
 
 		TListInfoUI* pInfo = m_pOwner->GetListInfo();
-		SIZE cXY = m_cxyFixed;
+		SIZE cXY = GetFixedSize();
 		if (cXY.cy == 0 && m_pManager != NULL) {
-			cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + 8;
-			cXY.cy += pInfo->rcTextPadding.top + pInfo->rcTextPadding.bottom;
+			const RECT rcPad = m_pManager->ScaleRect(pInfo->rcTextPadding);
+			cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + m_pManager->ScaleValue(8);
+			cXY.cy += rcPad.top + rcPad.bottom;
 		}
 
 		if (cXY.cx == 0) {
@@ -2982,10 +2986,13 @@ namespace FYUI
 		TListInfoUI* pInfo = NULL;
 		if (m_pOwner) pInfo = m_pOwner->GetListInfo();
 
-		SIZE cXY = m_cxyFixed;
+		SIZE cXY = GetFixedSize();
 		if (cXY.cy == 0 && m_pManager != NULL) {
-			cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + 8;
-			if (pInfo) cXY.cy += pInfo->rcTextPadding.top + pInfo->rcTextPadding.bottom;
+			cXY.cy = m_pManager->GetFontInfo(pInfo->nFont)->tm.tmHeight + m_pManager->ScaleValue(8);
+			if (pInfo) {
+				const RECT rcPad = m_pManager->ScaleRect(pInfo->rcTextPadding);
+				cXY.cy += rcPad.top + rcPad.bottom;
+			}
 		}
 
 		return cXY;

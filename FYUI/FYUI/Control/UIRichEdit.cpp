@@ -466,7 +466,6 @@ namespace FYUI
 
 	void CRichEditUI::SetScrollPos(SIZE szPos, bool, bool)
 	{
-		UpdateScrollBars();
 		if (m_pVerticalScrollBar != NULL) m_pVerticalScrollBar->SetScrollPos(static_cast<int>((std::max<LONG>)(0L, szPos.cy)));
 		if (m_pHorizontalScrollBar != NULL) m_pHorizontalScrollBar->SetScrollPos(static_cast<int>((std::max<LONG>)(0L, szPos.cx)));
 		UpdateImeCompositionWindow();
@@ -925,18 +924,36 @@ namespace FYUI
 		lineIndex = (std::max)(0, (std::min)(lineIndex, static_cast<int>(m_lines.size()) - 1));
 		const TextLine& line = m_lines[static_cast<size_t>(lineIndex)];
 		const int localX = pt.x - rcView.left + scroll.cx;
-		size_t best = line.start;
-		int bestDelta = INT_MAX;
 		const std::wstring text = GetDisplayText();
-		for (size_t i = 0; i <= line.length; ++i) {
-			const int width = MeasureTextWidth(std::wstring_view(text).substr(line.start, i));
-			const int delta = std::abs(width - localX);
-			if (delta < bestDelta) {
-				bestDelta = delta;
-				best = line.start + i;
+
+		// Binary search: prefix widths of the line are monotonically non-decreasing,
+		// so we can locate the largest prefix whose width <= localX in O(log N) measurements
+		// instead of measuring all N+1 prefixes (huge speed-up while dragging selection).
+		if (line.length == 0 || localX <= 0) {
+			return line.start;
+		}
+		if (localX >= line.width) {
+			return line.start + line.length;
+		}
+		size_t lo = 0;
+		size_t hi = line.length;
+		while (lo < hi) {
+			const size_t mid = lo + (hi - lo + 1) / 2;
+			const int midWidth = MeasureTextWidth(std::wstring_view(text).substr(line.start, mid));
+			if (midWidth <= localX) {
+				lo = mid;
+			}
+			else {
+				hi = mid - 1;
 			}
 		}
-		return best;
+		// lo is the largest prefix length whose width <= localX; pick lo or lo+1 by proximity
+		const int loWidth = MeasureTextWidth(std::wstring_view(text).substr(line.start, lo));
+		if (lo >= line.length) return line.start + lo;
+		const int hiWidth = MeasureTextWidth(std::wstring_view(text).substr(line.start, lo + 1));
+		const int dLo = std::abs(loWidth - localX);
+		const int dHi = std::abs(hiWidth - localX);
+		return line.start + ((dHi < dLo) ? (lo + 1) : lo);
 	}
 
 	CDuiPoint CRichEditUI::CharPos(size_t index) const

@@ -665,6 +665,13 @@ namespace FYUI {
 		 */
 		static SIZE GetTextSize(CPaintRenderContext& renderContext, std::wstring_view text, int iFont, UINT uStyle);
 
+		/**
+		 * @brief 批量获取文本前缀像素宽度（GDI 快路径）
+		 * @details 通过 GetTextExtentExPointW 一次性获取每个前缀的累计像素宽度。
+		 *          outPrefix[i] 表示 text[0..i] 的累计像素宽度，tab 按空格处理。
+		 * @return 成功时 outPrefix.size()==len，否则返回 false 并清空 outPrefix
+		 */
+		static bool GetTextPrefixWidths(CPaintManagerUI* pManager, int iFont, const wchar_t* str, size_t len, std::vector<int>& outPrefix);
 
 	};
 

@@ -494,8 +494,12 @@ namespace FYUI
 
 	void CRichEditUI::SetPos(RECT rc, bool bNeedInvalidate)
 	{
+		const LONG oldWidth = m_rcItem.right - m_rcItem.left;
 		CControlUI::SetPos(rc, bNeedInvalidate);
-		InvalidateLayout();
+		const LONG newWidth = m_rcItem.right - m_rcItem.left;
+		if (newWidth != oldWidth) {
+			InvalidateLayout();
+		}
 		UpdateScrollBars();
 	}
 
@@ -813,53 +817,94 @@ namespace FYUI
 		m_nContentWidth = 0;
 		const std::wstring text = GetDisplayText();
 		const int maxWidth = m_bWordWrap ? viewWidth : INT_MAX / 4;
+
+		auto pushEmptyLine = [&](size_t at) {
+			TextLine line;
+			line.start = at;
+			line.length = 0;
+			line.width = 0;
+			line.charOffsets.assign(1, 0);
+			m_lines.push_back(std::move(line));
+		};
+
 		size_t paragraphStart = 0;
 		while (paragraphStart <= text.size()) {
 			size_t paragraphEnd = text.find(L'\n', paragraphStart);
 			const bool hasNewline = paragraphEnd != std::wstring::npos;
 			if (!hasNewline) paragraphEnd = text.size();
-			if (paragraphStart == paragraphEnd) {
-				m_lines.push_back(TextLine{ paragraphStart, 0, 0 });
+			const size_t paraLen = paragraphEnd - paragraphStart;
+
+			if (paraLen == 0) {
+				pushEmptyLine(paragraphStart);
 			}
 			else {
-				size_t lineStart = paragraphStart;
-				while (lineStart < paragraphEnd) {
-					size_t low = lineStart + 1;
-					size_t high = paragraphEnd;
-					size_t best = low;
-					while (low <= high) {
-						const size_t mid = (low + high) / 2;
-						const int width = MeasureTextWidth(std::wstring_view(text).substr(lineStart, mid - lineStart));
-						if (width <= maxWidth || mid == lineStart + 1) {
-							best = mid;
-							low = mid + 1;
-						}
-						else {
-							high = mid - 1;
-						}
-					}
-					if (m_bWordWrap && best < paragraphEnd) {
-						for (size_t i = best; i > lineStart + 1; --i) {
-							if (iswspace(text[i - 1])) {
-								best = i;
-								break;
+				// One GDI call gives prefix widths for the whole paragraph.
+				std::vector<int> prefix;
+				CRenderEngine::GetTextPrefixWidths(m_pManager, m_iFont, text.data() + paragraphStart, paraLen, prefix);
+				if (prefix.size() != paraLen) {
+					// GDI failed (no manager / no font). Fall back to a zero-width line so we
+					// don't loop forever; layout will retry once the manager is wired up.
+					pushEmptyLine(paragraphStart);
+				}
+				else {
+					size_t lineRel = 0;
+					while (lineRel < paraLen) {
+						const int baseWidth = (lineRel == 0) ? 0 : prefix[lineRel - 1];
+						const size_t remaining = paraLen - lineRel;
+
+						// Largest k in [1, remaining] s.t. prefix[lineRel+k-1]-baseWidth <= maxWidth.
+						// Pure array indexing — no measurement.
+						size_t k = 1;
+						{
+							size_t lo = 1;
+							size_t hi = remaining;
+							while (lo <= hi) {
+								const size_t mid = (lo + hi) / 2;
+								const int w = prefix[lineRel + mid - 1] - baseWidth;
+								if (w <= maxWidth || mid == 1) {
+									k = mid;
+									lo = mid + 1;
+								}
+								else {
+									if (mid == 0) break;
+									hi = mid - 1;
+								}
 							}
 						}
+
+						// Word-wrap: backtrack to nearest preceding whitespace if mid-word.
+						if (m_bWordWrap && lineRel + k < paraLen) {
+							for (size_t i = k; i > 1; --i) {
+								if (iswspace(text[paragraphStart + lineRel + i - 1])) {
+									k = i;
+									break;
+								}
+							}
+						}
+
+						TextLine line;
+						line.start = paragraphStart + lineRel;
+						line.length = k;
+						line.width = prefix[lineRel + k - 1] - baseWidth;
+						line.charOffsets.assign(k + 1, 0);
+						for (size_t i = 1; i <= k; ++i) {
+							line.charOffsets[i] = prefix[lineRel + i - 1] - baseWidth;
+						}
+						m_nContentWidth = (std::max)(m_nContentWidth, line.width);
+						m_lines.push_back(std::move(line));
+						lineRel += k;
 					}
-					const int width = MeasureTextWidth(std::wstring_view(text).substr(lineStart, best - lineStart));
-					m_lines.push_back(TextLine{ lineStart, best - lineStart, width });
-					m_nContentWidth = (std::max)(m_nContentWidth, width);
-					lineStart = best;
 				}
 			}
+
 			if (!hasNewline) break;
 			paragraphStart = paragraphEnd + 1;
 			if (paragraphStart == text.size()) {
-				m_lines.push_back(TextLine{ paragraphStart, 0, 0 });
+				pushEmptyLine(paragraphStart);
 				break;
 			}
 		}
-		if (m_lines.empty()) m_lines.push_back(TextLine{ 0, 0, 0 });
+		if (m_lines.empty()) pushEmptyLine(0);
 		m_nContentHeight = static_cast<int>(m_lines.size()) * GetLineHeight();
 		m_bLayoutDirty = false;
 	}
@@ -917,6 +962,7 @@ namespace FYUI
 	size_t CRichEditUI::HitTest(CDuiPoint pt) const
 	{
 		EnsureLayout();
+		if (m_lines.empty()) return 0;
 		const RECT rcView = GetViewRect();
 		const SIZE scroll = GetScrollPos();
 		const int lineHeight = GetLineHeight();
@@ -924,36 +970,20 @@ namespace FYUI
 		lineIndex = (std::max)(0, (std::min)(lineIndex, static_cast<int>(m_lines.size()) - 1));
 		const TextLine& line = m_lines[static_cast<size_t>(lineIndex)];
 		const int localX = pt.x - rcView.left + scroll.cx;
-		const std::wstring text = GetDisplayText();
 
-		// Binary search: prefix widths of the line are monotonically non-decreasing,
-		// so we can locate the largest prefix whose width <= localX in O(log N) measurements
-		// instead of measuring all N+1 prefixes (huge speed-up while dragging selection).
-		if (line.length == 0 || localX <= 0) {
-			return line.start;
+		if (line.length == 0 || localX <= 0) return line.start;
+		if (localX >= line.width) return line.start + line.length;
+
+		// O(log N) lookup in the cached charOffsets table populated by EnsureLayout.
+		auto it = std::upper_bound(line.charOffsets.begin(), line.charOffsets.end(), localX);
+		if (it == line.charOffsets.begin()) return line.start;
+		const size_t k = static_cast<size_t>((it - line.charOffsets.begin()) - 1);
+		if (k + 1 < line.charOffsets.size()) {
+			const int dLo = std::abs(line.charOffsets[k] - localX);
+			const int dHi = std::abs(line.charOffsets[k + 1] - localX);
+			return line.start + ((dHi < dLo) ? (k + 1) : k);
 		}
-		if (localX >= line.width) {
-			return line.start + line.length;
-		}
-		size_t lo = 0;
-		size_t hi = line.length;
-		while (lo < hi) {
-			const size_t mid = lo + (hi - lo + 1) / 2;
-			const int midWidth = MeasureTextWidth(std::wstring_view(text).substr(line.start, mid));
-			if (midWidth <= localX) {
-				lo = mid;
-			}
-			else {
-				hi = mid - 1;
-			}
-		}
-		// lo is the largest prefix length whose width <= localX; pick lo or lo+1 by proximity
-		const int loWidth = MeasureTextWidth(std::wstring_view(text).substr(line.start, lo));
-		if (lo >= line.length) return line.start + lo;
-		const int hiWidth = MeasureTextWidth(std::wstring_view(text).substr(line.start, lo + 1));
-		const int dLo = std::abs(loWidth - localX);
-		const int dHi = std::abs(hiWidth - localX);
-		return line.start + ((dHi < dLo) ? (lo + 1) : lo);
+		return line.start + k;
 	}
 
 	CDuiPoint CRichEditUI::CharPos(size_t index) const
@@ -961,12 +991,12 @@ namespace FYUI
 		EnsureLayout();
 		const RECT rcView = GetViewRect();
 		const SIZE scroll = GetScrollPos();
-		const std::wstring text = GetDisplayText();
 		for (size_t i = 0; i < m_lines.size(); ++i) {
 			const TextLine& line = m_lines[i];
 			if (index >= line.start && index <= line.start + line.length) {
 				const size_t count = (std::min)(index - line.start, line.length);
-				const int x = rcView.left - scroll.cx + MeasureTextWidth(std::wstring_view(text).substr(line.start, count));
+				const int xOff = (count < line.charOffsets.size()) ? line.charOffsets[count] : 0;
+				const int x = rcView.left - scroll.cx + xOff;
 				const int y = rcView.top - scroll.cy + static_cast<int>(i) * GetLineHeight();
 				return CDuiPoint(x, y);
 			}
@@ -1045,14 +1075,22 @@ namespace FYUI
 	void CRichEditUI::ApplyScrollBarStyle(CScrollBarUI* pScrollBar, std::wstring_view styleName, std::wstring_view defaultName)
 	{
 		if (pScrollBar == NULL || m_pManager == NULL) return;
+		bool styleApplied = false;
 		if (!styleName.empty()) {
 			const std::wstring_view style = m_pManager->GetStyle(styleName);
 			pScrollBar->ApplyAttributeList(style.empty() ? styleName : style);
+			styleApplied = true;
 		}
 		else {
 			const std::wstring_view defaultStyle = m_pManager->GetDefaultAttributeList(defaultName);
 			const std::wstring_view commonStyle = defaultStyle.empty() ? m_pManager->GetDefaultAttributeList(L"ScrollBar") : defaultStyle;
-			if (!commonStyle.empty()) pScrollBar->ApplyAttributeList(commonStyle);
+			if (!commonStyle.empty()) {
+				pScrollBar->ApplyAttributeList(commonStyle);
+				styleApplied = true;
+			}
+		}
+		if (!styleApplied) {
+			pScrollBar->ApplyDefaultStyle();
 		}
 		pScrollBar->SetShow(m_bShowScrollbar);
 	}
@@ -1080,7 +1118,8 @@ namespace FYUI
 			const TextLine& line = m_lines[i];
 			if (caret >= line.start && caret <= line.start + line.length) {
 				const size_t count = (std::min)(caret - line.start, line.length);
-				ptCaret.x = rcView.left - scroll.cx + MeasureTextWidth(std::wstring_view(text).substr(line.start, count));
+				const int xOff = (count < line.charOffsets.size()) ? line.charOffsets[count] : 0;
+				ptCaret.x = rcView.left - scroll.cx + xOff;
 				ptCaret.y = rcView.top - scroll.cy + static_cast<LONG>(i) * lineHeight;
 				return true;
 			}
@@ -1150,10 +1189,12 @@ namespace FYUI
 			LONG left = lineLeft;
 			LONG right = lineLeft;
 			if (selStart > lineStart && selStart <= lineEnd) {
-				left += MeasureTextWidth(std::wstring_view(displayText).substr(lineStart, selStart - lineStart));
+				const size_t cnt = selStart - lineStart;
+				if (cnt < line.charOffsets.size()) left += line.charOffsets[cnt];
 			}
 			if (selEnd <= lineEnd) {
-				right += MeasureTextWidth(std::wstring_view(displayText).substr(lineStart, selEnd - lineStart));
+				const size_t cnt = selEnd - lineStart;
+				if (cnt < line.charOffsets.size()) right += line.charOffsets[cnt];
 			}
 			else {
 				right += line.width;

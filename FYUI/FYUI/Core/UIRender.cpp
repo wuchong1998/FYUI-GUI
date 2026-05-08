@@ -3434,6 +3434,27 @@ namespace FYUI
 		return GetTextSizeInternal(renderContext, text, iFont, uStyle);
 	}
 
+	bool CRenderEngine::GetTextPrefixWidths(CPaintManagerUI* pManager, int iFont, const wchar_t* str, size_t len, std::vector<int>& outPrefix)
+	{
+		outPrefix.clear();
+		if (pManager == NULL || str == NULL || len == 0) return false;
+		HFONT hFont = pManager->GetFont(iFont);
+		if (hFont == NULL) return false;
+		HDC hdc = ::CreateCompatibleDC(NULL);
+		if (hdc == NULL) return false;
+		HFONT hOld = static_cast<HFONT>(::SelectObject(hdc, hFont));
+		std::wstring buf(str, len);
+		for (wchar_t& ch : buf) { if (ch == L'\t') ch = L' '; }
+		outPrefix.assign(buf.size(), 0);
+		INT nFit = 0;
+		SIZE sz = {};
+		const BOOL ok = ::GetTextExtentExPointW(hdc, buf.data(), static_cast<int>(buf.size()), INT_MAX, &nFit, outPrefix.data(), &sz);
+		::SelectObject(hdc, hOld);
+		::DeleteDC(hdc);
+		if (!ok) { outPrefix.clear(); return false; }
+		return true;
+	}
+
 } // namespace DuiLib
 #pragma warning(pop)
 

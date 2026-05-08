@@ -961,6 +961,11 @@ namespace FYUI
 			size_t start = 0;
 			size_t length = 0;
 			int width = 0;
+			// charOffsets[i] = pixel width of the first i characters in the line.
+			// size = length + 1; charOffsets[0] == 0; charOffsets[length] == width.
+			// Populated by EnsureLayout via a single GDI call per paragraph; used by
+			// HitTest / CharPos / TryGetCachedCaretPoint / DrawSelection as O(1) lookups.
+			std::vector<int> charOffsets;
 		};
 
 		/**

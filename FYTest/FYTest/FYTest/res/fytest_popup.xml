@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window size="640,470" mininfo="560,420" sizebox="5,5,5,5" caption="0,0,640,46" roundcorner="22,22" defaultfontcolor="#FF243042" disabledfontcolor="#FF8A98A8" renderbackend="direct2d" d2drendermode="software" renderdiagnostics="true">
+<Window size="640,470" mininfo="560,420" sizebox="5,5,5,5" caption="0,0,640,46" roundcorner="11,11" defaultfontcolor="#FF243042" disabledfontcolor="#FF8A98A8" renderbackend="direct2d" d2drendermode="software" renderdiagnostics="true">
   <Font id="0" name="Segoe UI" size="13" default="true" />
   <Font id="1" name="Segoe UI" size="17" bold="true" />
   <Style name="PopupPanel" value="bkcolor=&quot;#FFFFFFFF&quot; bordercolor=&quot;#FFD9E1EA&quot; bordersize=&quot;1&quot; borderround=&quot;20,20&quot;" />
@@ -27,7 +27,7 @@
         <Label text="Modal and modeless popup reuse the same XML." height="28" font="1" />
         <HBox height="38" childpadding="8">
           <Label text="Name" width="96" valign="vcenter" />
-          <Label name="popup_removed_edit_name" height="34" text="FYUI tester" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="6,6" padding="8,0,8,0" valign="vcenter" />
+          <Label name="popup_removed_edit_name" height="34" text="FYUI tester" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" padding="8,0,8,0" valign="vcenter" />
         </HBox>
         <HBox height="38" childpadding="8">
           <Label text="Mode" width="96" valign="vcenter" />
@@ -68,7 +68,7 @@
       <VBox style="PopupPanel" inset="14,14,14,14" childpadding="10">
         <Label text="Popup media controls" height="28" font="1" />
         <HBox height="120" childpadding="14">
-          <Control width="110" bkimage="file='VideoGIF_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="8,8" />
+          <Control width="110" bkimage="file='VideoGIF_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="4,4" />
           <GifAnim name="popup_gif" width="110" bkimage="file='loading.gif'" autoplay="true" autosize="false" bordercolor="#FFE0E7EF" bordersize="1" />
           <Ring name="popup_ring" width="96" height="96" bkimage="loading.gif" />
         </HBox>

@@ -9,9 +9,9 @@ namespace FYUI
 		DrawColorInternal(renderContext, rc, color);
 	}
 
-	void CRenderEngine::DrawRoundColor(CPaintRenderContext& renderContext, const RECT& rc, int width, int height, DWORD color)
+	void CRenderEngine::DrawRoundColor(CPaintRenderContext& renderContext, const RECT& rc, int radiusX, int radiusY, DWORD color)
 	{
-		DrawRoundColorInternal(renderContext, rc, width, height, color);
+		DrawRoundColorInternal(renderContext, rc, radiusX, radiusY, color);
 	}
 
 	void CRenderEngine::DrawGradient(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps)
@@ -29,8 +29,8 @@ namespace FYUI
 		DrawRectInternal(renderContext, rc, nSize, dwPenColor, nStyle);
 	}
 
-	void CRenderEngine::DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int width, int height, DWORD dwPenColor, int nStyle)
+	void CRenderEngine::DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int radiusX, int radiusY, DWORD dwPenColor, int nStyle)
 	{
-		DrawRoundRectInternal(renderContext, rc, nSize, width, height, dwPenColor, nStyle);
+		DrawRoundRectInternal(renderContext, rc, nSize, radiusX, radiusY, dwPenColor, nStyle);
 	}
 }

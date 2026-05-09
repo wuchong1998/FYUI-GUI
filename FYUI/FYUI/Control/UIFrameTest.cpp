@@ -205,7 +205,7 @@ namespace FYUI
 			rc.right - railInset,
 			rc.bottom - 16
 		};
-		CRenderEngine::DrawRoundColor(renderContext, rcRail, 14, 14, 0x66000000);
+		CRenderEngine::DrawRoundColor(renderContext, rcRail, 7, 7, 0x66000000);
 
 		const LONG railWidth = (std::max<LONG>)(1, rcRail.right - rcRail.left);
 		const LONG markerWidth = (std::max<LONG>)(24, railWidth / 5);
@@ -217,7 +217,7 @@ namespace FYUI
 			markerLeft + markerWidth,
 			rcRail.bottom
 		};
-		CRenderEngine::DrawRoundColor(renderContext, rcMarker, 14, 14, BlendColor(0xFFFFC857, 0xFF7DD3FC, pulse));
+		CRenderEngine::DrawRoundColor(renderContext, rcMarker, 7, 7, BlendColor(0xFFFFC857, 0xFF7DD3FC, pulse));
 
 		const LONG orbSize = (std::min<LONG>)(height / 3, width / 5);
 		const LONG cx = rc.left + width / 2 + static_cast<LONG>(std::sin(elapsedMs / 260.0) * width * 0.22);
@@ -228,7 +228,8 @@ namespace FYUI
 			cx + orbSize / 2,
 			cy + orbSize / 2
 		};
-		CRenderEngine::DrawRoundColor(renderContext, rcOrb, orbSize, orbSize, BlendColor(0xEE22C55E, 0xEEE879F9, 1.0 - pulse));
+		// orb is fully circular: corner radius = orbSize / 2 fills the rect.
+		CRenderEngine::DrawRoundColor(renderContext, rcOrb, orbSize / 2, orbSize / 2, BlendColor(0xEE22C55E, 0xEEE879F9, 1.0 - pulse));
 	}
 
 	void CFrameTestUI::PaintStats(CPaintRenderContext& renderContext)

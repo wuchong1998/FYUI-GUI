@@ -1757,7 +1757,6 @@ namespace FYUI
 
 	CControlUI* CControlUI::ApplyAttributeList(std::wstring_view pstrValue)
 	{
-		// 閻熸瑱绲鹃悗浠嬪冀瀹勬壆纭€閻?
 		if(m_pManager != NULL) {
 			const std::wstring_view pStyle = m_pManager->GetStyle(pstrValue);
 			if (!pStyle.empty()) {

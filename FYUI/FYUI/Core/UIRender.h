@@ -64,11 +64,11 @@ namespace FYUI {
 		 * @param renderContext [in,out] 绘制上下文
 		 * @param rc [in] 矩形区域
 		 * @param rcItem [in] 子项矩形区域
-		 * @param width [in] 宽度参数
-		 * @param height [in] 高度参数
+		 * @param radiusX [in] 圆角 X 半径（像素）
+		 * @param radiusY [in] 圆角 Y 半径（像素）
 		 * @param clip [in,out] 裁剪区域参数
 		 */
-		static void GenerateRoundClip(CPaintRenderContext& renderContext, RECT rc, RECT rcItem, int width, int height, CRenderClip& clip);
+		static void GenerateRoundClip(CPaintRenderContext& renderContext, RECT rc, RECT rcItem, int radiusX, int radiusY, CRenderClip& clip);
 		/**
 		 * @brief 执行 UseOldClipBegin 操作
 		 * @details 用于执行 UseOldClipBegin 操作。具体行为由当前对象状态以及传入参数共同决定。
@@ -393,11 +393,11 @@ namespace FYUI {
 		 * @details 用于绘制圆角颜色。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param renderContext [in,out] 绘制上下文
 		 * @param rc [in] 矩形区域
-		 * @param width [in] 宽度参数
-		 * @param height [in] 高度参数
+		 * @param radiusX [in] 圆角 X 半径（像素）
+		 * @param radiusY [in] 圆角 Y 半径（像素）
 		 * @param color [in] 颜色参数
 		 */
-		static void DrawRoundColor(CPaintRenderContext& renderContext, const RECT& rc, int width, int height, DWORD color);
+		static void DrawRoundColor(CPaintRenderContext& renderContext, const RECT& rc, int radiusX, int radiusY, DWORD color);
 		/**
 		 * @brief 绘制渐变
 		 * @details 用于绘制渐变。具体行为由当前对象状态以及传入参数共同决定。
@@ -436,13 +436,13 @@ namespace FYUI {
 		 * @param renderContext [in,out] 绘制上下文
 		 * @param rc [in] 矩形区域
 		 * @param nSize [in] 尺寸数值
-		 * @param width [in] 宽度参数
-		 * @param height [in] 高度参数
+		 * @param radiusX [in] 圆角 X 半径（像素）
+		 * @param radiusY [in] 圆角 Y 半径（像素）
 		 * @param dwPenColor [in] Pen颜色数值
 		 * @param nStyle [in] 边框样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`。
 		 */
-		static void DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int width, 
-									int height, DWORD dwPenColor,int nStyle = PS_SOLID);
+		static void DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int radiusX,
+									int radiusY, DWORD dwPenColor,int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制椭圆边框
 		 * @details 按目标矩形外接椭圆绘制边框，适合绘制圆点、头像边框、状态灯、胶囊按钮装饰等元素。

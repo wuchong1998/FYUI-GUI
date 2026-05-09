@@ -107,8 +107,8 @@ namespace FYUI
 		 */
 		void ClearItemHeights();
 		/**
-		 * @brief 判断是否Variable高度Mode
-		 * @details 用于判断是否Variable高度Mode。具体行为由当前对象状态以及传入参数共同决定。
+		 * @brief 判断是否可变高度模式
+		 * @details 用于判断是否是否可变高度模式。具体行为由当前对象状态以及传入参数共同决定。
 		 * @return bool 操作成功返回 true，否则返回 false
 		 */
 		bool IsVariableHeightMode() const;
@@ -171,13 +171,13 @@ namespace FYUI
 		DWORD GetItemSelectedBkColor() const;
 
 		/**
-		 * @brief 设置AllowSelectionCancel
+		 * @brief 设置取消选择
 		 * @details 用于设置AllowSelectionCancel。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param allow [in] allow参数
 		 */
 		void SetAllowSelectionCancel(bool allow);
 		/**
-		 * @brief 判断是否AllowSelectionCancel
+		 * @brief 判断是否允许取消选择
 		 * @details 用于判断是否AllowSelectionCancel。具体行为由当前对象状态以及传入参数共同决定。
 		 * @return bool 操作成功返回 true，否则返回 false
 		 */

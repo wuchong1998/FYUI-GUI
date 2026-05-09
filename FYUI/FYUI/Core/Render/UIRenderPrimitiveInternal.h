@@ -17,11 +17,11 @@ namespace FYUI
 	 * @details 用于绘制圆角颜色Internal。具体行为由当前对象状态以及传入参数共同决定。
 	 * @param renderContext [in,out] 绘制上下文
 	 * @param rc [in] 矩形区域
-	 * @param width [in] 宽度参数
-	 * @param height [in] 高度参数
+	 * @param radiusX [in] 圆角 X 半径（像素）
+	 * @param radiusY [in] 圆角 Y 半径（像素）
 	 * @param color [in] 颜色参数
 	 */
-	void DrawRoundColorInternal(CPaintRenderContext& renderContext, const RECT& rc, int width, int height, DWORD color);
+	void DrawRoundColorInternal(CPaintRenderContext& renderContext, const RECT& rc, int radiusX, int radiusY, DWORD color);
 	/**
 	 * @brief 执行 PushD2DRectClipInternal 操作
 	 * @details 用于执行 PushD2DRectClipInternal 操作。具体行为由当前对象状态以及传入参数共同决定。
@@ -32,10 +32,10 @@ namespace FYUI
 	 * @brief 执行 PushD2DRoundClipInternal 操作
 	 * @details 用于执行 PushD2DRoundClipInternal 操作。具体行为由当前对象状态以及传入参数共同决定。
 	 * @param rc [in] 矩形区域
-	 * @param width [in] 宽度参数
-	 * @param height [in] 高度参数
+	 * @param radiusX [in] 圆角 X 半径（像素）
+	 * @param radiusY [in] 圆角 Y 半径（像素）
 	 */
-	void PushD2DRoundClipInternal(const RECT& rc, int width, int height);
+	void PushD2DRoundClipInternal(const RECT& rc, int radiusX, int radiusY);
 	/**
 	 * @brief 执行 PopD2DClipInternal 操作
 	 * @details 用于执行 PopD2DClipInternal 操作。具体行为由当前对象状态以及传入参数共同决定。
@@ -78,10 +78,10 @@ namespace FYUI
 	 * @param renderContext [in,out] 绘制上下文
 	 * @param rc [in] 矩形区域
 	 * @param nSize [in] 尺寸数值
-	 * @param width [in] 宽度参数
-	 * @param height [in] 高度参数
+	 * @param radiusX [in] 圆角 X 半径（像素）
+	 * @param radiusY [in] 圆角 Y 半径（像素）
 	 * @param dwPenColor [in] Pen颜色数值
 	 * @param nStyle [in] 样式数值
 	 */
-	void DrawRoundRectInternal(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int width, int height, DWORD dwPenColor, int nStyle = PS_SOLID);
+	void DrawRoundRectInternal(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int radiusX, int radiusY, DWORD dwPenColor, int nStyle = PS_SOLID);
 }

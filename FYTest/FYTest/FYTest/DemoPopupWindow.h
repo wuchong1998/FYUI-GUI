@@ -5,7 +5,7 @@
 
 namespace FYTestApp
 {
-    class DemoPopupWindow final : public FYUI::WindowImplBase
+    class DemoPopupWindow final : public WindowImplBase
     {
     public:
         explicit DemoPopupWindow(bool autoDestroy);
@@ -13,7 +13,7 @@ namespace FYTestApp
         std::wstring GetSkinFile() override;
         std::wstring_view GetWindowClassName() const override;
         void InitWindow() override;
-        void OnClick(FYUI::TNotifyUI& msg) override;
+        void OnClick(TNotifyUI& msg) override;
         void OnFinalMessage(HWND hWnd) override;
 
     private:

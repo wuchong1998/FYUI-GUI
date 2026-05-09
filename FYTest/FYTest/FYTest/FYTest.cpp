@@ -90,8 +90,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     (void)lpCmdLine;
     (void)nCmdShow;
 
-    FYUI::CPaintManagerUI::SetInstance(hInstance);
-    FYUI::CPaintManagerUI::SetResourceType(FYUI::UILIB_FILE);
+    CPaintManagerUI::SetInstance(hInstance);
+    CPaintManagerUI::SetResourceType(UILIB_FILE);
     FYUI::CPaintManagerUI::SetResourcePath(ResolveResourceDirectory(hInstance));
 
     const HRESULT oleResult = ::OleInitialize(nullptr);

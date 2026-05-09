@@ -99,6 +99,7 @@ namespace FYUI
 			std::unordered_map<DWORD, ComPtr<ID2D1SolidColorBrush>> brushCache;
 			std::unordered_map<int, ComPtr<ID2D1StrokeStyle>> strokeStyleCache;
 			std::unordered_map<unsigned long long, ComPtr<ID2D1GradientStopCollection>> gradientStopCollectionCache;
+			std::vector<ComPtr<ID2D1Layer>> roundRectClipLayerPool;
 
 			// Plain text caches
 			std::unordered_map<D2DTextFormatCacheKey, ComPtr<IDWriteTextFormat>, D2DTextFormatCacheKeyHasher> textFormatCache;
@@ -127,6 +128,7 @@ namespace FYUI
 			state.brushCache.clear();
 			state.strokeStyleCache.clear();
 			state.gradientStopCollectionCache.clear();
+			state.roundRectClipLayerPool.clear();
 		}
 
 		void ClearHtmlRuntimeCaches(D2DRenderState& state);
@@ -514,6 +516,39 @@ namespace FYUI
 			return renderContext.GetDC() != NULL && CanUseDirect2D();
 		}
 
+		size_t GetRoundRectClipLayerPoolLimit()
+		{
+			return 32;
+		}
+
+		ComPtr<ID2D1Layer> AcquireRoundRectClipLayer(D2DRenderState& state, ID2D1RenderTarget* pRenderTarget)
+		{
+			while (!state.roundRectClipLayerPool.empty()) {
+				ComPtr<ID2D1Layer> layer = std::move(state.roundRectClipLayerPool.back());
+				state.roundRectClipLayerPool.pop_back();
+				if (layer) {
+					return layer;
+				}
+			}
+			ComPtr<ID2D1Layer> layer;
+			if (pRenderTarget != nullptr) {
+				pRenderTarget->CreateLayer(nullptr, layer.GetAddressOf());
+			}
+			return layer;
+		}
+
+		void ReleaseRoundRectClipLayer(D2DRenderState& state, ComPtr<ID2D1Layer>& layer)
+		{
+			if (!layer) {
+				return;
+			}
+			if (state.roundRectClipLayerPool.size() >= GetRoundRectClipLayerPoolLimit()) {
+				layer.Reset();
+				return;
+			}
+			state.roundRectClipLayerPool.push_back(std::move(layer));
+		}
+
 		class D2DDrawScope
 		{
 		public:
@@ -612,16 +647,17 @@ namespace FYUI
 					}
 
 					ComPtr<ID2D1RoundedRectangleGeometry> geometry;
+					// clip.width/clip.height are X/Y radii (after the 2026-05-09 semantic flip).
 					const D2D1_ROUNDED_RECT roundedRect = D2D1::RoundedRect(
 						ToD2DRectF(clip.rc),
-						static_cast<float>((std::max)(1, clip.width)) * 0.5f,
-						static_cast<float>((std::max)(1, clip.height)) * 0.5f);
+						static_cast<float>((std::max)(1, clip.width)),
+						static_cast<float>((std::max)(1, clip.height)));
 					if (FAILED(factory->CreateRoundedRectangleGeometry(roundedRect, geometry.GetAddressOf()))) {
 						continue;
 					}
 
-					ComPtr<ID2D1Layer> layer;
-					if (FAILED(m_renderTarget->CreateLayer(nullptr, layer.GetAddressOf()))) {
+					ComPtr<ID2D1Layer> layer = AcquireRoundRectClipLayer(GetD2DRenderState(), m_renderTarget);
+					if (!layer) {
 						continue;
 					}
 
@@ -652,6 +688,11 @@ namespace FYUI
 					}
 				}
 				m_clipOperations.clear();
+
+				D2DRenderState& renderState = GetD2DRenderState();
+				for (ComPtr<ID2D1Layer>& pooledLayer : m_clipLayers) {
+					ReleaseRoundRectClipLayer(renderState, pooledLayer);
+				}
 				m_clipLayers.clear();
 				m_clipGeometries.clear();
 			}
@@ -2922,13 +2963,14 @@ namespace FYUI
 		ActiveD2DClipStack().push_back(D2DClipState{ D2DClipType::AxisAlignedRect, rc, 0, 0 });
 	}
 
-	void PushD2DRoundClipInternal(const RECT& rc, int width, int height)
+	void PushD2DRoundClipInternal(const RECT& rc, int radiusX, int radiusY)
 	{
-		if (!IsRectValid(rc) || width <= 0 || height <= 0) {
+		if (!IsRectValid(rc) || radiusX <= 0 || radiusY <= 0) {
 			return;
 		}
 
-		ActiveD2DClipStack().push_back(D2DClipState{ D2DClipType::RoundRect, rc, width, height });
+		// radiusX/radiusY are corner radii (after the 2026-05-09 semantic flip).
+		ActiveD2DClipStack().push_back(D2DClipState{ D2DClipType::RoundRect, rc, radiusX, radiusY });
 	}
 
 	void PopD2DClipInternal()
@@ -2958,7 +3000,7 @@ namespace FYUI
 		drawScope.Get()->FillRectangle(ToD2DRectF(rc), brush.Get());
 	}
 
-	void DrawRoundColorInternal(CPaintRenderContext& renderContext, const RECT& rc, int width, int height, DWORD color)
+	void DrawRoundColorInternal(CPaintRenderContext& renderContext, const RECT& rc, int radiusX, int radiusY, DWORD color)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectValid(rc) || color <= 0x00FFFFFF) {
 			return;
@@ -2974,10 +3016,11 @@ namespace FYUI
 			return;
 		}
 
+		// radiusX/radiusY are corner radii (after the 2026-05-09 semantic flip).
 		const D2D1_ROUNDED_RECT roundedRect = D2D1::RoundedRect(
 			ToD2DRectF(rc),
-			static_cast<float>((std::max)(1, width)) * 0.5f,
-			static_cast<float>((std::max)(1, height)) * 0.5f);
+			static_cast<float>((std::max)(1, radiusX)),
+			static_cast<float>((std::max)(1, radiusY)));
 		drawScope.Get()->FillRoundedRectangle(roundedRect, brush.Get());
 	}
 
@@ -3073,7 +3116,7 @@ namespace FYUI
 		drawScope.Get()->DrawRectangle(ToInsetD2DRectF(rc, static_cast<float>(nSize)), brush.Get(), static_cast<float>(nSize), strokeStyle.Get());
 	}
 
-	void DrawRoundRectInternal(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int width, int height, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
+	void DrawRoundRectInternal(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int radiusX, int radiusY, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectValid(rc) || nSize <= 0) {
 			return;
@@ -3094,10 +3137,11 @@ namespace FYUI
 			GetCachedStrokeStyle(nStyle, strokeStyle.GetAddressOf());
 		}
 
+		// radiusX/radiusY are corner radii (after the 2026-05-09 semantic flip).
 		const D2D1_ROUNDED_RECT roundedRect = D2D1::RoundedRect(
 			ToInsetD2DRectF(rc, static_cast<float>(nSize)),
-			static_cast<float>(width) * 0.5f,
-			static_cast<float>(height) * 0.5f);
+			static_cast<float>(radiusX),
+			static_cast<float>(radiusY));
 		drawScope.Get()->DrawRoundedRectangle(roundedRect, brush.Get(), static_cast<float>(nSize), strokeStyle.Get());
 	}
 

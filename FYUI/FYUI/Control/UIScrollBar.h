@@ -502,6 +502,12 @@ namespace FYUI
 		 */
 		bool IsDefaultStyle() const;
 
+		/**
+		 * @brief 拖块是否处于按下/拖拽捕获状态
+		 * @return bool 正在被鼠标拖拽时返回 true
+		 */
+		bool IsCaptured() const { return (m_uThumbState & UISTATE_CAPTURED) != 0; }
+
 	protected:
 		enum
 		{

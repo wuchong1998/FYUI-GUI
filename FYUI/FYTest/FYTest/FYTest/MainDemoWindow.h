@@ -47,6 +47,13 @@ namespace FYTestApp
         std::chrono::steady_clock::time_point last_fps_sample_time_;
         std::chrono::steady_clock::time_point last_active_scroll_sample_time_;
         std::chrono::steady_clock::time_point last_fps_ui_update_time_;
+        std::chrono::steady_clock::time_point last_value_status_update_time_;
+        std::chrono::steady_clock::time_point last_diag_status_update_time_;
+        std::wstring last_fps_text_;
+        std::wstring last_window_title_;
+        std::wstring last_diag_text_;
+        UINT self_induced_paint_count_ = 0;
+        UINT last_displayed_fps_value_ = 0;
         bool has_fps_sample_ = false;
         bool virtual_list_count_grow_ = true;
         std::wstring virtual_list_mode_text_ = L"fixed";

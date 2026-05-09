@@ -391,6 +391,13 @@ namespace FYUI
 		void SetScrollFloat(bool bFloat);
 
 		/**
+		 * @brief Float 滚动条当前是否应显示
+		 * @details 仅 ScrollFloat=true 时生效：鼠标悬浮在容器内显示；鼠标离开时隐藏；但若正在拖拽滚动条（IsCaptured）则即使鼠标离开也保持显示。
+		 * @return bool 应显示时返回 true
+		 */
+		bool IsScrollFloatShown() const;
+
+		/**
 		 * @brief 设置QuickScrolling
 		 * @details 用于设置QuickScrolling。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param bQuickScrolling [in] 是否QuickScrolling
@@ -833,6 +840,7 @@ namespace FYUI
 		bool m_bCursorMouse;
 		bool m_bQuickScrolling = true;
 		bool m_bScrollFloat = true;
+		bool m_bScrollFloatHover = false;
 
 
 

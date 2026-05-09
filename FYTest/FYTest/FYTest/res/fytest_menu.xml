@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Menu name="fytest_popup_menu" width="250" bkcolor="#FFFFFFFF" bordercolor="#FFD9E1EA" bordersize="1" borderround="16,16" inset="6,6,6,6" 
+<Menu name="fytest_popup_menu" width="250" bkcolor="#FFFFFFFF" bordercolor="#FFD9E1EA" bordersize="1" borderround="8,8" inset="6,6,6,6" 
 				itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" itemtextpadding="34,0,30,0">
   <Default name="ExplandIcon" value="file='Down.png' dest='0,0,12,12'" />
   <MenuElement text="New demo page" height="34" icon="file='menu.png'" iconsize="18,18" />

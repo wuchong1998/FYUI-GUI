@@ -6,7 +6,7 @@ namespace
     constexpr wchar_t kPopupSkin[] = L"fytest_popup.xml";
 
     template <typename T>
-    T* FindControlAs(FYUI::CPaintManagerUI& manager, const wchar_t* name)
+    T* FindControlAs(CPaintManagerUI& manager, const wchar_t* name)
     {
         return static_cast<T*>(manager.FindControl(name));
     }
@@ -31,12 +31,12 @@ namespace FYTestApp
 
     void DemoPopupWindow::InitWindow()
     {
-        if (auto* caption = FindControlAs<FYUI::CLabelUI>(m_pm, L"popup_caption")) {
+        if (auto* caption = FindControlAs<CLabelUI>(m_pm, L"popup_caption")) {
             caption->SetText(L"FYUI child window test surface");
         }
     }
 
-    void DemoPopupWindow::OnClick(FYUI::TNotifyUI& msg)
+    void DemoPopupWindow::OnClick(TNotifyUI& msg)
     {
         if (msg.pSender != nullptr) {
             const std::wstring& name = msg.pSender->GetName();

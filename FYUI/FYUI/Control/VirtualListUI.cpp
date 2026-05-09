@@ -793,13 +793,43 @@ namespace FYUI
 
 	void CVirtualListUI::RebuildPrefixHeights()
 	{
-		m_prefixHeights.assign(m_itemHeights.size() + 1, 0);
+		const size_t n = m_itemHeights.size();
+		m_prefixHeights.assign(n + 1, 0);
+		if (n == 0) {
+			m_contentHeight = 0;
+			return;
+		}
+
+		// Hoist DPI scaling outside the per-item loop. Calling
+		// m_pManager->ScaleValue() per element dispatches through
+		// EnsureDPIState() -> LogicalToDevice() -> MulDiv() and dominates cost
+		// (~50ns each -> ~90ms for 1.8M items). One sampled call gives the
+		// linear factor we then apply via integer multiply + shift.
+		// m_itemHeights is already clamped by every writer
+		// (SetItemHeight / SetItemHeights / ApplyVariableItemHeights), so the
+		// inner loop skips the redundant ClampPositiveHeight re-check.
+		constexpr long long kSampleBase = 1LL << 20;
+		const long long scaleNum = m_pManager != nullptr
+			? static_cast<long long>(m_pManager->ScaleValue(static_cast<int>(kSampleBase)))
+			: kSampleBase;
+		const bool identityScale = (scaleNum == kSampleBase);
+
+		const int* heights = m_itemHeights.data();
+		long long* prefix = m_prefixHeights.data();
 		long long total = 0;
-		for (size_t i = 0; i < m_itemHeights.size(); ++i) {
-			const int raw = ClampPositiveHeight(m_itemHeights[i], m_fixedItemHeight);
-			const int scaled = m_pManager ? m_pManager->ScaleValue(raw) : raw;
-			total += scaled;
-			m_prefixHeights[i + 1] = total;
+		if (identityScale) {
+			for (size_t i = 0; i < n; ++i) {
+				total += heights[i];
+				prefix[i + 1] = total;
+			}
+		}
+		else {
+			for (size_t i = 0; i < n; ++i) {
+				long long scaled = (static_cast<long long>(heights[i]) * scaleNum) >> 20;
+				if (scaled <= 0 && heights[i] > 0) scaled = 1;
+				total += scaled;
+				prefix[i + 1] = total;
+			}
 		}
 		m_contentHeight = total;
 	}

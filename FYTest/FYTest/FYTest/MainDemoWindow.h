@@ -5,19 +5,19 @@
 #include <vector>
 
 #include "framework.h"
-#include "FYUILib.h"
+
 
 namespace FYTestApp
 {
-    class MainDemoWindow final : public FYUI::WindowImplBase
+    class MainDemoWindow final : public WindowImplBase
     {
     public:
         std::wstring GetSkinFile() override;
         std::wstring_view GetWindowClassName() const override;
         std::wstring_view GetManagerName() override;
         void InitWindow() override;
-        void Notify(FYUI::TNotifyUI& msg) override;
-        void OnClick(FYUI::TNotifyUI& msg) override;
+        void Notify(TNotifyUI& msg) override;
+        void OnClick(TNotifyUI& msg) override;
         LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) override;
         LRESULT HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) override;
 
@@ -30,12 +30,12 @@ namespace FYTestApp
         void UpdateVirtualListStatus(const std::wstring& prefix = L"");
         std::vector<int> BuildVirtualListWaveHeights(size_t count) const;
         void SetStatusText(const std::wstring& text);
-        void UpdateValueStatus(FYUI::CControlUI* sender);
-        void UpdateStatusFromNotify(const FYUI::TNotifyUI& msg);
+        void UpdateValueStatus(CControlUI* sender);
+        void UpdateStatusFromNotify(const TNotifyUI& msg);
         void OpenModalPopup();
         void OpenModelessPopup();
-        void OpenPopupMenu(FYUI::CControlUI* anchor);
-        void PopulateStressTiles();
+        void OpenPopupMenu(CControlUI* anchor);
+       
         void StepProgress();
         void RefreshDiagnostics();
         void UpdateFpsMeter(bool resetSample = false);
@@ -52,6 +52,6 @@ namespace FYTestApp
         std::wstring virtual_list_mode_text_ = L"fixed";
         std::vector<int> virtual_list_heights_;
 
-        FYUI::CMenuWnd* m_pMenu = nullptr;
+        CMenuWnd* m_pMenu = nullptr;
     };
 }

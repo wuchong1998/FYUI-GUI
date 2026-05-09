@@ -128,7 +128,9 @@ namespace FYUI
 				return;
 			}
 
-			HRGN hRgn = ::CreateRoundRectRgn(rcWindow.left, rcWindow.top, rcWindow.right, rcWindow.bottom, roundCorner.cx, roundCorner.cy);
+			// roundCorner is corner radii (after the 2026-05-09 semantic flip).
+			// CreateRoundRectRgn takes ellipse width/height (= 2*radius).
+			HRGN hRgn = ::CreateRoundRectRgn(rcWindow.left, rcWindow.top, rcWindow.right, rcWindow.bottom, roundCorner.cx * 2, roundCorner.cy * 2);
 			if (hRgn == NULL) {
 				return;
 			}

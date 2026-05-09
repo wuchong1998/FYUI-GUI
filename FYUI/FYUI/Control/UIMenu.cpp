@@ -607,7 +607,9 @@ namespace FYUI {
 			::GetWindowRect(*this, &rcWnd);
 			rcWnd.Offset(-rcWnd.left, -rcWnd.top);
 			rcWnd.right++; rcWnd.bottom++;
-			HRGN hRgn = ::CreateRoundRectRgn(rcWnd.left, rcWnd.top, rcWnd.right, rcWnd.bottom, szRoundCorner.cx, szRoundCorner.cy);
+			// szRoundCorner is now corner radii (after the 2026-05-09 semantic flip).
+			// CreateRoundRectRgn takes ellipse width/height (= 2*radius).
+			HRGN hRgn = ::CreateRoundRectRgn(rcWnd.left, rcWnd.top, rcWnd.right, rcWnd.bottom, szRoundCorner.cx * 2, szRoundCorner.cy * 2);
 			::SetWindowRgn(*this, hRgn, TRUE);
 			::DeleteObject(hRgn);
 		}

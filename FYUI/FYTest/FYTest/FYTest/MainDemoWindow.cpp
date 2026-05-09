@@ -79,6 +79,14 @@ namespace FYTestApp
     void MainDemoWindow::Notify(FYUI::TNotifyUI& msg)
     {
         if (msg.sType == DUI_MSGTYPE_VALUECHANGED || msg.sType == DUI_MSGTYPE_VALUECHANGED_MOVE) {
+            if (msg.sType == DUI_MSGTYPE_VALUECHANGED_MOVE) {
+                const auto now = std::chrono::steady_clock::now();
+                if ((now - last_value_status_update_time_) < std::chrono::milliseconds(33)) {
+                    WindowImplBase::Notify(msg);
+                    return;
+                }
+                last_value_status_update_time_ = now;
+            }
             UpdateValueStatus(msg.pSender);
         }
         else if (msg.sType == DUI_MSGTYPE_SCROLL || msg.sType == DUI_MSGTYPE_SCROLL_TOOLS) {
@@ -502,6 +510,7 @@ namespace FYTestApp
 
         UINT paintFramesThisSecond = static_cast<UINT>(diagnostics.nAverageFPS);
         UINT scrollFramesThisSecond = 0;
+        UINT externalPaintDelta = 0;
         if (!resetSample && has_fps_sample_) {
             const double elapsedSeconds = (std::max)(
                 std::chrono::duration<double>(now - last_fps_sample_time_).count(),
@@ -512,7 +521,10 @@ namespace FYTestApp
             const UINT scrollFrameDelta = diagnostics.nScrollRenderCacheHits >= last_scroll_cache_hit_count_
                 ? diagnostics.nScrollRenderCacheHits - last_scroll_cache_hit_count_
                 : diagnostics.nScrollRenderCacheHits;
-            paintFramesThisSecond = static_cast<UINT>(std::lround(paintFrameDelta / elapsedSeconds));
+            externalPaintDelta = paintFrameDelta >= self_induced_paint_count_
+                ? paintFrameDelta - self_induced_paint_count_
+                : 0;
+            paintFramesThisSecond = static_cast<UINT>(std::lround(externalPaintDelta / elapsedSeconds));
             scrollFramesThisSecond = static_cast<UINT>(std::lround(scrollFrameDelta / elapsedSeconds));
             if (scrollFrameDelta > 0) {
                 last_active_scroll_fps_ = scrollFramesThisSecond;
@@ -524,18 +536,43 @@ namespace FYTestApp
         last_scroll_cache_hit_count_ = diagnostics.nScrollRenderCacheHits;
         last_fps_sample_time_ = now;
         has_fps_sample_ = true;
+        self_induced_paint_count_ = 0;
 
         const bool hasRecentScrollSample =
             last_active_scroll_sample_time_.time_since_epoch().count() != 0 &&
             now - last_active_scroll_sample_time_ < std::chrono::milliseconds(1500);
         const UINT activeScrollFramesThisSecond = hasRecentScrollSample ? last_active_scroll_fps_ : scrollFramesThisSecond;
         const UINT framesThisSecond = (std::max)(paintFramesThisSecond, activeScrollFramesThisSecond);
-        if (auto* fps = FindControlAs<FYUI::CButtonUI>(m_pm, L"fps_meter")) {
-            fps->SetText(L"FPS " + std::to_wstring(framesThisSecond) + L"/s");
+
+        const std::wstring fps_text = L"FPS " + std::to_wstring(framesThisSecond) + L"/s";
+        if (fps_text != last_fps_text_) {
+            if (auto* fps = FindControlAs<FYUI::CButtonUI>(m_pm, L"fps_meter")) {
+                fps->SetText(fps_text);
+                ++self_induced_paint_count_;
+            }
+            last_fps_text_ = fps_text;
+        }
+        last_displayed_fps_value_ = framesThisSecond;
+
+        if (externalPaintDelta == 0 && !hasRecentScrollSample && framesThisSecond == 0) {
+            return;
         }
 
         const std::wstring title = FormatFpsTitle(framesThisSecond, diagnostics);
-        ::SetWindowText(*this, title.c_str());
+        if (title != last_window_title_) {
+            ::SetWindowText(*this, title.c_str());
+            last_window_title_ = title;
+        }
+        if ((now - last_diag_status_update_time_) >= std::chrono::milliseconds(1000)) {
+            last_diag_status_update_time_ = now;
+            if (auto* diag = FindControlAs<FYUI::CLabelUI>(m_pm, L"diag_status")) {
+                if (title != last_diag_text_) {
+                    diag->SetText(title);
+                    ++self_induced_paint_count_;
+                    last_diag_text_ = title;
+                }
+            }
+        }
     }
 
     void MainDemoWindow::UpdateFpsMeterIfDue()

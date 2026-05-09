@@ -183,6 +183,7 @@ namespace FYUI
 					nAttributes = node.GetAttributeCount();
 					std::wstring_view pControlName;
 					std::wstring_view pControlValue;
+					std::wstring inlineAttrs;
 					bool shared = false;
 					for( int i = 0; i < nAttributes; i++ ) {
 						pstrName = node.GetAttributeName(i);
@@ -196,15 +197,34 @@ namespace FYUI
 						else if( EqualsNoCase(pstrName, L"shared") ) {
 							shared = EqualsNoCase(pstrValue, L"true");
 						}
+						else {
+							// New short form: <Default name="X" attr1="v1" attr2="v2" .../>
+							// Collect every non-reserved attribute into a single
+							// `key="val" key="val"` declaration list. Quotes inside
+							// values are escaped as &quot; so they survive the later
+							// ApplyAttributeList unescape step.
+							if (!inlineAttrs.empty()) inlineAttrs.push_back(L' ');
+							inlineAttrs.append(pstrName);
+							inlineAttrs.append(L"=\"");
+							for (wchar_t ch : pstrValue) {
+								if (ch == L'"') inlineAttrs.append(L"&quot;");
+								else inlineAttrs.push_back(ch);
+							}
+							inlineAttrs.push_back(L'"');
+						}
 					}
 					if( !pControlName.empty() ) {
-						pManager->AddDefaultAttributeList(pControlName, pControlValue, shared);
+						const std::wstring_view declarations = pControlValue.empty()
+							? std::wstring_view(inlineAttrs)
+							: pControlValue;
+						pManager->AddDefaultAttributeList(pControlName, declarations, shared);
 					}
 				}
 				else if( EqualsNoCase(pstrClass, L"Style") ) {
 					nAttributes = node.GetAttributeCount();
 					std::wstring_view pName;
 					std::wstring_view pStyle;
+					std::wstring inlineAttrs;
 					bool shared = false;
 					for( int i = 0; i < nAttributes; i++ ) {
 						pstrName = node.GetAttributeName(i);
@@ -218,9 +238,24 @@ namespace FYUI
 						else if( EqualsNoCase(pstrName, L"shared") ) {
 							shared = EqualsNoCase(pstrValue, L"true");
 						}
+						else {
+							// New short form: <Style name="X" attr1="v1" attr2="v2" .../>
+							// See <Default> branch above for rationale.
+							if (!inlineAttrs.empty()) inlineAttrs.push_back(L' ');
+							inlineAttrs.append(pstrName);
+							inlineAttrs.append(L"=\"");
+							for (wchar_t ch : pstrValue) {
+								if (ch == L'"') inlineAttrs.append(L"&quot;");
+								else inlineAttrs.push_back(ch);
+							}
+							inlineAttrs.push_back(L'"');
+						}
 					}
 					if( !pName.empty() ) {
-						pManager->AddStyle(pName, pStyle, shared);
+						const std::wstring_view declarations = pStyle.empty()
+							? std::wstring_view(inlineAttrs)
+							: pStyle;
+						pManager->AddStyle(pName, declarations, shared);
 					}
 				}
 				else if (EqualsNoCase(pstrClass, L"Import")) {

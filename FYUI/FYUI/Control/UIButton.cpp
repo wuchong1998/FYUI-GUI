@@ -713,21 +713,25 @@ namespace FYUI
 
 	void CButtonUI::PaintBorder(CPaintRenderContext& renderContext)
 	{
+		int nBorderSize = GetBorderSize();
+		SIZE cxyBorderRound = GetBorderRound();
+		RECT rcBorderSize = GetBorderRectSize();
+
 		if ((m_uButtonState & UISTATE_DISABLED) != 0) {
 			if (m_dwDisabledBorderColor != 0) {
-				DrawBorder(renderContext, m_rcItem, GetAdjustColor(m_dwDisabledBorderColor), m_nBorderSize, m_rcBorderSize, m_cxyBorderRound, m_nBorderStyle);
+				DrawBorder(renderContext, m_rcItem, GetAdjustColor(m_dwDisabledBorderColor), nBorderSize, rcBorderSize, cxyBorderRound, m_nBorderStyle);
 				return;
 			}
 		}
 		else if ((m_uButtonState & UISTATE_PUSHED) != 0) {
 			if (m_dwPushedBorderColor != 0) {
-				DrawBorder(renderContext, m_rcItem, GetAdjustColor(m_dwPushedBorderColor), m_nBorderSize, m_rcBorderSize, m_cxyBorderRound, m_nBorderStyle);
+				DrawBorder(renderContext, m_rcItem, GetAdjustColor(m_dwPushedBorderColor), nBorderSize, rcBorderSize, cxyBorderRound, m_nBorderStyle);
 				return;
 			}
 		}
 		else if ((m_uButtonState & UISTATE_HOT) != 0) {
 			if (m_dwHotBorderColor != 0) {
-				DrawBorder(renderContext, m_rcItem, GetAdjustColor(m_dwHotBorderColor), m_nBorderSize, m_rcBorderSize, m_cxyBorderRound, m_nBorderStyle);
+				DrawBorder(renderContext, m_rcItem, GetAdjustColor(m_dwHotBorderColor), nBorderSize, rcBorderSize, cxyBorderRound, m_nBorderStyle);
 				return;
 			}
 		}
@@ -755,13 +759,16 @@ namespace FYUI
 
 	void CButtonUI::DrawBorder(CPaintRenderContext& renderContext, const RECT& rcItem, const DWORD& dwBorderColor, const int& nBorderSize, const RECT& rcBorderSize, const SIZE& cxyBorderRound, const int& nBorderStyle)
 	{
-		if (dwBorderColor != 0) {
-			//禄颅脭虏陆脟卤脽驴貌
-			if (nBorderSize > 0 && (cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0)) {
+		if (dwBorderColor != 0) 
+		{
+			if (nBorderSize > 0 && (cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0)) 
+			{
 				CRenderEngine::DrawRoundRect(renderContext, rcItem, nBorderSize, cxyBorderRound.cx, cxyBorderRound.cy, GetAdjustColor(dwBorderColor), nBorderStyle);
 			}
-			else {
-				if (rcBorderSize.left > 0 || rcBorderSize.top > 0 || rcBorderSize.right > 0 || rcBorderSize.bottom > 0) {
+			else
+			{
+				if (rcBorderSize.left > 0 || rcBorderSize.top > 0 || rcBorderSize.right > 0 || rcBorderSize.bottom > 0) 
+				{
 					RECT rcBorder;
 
 					if (rcBorderSize.left > 0) {
@@ -787,7 +794,8 @@ namespace FYUI
 						CRenderEngine::DrawLine(renderContext, rcBorder, rcBorderSize.bottom, GetAdjustColor(dwBorderColor), nBorderStyle);
 					}
 				}
-				else if (nBorderSize > 0) {
+				else if (nBorderSize > 0)
+				{
 					CRenderEngine::DrawRect(renderContext, rcItem, nBorderSize, GetAdjustColor(dwBorderColor), nBorderStyle);
 				}
 			}

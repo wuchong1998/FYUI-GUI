@@ -1065,8 +1065,9 @@ namespace FYUI
 			const int thickness = m_bHorizontal
 				? (m_rcThumb.bottom - m_rcThumb.top)
 				: (m_rcThumb.right - m_rcThumb.left);
-			const int round = (thickness > 0) ? thickness : 6;
-			CRenderEngine::DrawRoundColor(renderContext, m_rcThumb, round, round, color);
+			// DrawRoundColor takes corner radii, so feed half of the thumb thickness.
+			const int radius = (thickness > 0) ? (thickness / 2) : 3;
+			CRenderEngine::DrawRoundColor(renderContext, m_rcThumb, radius, radius, color);
 			return;
 		}
 		RECT rcDest = {

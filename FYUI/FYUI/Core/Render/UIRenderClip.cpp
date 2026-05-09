@@ -128,7 +128,7 @@ namespace FYUI
 		PushD2DClipForState(state);
 	}
 
-	void CRenderClip::GenerateRoundClip(CPaintRenderContext& renderContext, RECT rc, RECT rcItem, int width, int height, CRenderClip& clip)
+	void CRenderClip::GenerateRoundClip(CPaintRenderContext& renderContext, RECT rc, RECT rcItem, int radiusX, int radiusY, CRenderClip& clip)
 	{
 		HDC hNativeDC = renderContext.GetDC();
 		if (hNativeDC == NULL) {
@@ -138,8 +138,12 @@ namespace FYUI
 
 		ClipState& state = clip.PrepareClipState();
 		state.pRenderContext = &renderContext;
-		const int roundWidth = (std::max)(1, width);
-		const int roundHeight = (std::max)(1, height);
+		// radiusX/radiusY are corner radii (after the 2026-05-09 semantic flip).
+		// CreateRoundRectRgn takes ellipse width/height (= 2*radius).
+		const int roundRadiusX = (std::max)(1, radiusX);
+		const int roundRadiusY = (std::max)(1, radiusY);
+		const int gdiEllipseWidth = roundRadiusX * 2;
+		const int gdiEllipseHeight = roundRadiusY * 2;
 		state.hNativeDC = hNativeDC;
 		state.hasNativeClip = ShouldMutateNativeClip(renderContext);
 		if (state.hasNativeClip) {
@@ -148,7 +152,7 @@ namespace FYUI
 			state.hPreviousClipRgn = ::CreateRectRgnIndirect(&rcNativeClip);
 			state.hClipRgn = ::CreateRectRgnIndirect(&rc);
 
-			HRGN hItemClipRgn = ::CreateRoundRectRgn(rcItem.left, rcItem.top, rcItem.right + 1, rcItem.bottom + 1, roundWidth, roundHeight);
+			HRGN hItemClipRgn = ::CreateRoundRectRgn(rcItem.left, rcItem.top, rcItem.right + 1, rcItem.bottom + 1, gdiEllipseWidth, gdiEllipseHeight);
 			if (hItemClipRgn != NULL) {
 				::CombineRgn(state.hClipRgn, state.hClipRgn, hItemClipRgn, RGN_AND);
 				::DeleteObject(hItemClipRgn);
@@ -159,9 +163,9 @@ namespace FYUI
 		}
 
 		state.d2dClipRect = rcItem;
-		state.d2dRoundWidth = roundWidth;
-		state.d2dRoundHeight = roundHeight;
-		state.hasD2DClip = IsValidClipRect(rcItem) && roundWidth > 0 && roundHeight > 0;
+		state.d2dRoundWidth = roundRadiusX;
+		state.d2dRoundHeight = roundRadiusY;
+		state.hasD2DClip = IsValidClipRect(rcItem) && roundRadiusX > 0 && roundRadiusY > 0;
 		state.isD2DRoundClip = true;
 		PushD2DClipForState(state);
 	}

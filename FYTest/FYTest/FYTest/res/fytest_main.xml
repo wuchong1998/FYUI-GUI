@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window size="1180,760" mininfo="980,640" sizebox="6,6,6,6" caption="0,0,1180,50" roundcorner="24,24" defaultfontcolor="#FF243042" disabledfontcolor="#FF8A98A8" selectedcolor="#FFDCEBFA" renderbackend="direct2d" d2drendermode="hardware" renderdiagnostics="true" tooltiphovertime="400">
-  <Font id="0" name="Segoe UI" size="13" default="true" />
-  <Font id="1" name="Segoe UI" size="18" bold="true" />
-  <Font id="2" name="Segoe UI" size="12" />
-  <Font id="3" name="Consolas" size="12" />
-  <Style name="Panel" value="bkcolor=&quot;#FFFFFFFF&quot; bordercolor=&quot;#FFD9E1EA&quot; bordersize=&quot;1&quot; borderround=&quot;22,22&quot;" />
-  <Style name="SubPanel" value="bkcolor=&quot;#FFF7FAFD&quot; bordercolor=&quot;#FFE0E7EF&quot; bordersize=&quot;1&quot; borderround=&quot;18,18&quot;" />
-  <Style name="RoundProbe" value="bkcolor=&quot;#FFFFF1DF&quot; bordercolor=&quot;#FFE0B887&quot; bordersize=&quot;1&quot; borderround=&quot;28,28&quot;" />
-  <Style name="TabButton" value="height=&quot;36&quot; width=&quot;152&quot; bkcolor=&quot;#00FFFFFF&quot; hotbkcolor=&quot;#FFE8F0F8&quot; pushedbkcolor=&quot;#FFD6E7FA&quot; borderround=&quot;18,18&quot; textcolor=&quot;#FF2B3545&quot; cursor=&quot;hand&quot;" />
-  <Style name="ActionButton" value="height=&quot;34&quot; width=&quot;140&quot; bkcolor=&quot;#FFF4F8FC&quot; hotbkcolor=&quot;#FFE5EEF7&quot; pushedbkcolor=&quot;#FFD4E4F4&quot; bordercolor=&quot;#FFC8D5E2&quot; bordersize=&quot;1&quot; borderround=&quot;18,18&quot; cursor=&quot;hand&quot;" />
-  <Default name="Label" value="font=&quot;0&quot; textcolor=&quot;#FF243042&quot;" />
-  <Default name="Button" value="font=&quot;0&quot; align=&quot;center&quot; valign=&quot;vcenter&quot; cursor=&quot;hand&quot;" />
-  <Default name="Option" value="font=&quot;0&quot; cursor=&quot;hand&quot; selectedbkcolor=&quot;#FFDCEBFA&quot; selectedtextcolor=&quot;#FF1D5F9F&quot;" />
-  <Default name="CheckBox" value="font=&quot;0&quot; cursor=&quot;hand&quot; selectedbkcolor=&quot;#FFEAF4EC&quot; selectedtextcolor=&quot;#FF22784F&quot;" />
-
-  <Default name="Progress" value="height=&quot;18&quot; showtext=&quot;true&quot; bkcolor=&quot;#FFEAF0F6&quot; forecolor=&quot;#FF2EA97D&quot; borderround=&quot;18,18&quot;" />
+<Window size="1180,760" mininfo="980,640" sizebox="6,6,6,6" caption="0,0,1180,50" roundcorner="12,12" defaultfontcolor="#FF243042" disabledfontcolor="#FF8A98A8" selectedcolor="#FFDCEBFA" renderbackend="direct2d" d2drendermode="hardware" renderdiagnostics="true" tooltiphovertime="400">
+  <Font id="0" name="微软雅黑" size="13" default="true" />
+  <Font id="1" name="微软雅黑" size="18" bold="true" />
+  <Font id="2" name="微软雅黑" size="12" />
+  <Font id="3" name="微软雅黑" size="12" />
+  <Style name="Panel" bkcolor="#FFFFFFFF" bordercolor="#FFD9E1EA" bordersize="1" borderround="11,11" />
+  <Style name="SubPanel" bkcolor="#FFF7FAFD" bordercolor="#FFE0E7EF" bordersize="1" borderround="9,9" />
+  <Style name="RoundProbe" bkcolor="#FFFFF1DF" bordercolor="#FFE0B887" bordersize="1" borderround="14,14" />
+  <Style name="TabButton" height="36" width="120" bkcolor="#00FFFFFF" hotbkcolor="#FFE8F0F8" pushedbkcolor="#FFD6E7FA" borderround="9,9" textcolor="#FF2B3545" cursor="hand" />
+  <Style name="ActionButton" height="34" width="140" bkcolor="#FFF4F8FC" hotbkcolor="#FFE5EEF7" pushedbkcolor="#FFD4E4F4" bordercolor="#FFC8D5E2" bordersize="1" borderround="9,9" cursor="hand" />
+  
+  <Default name="Label" font="0" textcolor="#FF243042" />
+  <Default name="Button" font="0" align="center" valign="vcenter" cursor="hand" />
+  <Default name="Option" font="0" cursor="hand" selectedbkcolor="#FFDCEBFA" selectedtextcolor="#FF1D5F9F" />
+  <Default name="CheckBox" font="0" cursor="hand" selectedbkcolor="#FFEAF4EC" selectedtextcolor="#FF22784F" />
+  <Default name="Progress" height="18" showtext="true" bkcolor="#FFEAF0F6" forecolor="#FF2EA97D" borderround="9,9" />
 
   <VBox name="root" bkcolor="#FFF0F4F8">
     <HBox name="title_bar" height="50" bkcolor="#FF1F2A36" childvalign="vcenter" childpadding="8" inset="16,0,10,0">
@@ -24,7 +24,7 @@
         <Label text="XML controls, rendering diagnostics and popup windows" height="18" font="2" textcolor="#FFC7D3DF" />
       </VBox>
       <Label name="diag_status" text="Direct2D diagnostics pending" textcolor="#FFD6E4F2" align="right" valign="vcenter" />
-      <Button name="fps_meter" text="FPS --/s" width="88" height="30" bkcolor="#153B82F6" hotbkcolor="#FF2E7CE6" pushedbkcolor="#FF2567C4" bordercolor="#663B82F6" bordersize="1" borderround="15,15" textcolor="#FFFFFFFF" />
+      <Button name="fps_meter" text="FPS --/s" width="88" height="30" bkcolor="#153B82F6" hotbkcolor="#FF2E7CE6" pushedbkcolor="#FF2567C4" bordercolor="#663B82F6" bordersize="1" borderround="7,7" textcolor="#FFFFFFFF" />
       <Button name="minbtn" text="-" width="36" height="30" bkcolor="#00222F3D" hotbkcolor="#FF334252" textcolor="#FFFFFFFF" />
       <Button name="maxbtn" text="[]" width="36" height="30" bkcolor="#00222F3D" hotbkcolor="#FF334252" textcolor="#FFFFFFFF" />
       <Button name="restorebtn" text="[]" width="36" height="30" visible="false" bkcolor="#00222F3D" hotbkcolor="#FF334252" textcolor="#FFFFFFFF" />
@@ -32,9 +32,9 @@
     </HBox>
 
     <HBox height="54" bkcolor="#FFFFFFFF" bordercolor="#FFE2E8EF" bottombordersize="1" childvalign="vcenter" childpadding="6" inset="18,8,18,8">
-      <Button text="Controls" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="0" />
-      <Button text="Data" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="1" />
-      <Button text="Layouts" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="2" />
+      <Button text="普通控件" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="0" />
+      <Button text="数据" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="1" />
+      <Button text="布局控件" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="2" />
       <Button text="Media" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="3" />
       <Button text="Stress" style="TabButton" bindtablayoutname="main_tabs" bindtabindex="4" />
       <Label />
@@ -44,11 +44,12 @@
     </HBox>
 
     <TabBox name="main_tabs" selectedid="0" inset="16,16,16,12">
-      <VBox name="page_controls" childpadding="12" vscrollbar="true" vscrollbarstyle="ScrollSkin" smooth="true" scrollstepsize="80">
+      <VBox name="page_controls" childpadding="12" vscrollbar="true"  smooth="true" scrollstepsize="80">
         <HBox height="530" childpadding="12">
           <VBox style="Panel" width="360" inset="14,14,14,14" childpadding="10">
-            <Label text="Buttons and state images" height="28" font="1" />
-            <Button name="btn_color" text="Color states" style="ActionButton" width="260" hotbkcolor="#FFFFF3C8" pushedbkcolor="#FFFFD38A" hottextcolor="#FF6B4C00" pushedtextcolor="#FF5C2D00" tooltip="Tests hot, pushed and text colors" />
+            <Label text="Button 按钮和状态图" height="28" font="1" />
+            <Button name="btn_color" text="Color states" style="ActionButton" width="260" hotbkcolor="#FFFFF3C8" pushedbkcolor="#FFFFD38A"
+			hottextcolor="#FFff0000" pushedtextcolor="#FF5C2D00" hotbordercolor="#ff0000" tooltip="Tests hot, pushed and text colors" />
             <Label text="Button html text samples" height="22" font="2" textcolor="#FF667789" />
             <Button name="btn_html_color" showhtml="true" text="Normal {b}bold{/b} {c #E67E22}orange{/c}" style="ActionButton" width="300" />
             <Button name="btn_html_font" showhtml="true" text="{f 1}Large{/f} + {u}underline{/u}" style="ActionButton" width="300" />
@@ -77,8 +78,8 @@
           </VBox>
           <VBox style="Panel" inset="14,14,14,14" childpadding="10">
             <Label text="Input, combo and value controls" height="28" font="1" />
-            <RichEdit name="richedit_single_tip" height="38" multiline="false" wanttab="false" wantreturn="false" wantctrlreturn="false" transparent="false" rich="false" wordwrap="false" font="0" textcolor="#FF243042" maxchar="64" textpadding="10,0,10,0" tipvalue="Single line RichEdit placeholder" tipvaluecolor="#FF8A98A8" tipvaluepadding="10,0,10,0" tipvaluealign="left" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="6,6" />
-            <RichEdit name="richedit_multi_wrap" height="118" multiline="true" wanttab="true" wantreturn="true" wantctrlreturn="true" transparent="false" rich="true" wordwrap="true" vscrollbar="true" hscrollbar="false" font="3" textcolor="#FF2B3545" textpadding="8,6,8,6" text="Direct2D RichEdit multiline text.&#10;Tab inserts a tab when focused. Return inserts a new line. Word wrap keeps the text inside this surface." bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="6,6" />
+            <RichEdit name="richedit_single_tip" height="38" multiline="false" wanttab="false" wantreturn="false" wantctrlreturn="false" transparent="false" rich="false" wordwrap="false" font="0" textcolor="#FF243042" maxchar="64" textpadding="10,0,10,0" tipvalue="Single line RichEdit placeholder" tipvaluecolor="#FF8A98A8" tipvaluepadding="10,0,10,0" tipvaluealign="left" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+            <RichEdit name="richedit_multi_wrap" height="118" multiline="true" wanttab="true" wantreturn="true" wantctrlreturn="true" transparent="false" rich="true" wordwrap="true" vscrollbar="true" hscrollbar="false" font="3" textcolor="#FF2B3545" textpadding="8,6,8,6" text="Direct2D RichEdit multiline text.&#10;Tab inserts a tab when focused. Return inserts a new line. Word wrap keeps the text inside this surface." bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
             <HBox height="38" childpadding="10">
               <Combo name="combo_basic" width="210" height="34" text="Combo item A" normalimage="file='menubk.png'" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" dropboxsize="220,140">
                 <ListLabelElement text="Combo item A" height="30" selected="true" />
@@ -100,23 +101,23 @@
         <HBox height="380" childpadding="12">
           <VBox style="Panel" width="560" inset="14,14,14,14" childpadding="10">
             <Label text="RichEdit attributes: text, readonly and image states" height="28" font="1" />
-            <RichEdit name="richedit_readonly" height="76" readonly="true" multiline="true" transparent="true" wordwrap="true" font="0" textcolor="#FF4B5563" textpadding="10,8,10,8" text="Readonly RichEdit keeps selection and scroll behavior but rejects text editing." bkcolor="#FFF7FAFD" bordercolor="#FFD9E1EA" bordersize="1" borderround="6,6" />
-            <RichEdit name="richedit_image_state" height="72" multiline="false" transparent="false" rich="true" font="0" textcolor="#FFFFFFFF" textpadding="12,0,12,0" text="Normal, hot, focused and disabled image attributes" normalimage="file='btn_def.png'" hotimage="file='ClickButton.png'" focusedimage="file='Default.png'" disabledimage="file='bt1.png'" bkcolor="#FF3E8ED0" bordercolor="#FF2567C4" bordersize="1" borderround="6,6" />
-            <RichEdit name="richedit_limit" height="72" multiline="true" maxchar="96" limittext="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" wanttab="true" wantreturn="true" textpadding="10,8,10,8" tipvalue="Max 96 chars, limit text string stored for API tests" tipvaluecolor="#FF8A98A8" tipvaluepadding="10,8,10,8" tipvaluealign="center" bkcolor="#FFFFFBEB" bordercolor="#FFE6C36A" bordersize="1" borderround="6,6" />
+            <RichEdit name="richedit_readonly" height="76" readonly="true" multiline="true" transparent="true" wordwrap="true" font="0" textcolor="#FF4B5563" textpadding="10,8,10,8" text="Readonly RichEdit keeps selection and scroll behavior but rejects text editing." bkcolor="#FFF7FAFD" bordercolor="#FFD9E1EA" bordersize="1" borderround="3,3" />
+            <RichEdit name="richedit_image_state" height="72" multiline="false" transparent="false" rich="true" font="0" textcolor="#FFFFFFFF" textpadding="12,0,12,0" text="Normal, hot, focused and disabled image attributes" normalimage="file='btn_def.png'" hotimage="file='ClickButton.png'" focusedimage="file='Default.png'" disabledimage="file='bt1.png'" bkcolor="#FF3E8ED0" bordercolor="#FF2567C4" bordersize="1" borderround="3,3" />
+            <RichEdit name="richedit_limit" height="72" multiline="true" maxchar="96" limittext="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" wanttab="true" wantreturn="true" textpadding="10,8,10,8" tipvalue="Max 96 chars, limit text string stored for API tests" tipvaluecolor="#FF8A98A8" tipvaluepadding="10,8,10,8" tipvaluealign="center" bkcolor="#FFFFFBEB" bordercolor="#FFE6C36A" bordersize="1" borderround="3,3" />
           </VBox>
 
           <VBox style="Panel" inset="14,14,14,14" childpadding="10">
             <Label text="RichEdit attributes: scrolling, wrapping and disabled" height="28" font="1" />
-            <RichEdit name="richedit_scroll_nowrap" height="118" multiline="true" wordwrap="false" vscrollbar="true" hscrollbar="true" wanttab="true" wantreturn="true" font="3" textcolor="#FF1F2937" textpadding="8,6,8,6" text="No word wrap: this very long line should use the horizontal scrollbar so Direct2D text clipping and scroll offsets can be checked.&#10;Second line for vertical scrolling coverage.&#10;Third line for caret movement coverage.&#10;Fourth line for scroll range coverage." bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="6,6" />
-            <RichEdit name="richedit_disabled" height="70" enabled="false" multiline="false" transparent="false" wordwrap="false" font="0" textcolor="#FF6B7280" textpadding="10,0,10,0" text="Disabled RichEdit with disabled image" disabledimage="file='bt2.png'" bkcolor="#FFE5E7EB" bordercolor="#FFD1D5DB" bordersize="1" borderround="6,6" />
-            <RichEdit name="richedit_transparent_tip" height="70" multiline="false" transparent="true" rich="false" readonly="false" font="2" textcolor="#FF0F766E" textpadding="10,0,10,0" tipvalue="Transparent empty RichEdit placeholder, right aligned" tipvaluecolor="#FF0F766E" tipvaluepadding="10,0,10,0" tipvaluealign="right" bordercolor="#FF99D7CF" bordersize="1" borderround="6,6" />
+            <RichEdit name="richedit_scroll_nowrap" height="118" multiline="true" wordwrap="false" vscrollbar="true" hscrollbar="true" wanttab="true" wantreturn="true" font="3" textcolor="#FF1F2937" textpadding="8,6,8,6" text="No word wrap: this very long line should use the horizontal scrollbar so Direct2D text clipping and scroll offsets can be checked.&#10;Second line for vertical scrolling coverage.&#10;Third line for caret movement coverage.&#10;Fourth line for scroll range coverage." bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+            <RichEdit name="richedit_disabled" height="70" enabled="false" multiline="false" transparent="false" wordwrap="false" font="0" textcolor="#FF6B7280" textpadding="10,0,10,0" text="Disabled RichEdit with disabled image" disabledimage="file='bt2.png'" bkcolor="#FFE5E7EB" bordercolor="#FFD1D5DB" bordersize="1" borderround="3,3" />
+            <RichEdit name="richedit_transparent_tip" height="70" multiline="false" transparent="true" rich="false" readonly="false" font="2" textcolor="#FF0F766E" textpadding="10,0,10,0" tipvalue="Transparent empty RichEdit placeholder, right aligned" tipvaluecolor="#FF0F766E" tipvaluepadding="10,0,10,0" tipvaluealign="right" bordercolor="#FF99D7CF" bordersize="1" borderround="3,3" />
           </VBox>
         </HBox>
       </VBox>
 
       <VBox name="page_data" childpadding="12">
         <HBox height="500" childpadding="12">
-          <List name="list_basic" style="Panel" width="520" header="show" itemalign="left" itemvalign="vcenter" itemtextpadding="8,0,8,0" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" itemshowrowline="true" itemlinecolor="#FFE0E7EF" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+          <List name="list_basic" style="Panel" width="520" header="show" itemalign="left" itemvalign="vcenter" itemtextpadding="8,0,8,0" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" itemshowrowline="true" itemlinecolor="#FFE0E7EF" vscrollbar="true" >
             <ListHeader height="34" bkcolor="#FFF1F5F9">
               <ListHeaderItem text="Control" width="160" sepwidth="1" textcolor="#FF243042" />
               <ListHeaderItem text="Scenario" width="210" sepwidth="1" />
@@ -142,7 +143,7 @@
               <Button name="virt_change_count" text="Mutate count" style="ActionButton" width="118" />
               <Button name="virt_clear_selection" text="Clear select" style="ActionButton" width="118" />
             </HBox>
-            <VirtualList name="virtual_list_demo" height="182" itemcount="240" itemheight="32" overscan="8" vscrollbar="true" vscrollbarstyle="ScrollSkin" allowselectioncancel="true" itembkcolor="#FFF7FAFD" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" bordercolor="#FFE0E7EF" bordersize="1" />
+            <VirtualList name="virtual_list_demo" height="182" itemcount="240" itemheight="32" overscan="8" vscrollbar="true"  allowselectioncancel="true" itembkcolor="#FFF7FAFD" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" bordercolor="#FFE0E7EF" bordersize="1" />
             <Label name="virtual_list_status" text="VirtualList ready." height="54" wordbreak="true" font="2" textcolor="#FF667789" />
           </VBox>
         </HBox>
@@ -165,7 +166,7 @@
         </HBox>
       </VBox>
 
-      <VBox name="page_layouts" childpadding="14" vscrollbar="true" vscrollbarstyle="ScrollSkin" scrollstepsize="100" smooth="true">
+      <VBox name="page_layouts" childpadding="14" vscrollbar="true"  scrollstepsize="100" smooth="true">
         <HBox height="230" childpadding="12">
           <VBox style="Panel" width="560" inset="16,16,16,16" childpadding="12">
             <Label text="UIHorizontalLayout with rounded child surfaces" height="28" font="1" />
@@ -219,20 +220,20 @@
               <Button text="Render" style="ActionButton" width="116" bindtablayoutname="nested_tabs" bindtabindex="1" />
               <Button text="Scroll" style="ActionButton" width="116" bindtablayoutname="nested_tabs" bindtabindex="2" />
             </HBox>
-            <TabBox name="nested_tabs" selectedid="0" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="20,20">
+            <TabBox name="nested_tabs" selectedid="0" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="10,10">
               <VBox inset="14,14,14,14" childpadding="10">
                 <Label text="Tab child 01: metrics" height="26" />
                 <Progress value="36" />
                 <Progress value="58" forecolor="#FF3E8ED0" />
                 <Button text="Focusable child" style="ActionButton" width="170" />
               </VBox>
-              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFFFF7E5" borderround="20,20">
+              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFFFF7E5" borderround="10,10">
                 <Label text="Tab child 02: rounded background" height="26" />
                 <Progress value="67" forecolor="#FFE6A23C" />
                 <Button text="Orange page" style="ActionButton" width="170" />
                 <CheckBox text="Check child" EnableAutoCheck="true" selected="true" />
               </VBox>
-              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFEAF7EE" borderround="20,20">
+              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFEAF7EE" borderround="10,10">
                 <Label text="Tab child 03: scroll target" height="26" />
                 <Progress value="88" forecolor="#FF2EA97D" />
                 <Slider height="28" value="48" thumbimage="file='SliderPlayThumb.png'" />
@@ -248,18 +249,18 @@
               <Button text="Anim B" style="ActionButton" width="100" bindtablayoutname="anim_tabs" bindtabindex="1" />
               <Button text="Anim C" style="ActionButton" width="100" bindtablayoutname="anim_tabs" bindtabindex="2" />
             </HBox>
-            <AnimationTabLayout name="anim_tabs" selectedid="0" animation_direction="horizontal" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="20,20">
+            <AnimationTabLayout name="anim_tabs" selectedid="0" animation_direction="horizontal" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="10,10">
               <VBox inset="14,14,14,14" childpadding="10">
                 <Label text="Animated page A" height="26" />
                 <Progress value="25" />
                 <Button text="Animation child" style="ActionButton" width="180" />
               </VBox>
-              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFF4EDFF" borderround="20,20">
+              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFF4EDFF" borderround="10,10">
                 <Label text="Animated page B" height="26" />
                 <Progress value="52" forecolor="#FF8E5AD7" />
                 <CheckBox text="Auto check child" EnableAutoCheck="true" />
               </VBox>
-              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFE9F6F5" borderround="20,20">
+              <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFE9F6F5" borderround="10,10">
                 <Label text="Animated page C" height="26" />
                 <Progress value="91" forecolor="#FF0EA5A3" />
                 <Button text="Final page child" style="ActionButton" width="180" />
@@ -269,7 +270,7 @@
         </HBox>
 
         <HBox height="330" childpadding="12">
-          <TileBox name="tile_demo" style="Panel" width="760" inset="16,16,16,16" itemsize="142,104" columns="5" hor_spacing="8" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+          <TileBox name="tile_demo" style="Panel" width="760" inset="16,16,16,16" itemsize="142,104" columns="5" hor_spacing="8" vscrollbar="true" >
             <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFE8F3FF"><Label text="Tile 01" height="22" align="center" /><Progress value="15" forecolor="#FF3E8ED0" /></VBox>
             <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFFFF0E7"><Label text="Tile 02" height="22" align="center" /><Progress value="24" forecolor="#FFE67E22" /></VBox>
             <VBox style="RoundProbe" inset="10,8,10,8" childpadding="8" bkcolor="#FFEAF7EE"><Label text="Tile 03" height="22" align="center" /><Progress value="33" forecolor="#FF2EA97D" /></VBox>
@@ -286,7 +287,7 @@
 
         <VBox style="Panel" height="320" inset="16,16,16,16" childpadding="10">
           <Label text="List layout with container rows, child progress bars and scroll" height="28" font="1" />
-          <List name="layout_progress_list" height="250" header="hidden" itembkcolor="#FFFFFFFF" itemhotbkcolor="#FFF4F8FC" itemselectedbkcolor="#FFE8F0F8" bordercolor="#FFE0E7EF" bordersize="1" borderround="18,18" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+          <List name="layout_progress_list" height="250" header="hidden" itembkcolor="#FFFFFFFF" itemhotbkcolor="#FFF4F8FC" itemselectedbkcolor="#FFE8F0F8" bordercolor="#FFE0E7EF" bordersize="1" borderround="9,9" vscrollbar="true" >
             <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 01" width="140" /><Progress value="12" /></HBox></ListContainerElement>
             <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 02" width="140" /><Progress value="24" forecolor="#FF3E8ED0" /></HBox></ListContainerElement>
             <ListContainerElement height="52"><HBox inset="12,6,12,6" childpadding="10" childvalign="vcenter"><Label text="List row 03" width="140" /><Progress value="36" forecolor="#FFE6A23C" /></HBox></ListContainerElement>
@@ -318,14 +319,14 @@
         </VBox>
       </VBox>
 
-      <VBox name="page_media" childpadding="12" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+      <VBox name="page_media" childpadding="12" vscrollbar="true" >
         <HBox height="250" childpadding="12">
           <VBox style="Panel" width="400" inset="12,12,12,12" childpadding="10">
             <Label text="Image and GIF resources" height="26" font="1" />
             <HBox height="92" childpadding="10">
-              <Control width="88" bkimage="file='VideoConverter_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="8,8" />
-              <Control width="88" bkimage="file='VideoCut_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="8,8" />
-              <Control width="88" bkimage="file='VideoMerge_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="8,8" />
+              <Control width="88" bkimage="file='VideoConverter_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="4,4" />
+              <Control width="88" bkimage="file='VideoCut_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="4,4" />
+              <Control width="88" bkimage="file='VideoMerge_2.png'" bordercolor="#FFE0E7EF" bordersize="1" borderround="4,4" />
             </HBox>
             <GifAnim name="gif_demo" height="86" bkimage="file='GifConvert.gif'" autoplay="true" autosize="false" bordercolor="#FFE0E7EF" bordersize="1" />
           </VBox>
@@ -337,16 +338,16 @@
             <Label text="Animated Ring and Countdown class" height="26" font="1" />
             <HBox height="96" childpadding="12">
               <Ring name="ring_demo" width="88" height="88" bkimage="loading.gif" />
-              <Countdown name="countdown_demo" width="180" height="64" text="Countdown idle" imgdir="frames" framecount="10" frameid="903" ellapse="90" loop="true" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="6,6" align="center" valign="vcenter" />
+              <Countdown name="countdown_demo" width="180" height="64" text="Countdown idle" imgdir="frames" framecount="10" frameid="903" ellapse="90" loop="true" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="3,3" align="center" valign="vcenter" />
             </HBox>
             <Label text="Countdown is present without autostart so missing frame folders are easy to catch during library tests." height="52" wordbreak="true" textcolor="#FF667789" />
           </VBox>
         </HBox>
       </VBox>
 
-      <VBox name="page_stress" childpadding="12" vscrollbar="true" vscrollbarstyle="ScrollSkin" scrollstepsize="120" smooth="true">
-        <Label text="Dense controls for repaint, hit-test and scroll stability" height="30" font="1" />
-        <TileBox name="stress_tiles" style="Panel" inset="12,12,12,12" itemsize="132,58" columns="7" hor_spacing="8" vscrollbar="true" vscrollbarstyle="ScrollSkin">
+      <VBox name="page_stress" childpadding="12" vscrollbar="true"  scrollstepsize="120" smooth="true">
+        <Label text="针对重绘、命中测试及滚动稳定性的精细控制" height="30" font="1" />
+        <TileBox name="stress_tiles" style="Panel" inset="12,12,12,12" itemsize="132,58" columns="7" hor_spacing="8" vscrollbar="true" >
           <Button text="Button 01" style="ActionButton" width="120" />
           <Button text="Button 02" style="ActionButton" width="120" />
           <Button text="Button 03" style="ActionButton" width="120" />

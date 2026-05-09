@@ -2,7 +2,7 @@
 #include "../UIRender.h"
 #include "UIRenderBatchInternal.h"
 #include "UIRenderContext.h"
-#include "UIRenderPrimitiveInternal.h"
+#include "UIRenderClipStackInternal.h"
 
 namespace FYUI
 {

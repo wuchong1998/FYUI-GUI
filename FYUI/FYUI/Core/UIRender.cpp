@@ -10,7 +10,7 @@
 #include "Render/UIRenderHtmlParseInternal.h"
 #include "Render/UIRenderImageD2DInternal.h"
 #include "Render/UIRenderImageRuntimeInternal.h"
-#include "Render/UIRenderPrimitiveInternal.h"
+#include "Render/UIRenderClipStackInternal.h"
 #include "Render/UIRenderTextSharedInternal.h"
 #include "Render/UIRenderSurface.h"
 
@@ -2981,7 +2981,7 @@ namespace FYUI
 		}
 	}
 
-	void DrawColorInternal(CPaintRenderContext& renderContext, const RECT& rc, DWORD color)
+	void CRenderEngine::DrawColor(CPaintRenderContext& renderContext, const RECT& rc, DWORD color)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectValid(rc) || color <= 0x00FFFFFF) {
 			return;
@@ -3000,7 +3000,7 @@ namespace FYUI
 		drawScope.Get()->FillRectangle(ToD2DRectF(rc), brush.Get());
 	}
 
-	void DrawRoundColorInternal(CPaintRenderContext& renderContext, const RECT& rc, int radiusX, int radiusY, DWORD color)
+	void CRenderEngine::DrawRoundColor(CPaintRenderContext& renderContext, const RECT& rc, int radiusX, int radiusY, DWORD color)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectValid(rc) || color <= 0x00FFFFFF) {
 			return;
@@ -3024,7 +3024,7 @@ namespace FYUI
 		drawScope.Get()->FillRoundedRectangle(roundedRect, brush.Get());
 	}
 
-	void DrawGradientInternal(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps)
+	void CRenderEngine::DrawGradient(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps)
 	{
 		(void)nSteps;
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectValid(rc)) {
@@ -3057,7 +3057,7 @@ namespace FYUI
 		drawScope.Get()->FillRectangle(ToD2DRectF(rc), brush.Get());
 	}
 
-	void DrawLineInternal(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
+	void CRenderEngine::DrawLine(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || nSize <= 0) {
 			return;
@@ -3092,7 +3092,7 @@ namespace FYUI
 			strokeStyle.Get());
 	}
 
-	void DrawRectInternal(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
+	void CRenderEngine::DrawRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectValid(rc) || nSize <= 0) {
 			return;
@@ -3116,7 +3116,7 @@ namespace FYUI
 		drawScope.Get()->DrawRectangle(ToInsetD2DRectF(rc, static_cast<float>(nSize)), brush.Get(), static_cast<float>(nSize), strokeStyle.Get());
 	}
 
-	void DrawRoundRectInternal(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int radiusX, int radiusY, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
+	void CRenderEngine::DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int radiusX, int radiusY, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectValid(rc) || nSize <= 0) {
 			return;
@@ -3458,7 +3458,7 @@ namespace FYUI
 
 	void CRenderEngine::DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, int iFont, UINT uStyle, DWORD dwTextBKColor)
 	{
-		DrawColorInternal(renderContext, rc, dwTextBKColor);
+		DrawColor(renderContext, rc, dwTextBKColor);
 		DrawTextInternal(renderContext, rc, text, dwTextColor, iFont, uStyle);
 	}
 

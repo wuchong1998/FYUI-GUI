@@ -189,7 +189,7 @@
     <ClInclude Include="Core\Render\UIRenderImageCodecInternal.h" />
     <ClInclude Include="Core\Render\UIRenderImageLegacyInternal.h" />
     <ClInclude Include="Core\Render\UIRenderImageRuntimeInternal.h" />
-    <ClInclude Include="Core\Render\UIRenderPrimitiveInternal.h" />
+    <ClInclude Include="Core\Render\UIRenderClipStackInternal.h" />
     <ClInclude Include="Core\Render\UIRenderSurface.h" />
     <ClInclude Include="Core\Render\UIRenderSurfaceInternal.h" />
     <ClInclude Include="Core\Render\UIRenderTextSharedInternal.h" />
@@ -278,7 +278,6 @@
     <ClCompile Include="Core\Render\UIRenderImageRuntime.cpp" />
     <ClCompile Include="Core\Render\UIRenderImageScale.cpp" />
     <ClCompile Include="Core\Render\UIRenderImageSpec.cpp" />
-    <ClCompile Include="Core\Render\UIRenderPrimitive.cpp" />
     <ClCompile Include="Core\Render\UIRenderSurface.cpp" />
     <ClCompile Include="Core\Render\UIRenderTextSharedInternal.cpp" />
     <ClCompile Include="Core\UIBase.cpp" />

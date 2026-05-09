@@ -51,8 +51,8 @@ else {
     $projectBans = @(
         @{ Pattern = '(?i)Control\\UIActiveX\.(cpp|h)'; Message = 'UIActiveX must stay out of the project build graph.' },
         @{ Pattern = '(?i)Control\\UIEdit\.(cpp|h)'; Message = 'UIEdit must stay out of the project build graph.' },
-        @{ Pattern = '(?i)Core\\(?:Render\\)?UIRenderHtmlLegacy\.cpp'; Message = 'Html HDC legacy fallback must stay out of the project build graph.' },
-        @{ Pattern = '(?i)Core\\(?:Render\\)?UIRenderTextLegacy\.(cpp|h)'; Message = 'Text HDC legacy fallback must stay out of the project build graph.' },
+        @{ Pattern = '(?i)Core\\UIRenderHtmlLegacy\.cpp'; Message = 'Html HDC legacy fallback must stay out of the project build graph.' },
+        @{ Pattern = '(?i)Core\\UIRenderTextLegacy\.(cpp|h)'; Message = 'Text HDC legacy fallback must stay out of the project build graph.' },
         @{ Pattern = '(?i)UIRenderLegacyHdc\.(cpp|h)'; Message = 'UIRenderLegacyHdc must not return to the project build graph.' },
         @{ Pattern = '(?i)\bfreetype\b|FreeType'; Message = 'FreeType must not return to project configuration.' }
     )
@@ -103,6 +103,7 @@ else {
 
     $requiredProjectIncludes = @(
         'Core\Render\UIRenderBatchInternal.h',
+        'Core\Render\UIRenderClipStackInternal.h',
         'Core\Render\UIRenderD2DCacheTypesInternal.h',
         'Core\Render\UIRenderD2DFrameMetricsInternal.h',
         'Core\Render\UIRenderD2DResourceInternal.h',
@@ -111,7 +112,6 @@ else {
         'Core\Render\UIRenderHtmlParseInternal.h',
         'Core\Render\UIRenderImageD2DInternal.h',
         'Core\Render\UIRenderImageLegacyInternal.h',
-        'Core\Render\UIRenderPrimitiveInternal.h',
         'Core\Render\UIRenderSurfaceInternal.h'
     )
     foreach ($include in $requiredProjectIncludes) {
@@ -152,11 +152,8 @@ else {
         @{ Include = 'Control\UIEdit.cpp'; Message = 'Removed Edit control implementation must not return.' },
         @{ Include = 'Control\UIEdit.h'; Message = 'Removed Edit control header must not return.' },
         @{ Include = 'Core\UIRenderHtmlLegacy.cpp'; Message = 'Removed Html HDC fallback implementation must not return.' },
-        @{ Include = 'Core\Render\UIRenderHtmlLegacy.cpp'; Message = 'Removed Html HDC fallback implementation must not return.' },
         @{ Include = 'Core\UIRenderTextLegacy.cpp'; Message = 'Removed text HDC fallback implementation must not return.' },
-        @{ Include = 'Core\Render\UIRenderTextLegacy.cpp'; Message = 'Removed text HDC fallback implementation must not return.' },
-        @{ Include = 'Core\UIRenderTextLegacyInternal.h'; Message = 'Removed text HDC fallback internal header must not return.' },
-        @{ Include = 'Core\Render\UIRenderTextLegacyInternal.h'; Message = 'Removed text HDC fallback internal header must not return.' }
+        @{ Include = 'Core\UIRenderTextLegacyInternal.h'; Message = 'Removed text HDC fallback internal header must not return.' }
     )
     foreach ($file in $removedFallbackFiles) {
         $path = Join-Path $ProjectRoot $file.Include
@@ -227,47 +224,47 @@ else {
 
     $contextizedImageCppBans = @(
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageEntry\.cpp$'
+            IncludePattern = '(?i)^Core\\UIRenderImageEntry\.cpp$'
             Pattern = '(?i)\bHDC\b|\.GetDC\s*\('
             Message = 'Image entry cpp must stay CPaintRenderContext/helper-based; raw/native DC checks belong in shared image internals.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageLegacy\.cpp$'
+            IncludePattern = '(?i)^Core\\UIRenderImageLegacy\.cpp$'
             Pattern = '(?i)\bHDC\b|\.GetDC\s*\('
             Message = 'Image legacy entry cpp must stay CPaintRenderContext/helper-based; raw/native DC checks belong in shared image internals.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageScale\.cpp$'
+            IncludePattern = '(?i)^Core\\UIRenderImageScale\.cpp$'
             Pattern = '(?im)^\s*HBITMAP\s+CreateARGB32Bitmap\s*\(\s*HDC\b'
             Message = 'Image scale bitmap allocation wrapper must accept CPaintRenderContext, not raw HDC.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageScale\.cpp$'
+            IncludePattern = '(?i)^Core\\UIRenderImageScale\.cpp$'
             Pattern = '\bhDC\b|\bCreateARGB32Bitmap\s*\('
             Message = 'Image scale native DC locals/helpers must use explicit NativeDC/internal names.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageScale\.cpp$'
+            IncludePattern = '(?i)^Core\\UIRenderImageScale\.cpp$'
             Pattern = '(?i)renderContext\.GetDC\s*\(\s*\)\s*==\s*(?:NULL|nullptr)'
             Message = 'Image scale callers should ask CanUseImageRenderContextInternal instead of repeating raw native DC validity checks.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageScale\.cpp$'
+            IncludePattern = '(?i)^Core\\UIRenderImageScale\.cpp$'
             Pattern = '(?im)^\s*HBITMAP\s+ResolveLegacyScaledBitmap\s*\(\s*HDC\b'
             Message = 'Image scale resolver must accept CPaintRenderContext, not raw HDC.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageRuntime\.cpp$'
+            IncludePattern = '(?i)^Core\\UIRenderImageRuntime\.cpp$'
             Pattern = '(?i)\bHDC\b'
             Message = 'Image runtime cpp must stay D2D/context-only; image HDC fallback is blocked.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderHtmlLegacy\.cpp$'
+            IncludePattern = '(?i)^Core\\UIRenderHtmlLegacy\.cpp$'
             Pattern = '(?i)\bDrawImageInternal\s*\(\s*HDC\b|\bDrawImageInternal\s*\(\s*hDC\b'
             Message = 'Html legacy inline images must call the explicitly named DrawImageLegacyFallbackInternal HDC island.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImage(?:DispatchInternal\.h|Legacy\.cpp)$'
+            IncludePattern = '(?i)^Core\\UIRenderImage(?:DispatchInternal\.h|Legacy\.cpp)$'
             Pattern = '(?i)\bDrawResolvedGdiplusImagePath\b'
             Message = 'Gdiplus-loaded images must stay on the explicitly named Direct2D bitmap path, not an ambiguous legacy image path.'
         }
@@ -288,7 +285,7 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderImageCodec\.cpp$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRenderImageCodec\.cpp$') {
             continue
         }
 
@@ -330,7 +327,7 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderBatchInternal\.cpp$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRenderBatchInternal\.cpp$') {
             continue
         }
 
@@ -342,26 +339,7 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderPrimitive\.cpp$') {
-            continue
-        }
-
-        $text = Get-Content -LiteralPath $item.Path -Raw
-        $primitiveCppBans = @(
-            @{ Pattern = '(?i)\bHDC\b|\.GetDC\s*\('; Message = 'Primitive runtime cpp must stay D2D/context-only; primitive HDC drawing is blocked.' },
-            @{ Pattern = '(?i)\bDraw(?:Color|Gradient|Line|Rect|RoundRect)Fallback\b'; Message = 'Primitive GDI/GDI+ fallback helpers must not return; primitives draw through D2D only.' },
-            @{ Pattern = '(?i)\b(GdiplusDrawRoundRectInternal|GradientFill|MoveToEx|LineTo|::\s*Rectangle|::\s*RoundRect)\b'; Message = 'Primitive HDC/GDI drawing calls must not return.' }
-        )
-        foreach ($ban in $primitiveCppBans) {
-            $match = [regex]::Match($text, $ban.Pattern)
-            if ($match.Success) {
-                Add-Failure "$($ban.Message) ($($item.Include):$((Get-LineNumber $text $match.Index)))"
-            }
-        }
-    }
-
-    foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderClip\.cpp$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRenderClip\.cpp$') {
             continue
         }
 
@@ -379,7 +357,7 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderFallbackSharedInternal\.cpp$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRenderFallbackSharedInternal\.cpp$') {
             continue
         }
 
@@ -398,7 +376,7 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRender(BitmapUtil|Surface)\.cpp$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRender(BitmapUtil|Surface)\.cpp$') {
             continue
         }
 
@@ -419,7 +397,7 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderTextSharedInternal\.cpp$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRenderTextSharedInternal\.cpp$') {
             continue
         }
 
@@ -516,7 +494,7 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderSurface\.h$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRenderSurface\.h$') {
             continue
         }
 
@@ -535,16 +513,15 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderPrimitiveInternal\.h$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRenderClipStackInternal\.h$') {
             continue
         }
 
         $text = Get-Content -LiteralPath $item.Path -Raw
-        $primitiveHeaderBans = @(
-            @{ Pattern = '(?i)\bHDC\b'; Message = 'Primitive internal header must stay CPaintRenderContext-based, not HDC-based.' },
-            @{ Pattern = '(?i)\bGdiplusDrawRoundRectInternal\b'; Message = 'GDI+ round-rect helper should remain cpp-local.' }
+        $clipStackHeaderBans = @(
+            @{ Pattern = '(?i)\bHDC\b'; Message = 'Clip-stack internal header must stay D2D-context based, not HDC-based.' }
         )
-        foreach ($ban in $primitiveHeaderBans) {
+        foreach ($ban in $clipStackHeaderBans) {
             $match = [regex]::Match($text, $ban.Pattern)
             if ($match.Success) {
                 Add-Failure "$($ban.Message) ($($item.Include):$((Get-LineNumber $text $match.Index)))"
@@ -554,55 +531,55 @@ else {
 
     $contextOnlyInternalHeaders = @(
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderBatchInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderBatchInternal\.h$'
             Message = 'Direct2D batch internal header must expose CPaintRenderContext-based helpers, not raw HDC batch handles.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderD2DCacheTypesInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderD2DCacheTypesInternal\.h$'
             Message = 'D2D cache type internal header must stay type-only and must not expose raw HDC.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderD2DFrameMetricsInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderD2DFrameMetricsInternal\.h$'
             Message = 'D2D frame metrics internal header must stay diagnostics-only and HDC-free.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderD2DResourceInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderD2DResourceInternal\.h$'
             Message = 'D2D resource internal header must expose pure resource creation helpers and stay HDC-free.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderD2DSharedInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderD2DSharedInternal\.h$'
             Message = 'D2D shared internal header must stay pure helper/context-free; do not expose raw HDC.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderHtmlMetricsInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderHtmlMetricsInternal\.h$'
             Message = 'HTML metrics internal header must stay pure DirectWrite helper/type-only and HDC-free.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderHtmlParseInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderHtmlParseInternal\.h$'
             Message = 'HTML parse internal header must stay pure helper/type-only and HDC-free.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageD2DInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderImageD2DInternal\.h$'
             Message = 'Image Direct2D internal header must stay pure D2D helper/type-only and HDC-free.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageLegacyInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderImageLegacyInternal\.h$'
             Message = 'Image legacy internal header must expose CPaintRenderContext wrappers; keep raw HDC image fallback in cpp-local/internal islands.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderImageRuntimeInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderImageRuntimeInternal\.h$'
             Message = 'Image runtime internal header must expose CPaintRenderContext wrappers; keep raw HDC runtime helpers cpp-local.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderTextLegacyInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderTextLegacyInternal\.h$'
             Message = 'Text legacy internal header must expose CPaintRenderContext wrappers; keep raw HDC text fallback in cpp-local/internal islands.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderTextSharedInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderTextSharedInternal\.h$'
             Message = 'Text shared internal header must expose CPaintRenderContext/pure helper APIs; keep HtmlText HDC parser state cpp-local.'
         },
         @{
-            IncludePattern = '(?i)^Core\\Render\\UIRenderSurfaceInternal\.h$'
+            IncludePattern = '(?i)^Core\\UIRenderSurfaceInternal\.h$'
             Message = 'Render surface internal header must expose CPaintRenderContext/surface operations, not raw HDC accessors.'
         }
     )
@@ -622,7 +599,7 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderBatchInternal\.h$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRenderBatchInternal\.h$') {
             continue
         }
 
@@ -634,7 +611,7 @@ else {
     }
 
     foreach ($item in $projectItems) {
-        if ($item.Include -notmatch '(?i)^Core\\Render\\UIRenderSurfaceInternal\.h$') {
+        if ($item.Include -notmatch '(?i)^Core\\UIRenderSurfaceInternal\.h$') {
             continue
         }
 

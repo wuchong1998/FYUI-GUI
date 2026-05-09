@@ -2,7 +2,7 @@
 #include "../UIRender.h"
 #include "UIRenderBatchInternal.h"
 #include "UIRenderContext.h"
-#include "UIRenderPrimitiveInternal.h"
+#include "UIRenderClipStackInternal.h"
 #include "UIRenderSurface.h"
 
 namespace FYUI
@@ -111,7 +111,7 @@ namespace FYUI
 
 		RECT rcClone = { 0, 0, cx, cy };
 		if (dwFilterColor > 0x00FFFFFF) {
-			DrawColorInternal(renderContext, rcClone, dwFilterColor);
+			CRenderEngine::DrawColor(renderContext, rcClone, dwFilterColor);
 		}
 		NormalizeGeneratedBitmapAlpha(pBits, cx, cy);
 
@@ -154,7 +154,7 @@ namespace FYUI
 
 		RECT rcClone = { 0, 0, cx, cy };
 		if (dwFilterColor > 0x00FFFFFF) {
-			DrawColorInternal(renderContext, rcClone, dwFilterColor);
+			CRenderEngine::DrawColor(renderContext, rcClone, dwFilterColor);
 		}
 		NormalizeGeneratedBitmapAlpha(pBits, cx, cy);
 

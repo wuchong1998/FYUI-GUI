@@ -267,7 +267,7 @@
     <ClInclude Include="Core\Render\UIRenderImageRuntimeInternal.h">
       <Filter>头文件\Core\Render</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Render\UIRenderPrimitiveInternal.h">
+    <ClInclude Include="Core\Render\UIRenderClipStackInternal.h">
       <Filter>头文件\Core\Render</Filter>
     </ClInclude>
     <ClInclude Include="Core\Render\UIRenderSurface.h">
@@ -516,9 +516,6 @@
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>
     <ClCompile Include="Core\Render\UIRenderImageSpec.cpp">
-      <Filter>源文件\Core\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Render\UIRenderPrimitive.cpp">
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>
     <ClCompile Include="Core\Render\UIRenderSurface.cpp">

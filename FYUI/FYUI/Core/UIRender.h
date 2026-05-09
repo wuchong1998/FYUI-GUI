@@ -7,9 +7,11 @@
 #include "Render/UIRenderContext.h"
 
 namespace FYUI {
-	/////////////////////////////////////////////////////////////////////////////////////
-	//
 
+	// ============================================================
+	// CRenderClip — 裁剪栈作用域辅助类
+	// 负责在绘制开始/结束之间维护 D2D 裁剪栈，外部使用通过其 4 个 static API。
+	// ============================================================
 	class FYUI_API CRenderClip
 	{
 	public:
@@ -113,12 +115,25 @@ namespace FYUI {
 		static void PopD2DClipForState(ClipState& state);
 	};
 
-	/////////////////////////////////////////////////////////////////////////////////////
+	// ============================================================
+	// CRenderEngine — 全局静态绘制接口
 	//
-
+	// 分组（按职责）：
+	//   1) 渲染后端与 D2D 模式
+	//   2) 帧统计 / 诊断
+	//   3) 图像加载与释放
+	//   4) 图像绘制
+	//   5) 形状与几何绘制
+	//   6) 文本绘制与度量
+	//   7) 颜色 / HSL 工具
+	//   8) 位图快照
+	// ============================================================
 	class FYUI_API CRenderEngine
 	{
 	public:
+		// ----------------------------------------------------------------
+		// (1) 渲染后端与 D2D 模式
+		// ----------------------------------------------------------------
 		/**
 		 * @brief 设置Preferred渲染渲染后端
 		 * @details 用于设置Preferred渲染渲染后端。具体行为由当前对象状态以及传入参数共同决定。
@@ -161,6 +176,10 @@ namespace FYUI {
 		 * @return bool 操作成功返回 true，否则返回 false
 		 */
 		static bool IsDirect2DAvailable();
+
+		// ----------------------------------------------------------------
+		// (2) 帧统计 / 诊断
+		// ----------------------------------------------------------------
 		/**
 		 * @brief 重置帧统计信息
 		 * @details 用于重置帧统计信息。具体行为由当前对象状态以及传入参数共同决定。
@@ -214,7 +233,9 @@ namespace FYUI {
 			UINT& nHtmlDirectWriteLayoutFailures,
 			UINT& nHtmlDirectWriteRenderFailures);
 
-		// 閸ュ墽澧栭崝鐘烘祰
+		// ----------------------------------------------------------------
+		// (3) 图像加载与释放
+		// ----------------------------------------------------------------
 		/**
 		 * @brief 加载图像
 		 * @details 用于加载图像。具体行为由当前对象状态以及传入参数共同决定。
@@ -227,19 +248,6 @@ namespace FYUI {
 		 */
 		static TImageInfo* LoadImage(STRINGorID bitmap, int nScale, std::wstring_view type = {},
 									DWORD mask = 0, HINSTANCE instance = NULL);
-		/**
-		 * @brief 执行 FreeImage 操作
-		 * @details 用于执行 FreeImage 操作。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param pImageInfo [in] 图像信息对象
-		 * @param bDelete [in] 是否删除
-		 */
-		static void FreeImage(TImageInfo* pImageInfo, bool bDelete = true);
-		/**
-		 * @brief 执行 FreeBitmap 操作
-		 * @details 用于执行 FreeBitmap 操作。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param hBitmap [in] h位图参数
-		 */
-		static void FreeBitmap(HBITMAP hBitmap);
 		/**
 		 * @brief 加载图像
 		 * @details 用于加载图像。具体行为由当前对象状态以及传入参数共同决定。
@@ -274,7 +282,43 @@ namespace FYUI {
 		 * @return TImageInfo* 加载成功返回图像信息对象，失败返回 nullptr
 		 */
 		static TImageInfo* LoadImageFromMemory(const void* pData, DWORD dwSize, int nScale = 100, DWORD mask = 0);
+		/**
+		 * @brief 执行 GdiplusLoadImage 操作
+		 * @details 用于执行 GdiplusLoadImage 操作。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param bitmap [in] 位图参数
+		 * @param type [in] 类型参数
+		 * @param mask [in] mask参数
+		 * @param instance [in] 模块实例句柄
+		 * @return TImageInfo* 返回结果对象指针，失败时返回 nullptr
+		 */
+		static TImageInfo* GdiplusLoadImage(STRINGorID bitmap, std::wstring_view type = {}, DWORD mask = 0, HINSTANCE instance = NULL);
+		/**
+		 * @brief 执行 GdiplusLoadImage 操作
+		 * @details 用于执行 GdiplusLoadImage 操作。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param pStrImage [in] 图像描述字符串
+		 * @param type [in] 类型参数
+		 * @param mask [in] mask参数
+		 * @param instance [in] 模块实例句柄
+		 * @return TImageInfo* 返回结果对象指针，失败时返回 nullptr
+		 */
+		static TImageInfo* GdiplusLoadImage(std::wstring_view pStrImage, std::wstring_view type = {}, DWORD mask = 0,HINSTANCE instance = NULL);
+		/**
+		 * @brief 执行 FreeImage 操作
+		 * @details 用于执行 FreeImage 操作。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param pImageInfo [in] 图像信息对象
+		 * @param bDelete [in] 是否删除
+		 */
+		static void FreeImage(TImageInfo* pImageInfo, bool bDelete = true);
+		/**
+		 * @brief 执行 FreeBitmap 操作
+		 * @details 用于执行 FreeBitmap 操作。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param hBitmap [in] h位图参数
+		 */
+		static void FreeBitmap(HBITMAP hBitmap);
 
+		// ----------------------------------------------------------------
+		// (4) 图像绘制
+		// ----------------------------------------------------------------
 		/**
 		 * @brief 绘制图像
 		 * @details 用于绘制图像。具体行为由当前对象状态以及传入参数共同决定。
@@ -319,7 +363,6 @@ namespace FYUI {
 		 */
 		static bool DrawImageFromMemory(CPaintRenderContext& renderContext, const RECT& rc, const void* pData,
 			DWORD dwSize, int nScale = 100, DWORD mask = 0, UINT uFade = 255);
-
 		/**
 		 * @brief 绘制Rotate图像
 		 * @details 用于绘制Rotate图像。具体行为由当前对象状态以及传入参数共同决定。
@@ -331,7 +374,7 @@ namespace FYUI {
 		 * @param uFade [in] Fade标志
 		 * @param uRotate [in] Rotate标志
 		 */
-		static void DrawRotateImage(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, 
+		static void DrawRotateImage(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc,
 										const RECT& rcBmpPart, bool bAlpha, UINT uFade = 255, UINT uRotate = 0);
 		/**
 		 * @brief 绘制图像信息
@@ -356,30 +399,10 @@ namespace FYUI {
 		static bool DrawImageString(CPaintRenderContext& renderContext, const RECT& rcItem, std::wstring_view pStrImage,
 									std::wstring_view pStrModify = {}, HINSTANCE instance = NULL);
 
-		// Gdiplus缂佹ê鍩?
-		/**
-		 * @brief 执行 GdiplusLoadImage 操作
-		 * @details 用于执行 GdiplusLoadImage 操作。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param bitmap [in] 位图参数
-		 * @param type [in] 类型参数
-		 * @param mask [in] mask参数
-		 * @param instance [in] 模块实例句柄
-		 * @return TImageInfo* 返回结果对象指针，失败时返回 nullptr
-		 */
-		static TImageInfo* GdiplusLoadImage(STRINGorID bitmap, std::wstring_view type = {}, DWORD mask = 0, HINSTANCE instance = NULL);
-		/**
-		 * @brief 执行 GdiplusLoadImage 操作
-		 * @details 用于执行 GdiplusLoadImage 操作。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param pStrImage [in] 图像描述字符串
-		 * @param type [in] 类型参数
-		 * @param mask [in] mask参数
-		 * @param instance [in] 模块实例句柄
-		 * @return TImageInfo* 返回结果对象指针，失败时返回 nullptr
-		 */
-		static TImageInfo* GdiplusLoadImage(std::wstring_view pStrImage, std::wstring_view type = {}, DWORD mask = 0,HINSTANCE instance = NULL);
-
-		// 娴犮儰绗呴崙鑺ユ殶娑擃厾娈戞０婊嗗閸欏倹鏆焌lpha閸婂吋妫ら弫?
-		// 閸ユ儳鍘撶紒妯哄煑
+		// ----------------------------------------------------------------
+		// (5) 形状与几何绘制
+		// 矩形 / 圆角矩形 / 渐变 / 直线 / 椭圆 / 弧 / 贝塞尔 / 多边形
+		// ----------------------------------------------------------------
 		/**
 		 * @brief 绘制颜色
 		 * @details 用于绘制颜色。具体行为由当前对象状态以及传入参数共同决定。
@@ -462,6 +485,20 @@ namespace FYUI {
 		 */
 		static void FillEllipse(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFillColor);
 		/**
+		 * @brief 绘制圆弧
+		 * @details 按椭圆外接矩形与角度范围绘制圆弧，常用于进度环、仪表盘、加载动画和趋势刻度等场景。
+		 * 角度以右侧水平方向为 0 度，正值按顺时针方向增长。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param rc [in] 圆弧所在椭圆的外接矩形
+		 * @param fStartAngle [in] 起始角度，单位为度
+		 * @param fSweepAngle [in] 扫过角度，单位为度，正值顺时针，负值逆时针
+		 * @param nSize [in] 线宽，单位为像素
+		 * @param dwPenColor [in] 线条颜色
+		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
+		 */
+		static void DrawArc(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle,
+			int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		/**
 		 * @brief 绘制贝塞尔曲线
 		 * @details 使用 4 个控制点绘制三次贝塞尔曲线，适合绘制平滑连线、流程图曲线、波形或图表趋势线。
 		 * @param renderContext [in,out] 绘制上下文
@@ -508,22 +545,11 @@ namespace FYUI {
 		 * @param dwFillColor [in] 填充颜色
 		 */
 		static void FillPolygon(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, DWORD dwFillColor);
-		/**
-		 * @brief 绘制圆弧
-		 * @details 按椭圆外接矩形与角度范围绘制圆弧，常用于进度环、仪表盘、加载动画和趋势刻度等场景。
-		 * 角度以右侧水平方向为 0 度，正值按顺时针方向增长。
-		 * @param renderContext [in,out] 绘制上下文
-		 * @param rc [in] 圆弧所在椭圆的外接矩形
-		 * @param fStartAngle [in] 起始角度，单位为度
-		 * @param fSweepAngle [in] 扫过角度，单位为度，正值顺时针，负值逆时针
-		 * @param nSize [in] 线宽，单位为像素
-		 * @param dwPenColor [in] 线条颜色
-		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
-		 */
-		static void DrawArc(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle,
-			int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 
-		// 鐎涙ぞ缍嬬紒妯哄煑
+		// ----------------------------------------------------------------
+		// (6) 文本绘制与度量
+		// 普通文本 / HTML 富文本 / 文本尺寸测量
+		// ----------------------------------------------------------------
 		/**
 		 * @brief 绘制文本
 		 * @details 用于绘制文本。具体行为由当前对象状态以及传入参数共同决定。
@@ -540,7 +566,7 @@ namespace FYUI {
 		 * `DT_NOCLIP` 不按 `rc` 裁剪，`DT_CALCRECT` 仅测量文本并回写矩形。
 		 * @param dwTextBKColor [in] 文本背景颜色数值
 		 */
-		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, 
+		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor,
 			int iFont, UINT uStyle, DWORD dwTextBKColor);
 		/**
 		 * @brief 绘制文本
@@ -554,7 +580,7 @@ namespace FYUI {
 		 * `DT_TOP`、`DT_VCENTER`、`DT_BOTTOM`、`DT_SINGLELINE`、`DT_WORDBREAK`、
 		 * `DT_END_ELLIPSIS`、`DT_NOPREFIX`、`DT_NOCLIP`、`DT_CALCRECT` 等常用标志
 		 */
-		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor, 
+		static void DrawText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor,
 			int iFont, UINT uStyle);
 
 		// DrawHtmlText 的 text 不是浏览器完整 HTML，而是 FYUI 内置的轻量富文本标记。
@@ -605,7 +631,28 @@ namespace FYUI {
 		static void DrawHtmlText(CPaintRenderContext& renderContext, RECT& rc, std::wstring_view text, DWORD dwTextColor,
 			RECT* pLinks, std::wstring* sLinks, int& nLinkRects, int iFont, UINT uStyle);
 
-		// 鏉堝懎濮崙鑺ユ殶
+		/**
+		 * @brief 获取文本尺寸
+		 * @details 用于获取文本尺寸。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param text [in] 文本内容
+		 * @param iFont [in] 字体值
+		 * @param uStyle [in] 文本格式标志，支持组合使用 `DT_SINGLELINE`、`DT_WORDBREAK`、
+		 * `DT_END_ELLIPSIS`、`DT_NOPREFIX`、`DT_CALCRECT` 及对齐相关 `DT_*` 标志
+		 * @return 返回对应的几何结果
+		 */
+		static SIZE GetTextSize(CPaintRenderContext& renderContext, std::wstring_view text, int iFont, UINT uStyle);
+		/**
+		 * @brief 批量获取文本前缀像素宽度（GDI 快路径）
+		 * @details 通过 GetTextExtentExPointW 一次性获取每个前缀的累计像素宽度。
+		 *          outPrefix[i] 表示 text[0..i] 的累计像素宽度，tab 按空格处理。
+		 * @return 成功时 outPrefix.size()==len，否则返回 false 并清空 outPrefix
+		 */
+		static bool GetTextPrefixWidths(CPaintManagerUI* pManager, int iFont, const wchar_t* str, size_t len, std::vector<int>& outPrefix);
+
+		// ----------------------------------------------------------------
+		// (7) 颜色 / HSL 工具
+		// ----------------------------------------------------------------
 		/**
 		 * @brief 执行 CheckAlphaColor 操作
 		 * @details 用于执行 CheckAlphaColor 操作。具体行为由当前对象状态以及传入参数共同决定。
@@ -633,6 +680,10 @@ namespace FYUI {
 		 */
 		static void AdjustImage(bool bUseHSL, TImageInfo* imageInfo, short H, short S, short L);
 
+		// ----------------------------------------------------------------
+		// (8) 位图快照
+		// 把指定控件 / 整个根控件离屏渲染为 HBITMAP，用于截图、缓存或动效合成。
+		// ----------------------------------------------------------------
 		/**
 		 * @brief 执行 GenerateBitmap 操作
 		 * @details 用于执行 GenerateBitmap 操作。具体行为由当前对象状态以及传入参数共同决定。
@@ -653,26 +704,6 @@ namespace FYUI {
 		 * @return HBITMAP 返回 执行 GenerateBitmap 操作 的结果
 		 */
 		static HBITMAP GenerateBitmap(CPaintManagerUI* pManager, CControlUI* pControl, RECT rc, DWORD dwFilterColor = 0);
-		/**
-		 * @brief 获取文本尺寸
-		 * @details 用于获取文本尺寸。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param renderContext [in,out] 绘制上下文
-		 * @param text [in] 文本内容
-		 * @param iFont [in] 字体值
-		 * @param uStyle [in] 文本格式标志，支持组合使用 `DT_SINGLELINE`、`DT_WORDBREAK`、
-		 * `DT_END_ELLIPSIS`、`DT_NOPREFIX`、`DT_CALCRECT` 及对齐相关 `DT_*` 标志
-		 * @return 返回对应的几何结果
-		 */
-		static SIZE GetTextSize(CPaintRenderContext& renderContext, std::wstring_view text, int iFont, UINT uStyle);
-
-		/**
-		 * @brief 批量获取文本前缀像素宽度（GDI 快路径）
-		 * @details 通过 GetTextExtentExPointW 一次性获取每个前缀的累计像素宽度。
-		 *          outPrefix[i] 表示 text[0..i] 的累计像素宽度，tab 按空格处理。
-		 * @return 成功时 outPrefix.size()==len，否则返回 false 并清空 outPrefix
-		 */
-		static bool GetTextPrefixWidths(CPaintManagerUI* pManager, int iFont, const wchar_t* str, size_t len, std::vector<int>& outPrefix);
-
 	};
 
 } // namespace DuiLib

@@ -46,6 +46,13 @@ namespace FYUI
 		 * @param bEnabled [in] 是否启用状态
 		 */
 		void SetEnabled(bool bEnabled) override;
+
+		/*	multiline	wordwrap	数据层	视觉层	典型场景
+		false	false	文本无 \n，回车不插入	单行无限延伸，超宽 → 水平滚动	单行输入框、搜索框、用户名/价格输入
+		false	true	文本无 \n，回车不插入	单段长文本按视图宽度折回多行	长字符串只读展示、说明性 tooltip 文本
+		true	false	用户可按 Enter 换行，文本可含 \n	各段不折行，超宽 → 水平滚动	代码编辑器、日志查看器、JSON 查看
+		true	true	用户可按 Enter 换行	各段在视图宽度处自动折回	普通段落编辑、聊天输入框、富文本编辑*/
+
 		/**
 		 * @brief 判断是否多选行
 		 * @details 用于判断是否多选行。具体行为由当前对象状态以及传入参数共同决定。
@@ -142,6 +149,14 @@ namespace FYUI
 		 * @param bPasswordMode [in] 是否密码Mode
 		 */
 		void SetPasswordMode(bool bPasswordMode = true);
+
+
+	/*	multiline	wordwrap	数据层	视觉层	典型场景
+		false	false	文本无 \n，回车不插入	单行无限延伸，超宽 → 水平滚动	单行输入框、搜索框、用户名/价格输入
+		false	true	文本无 \n，回车不插入	单段长文本按视图宽度折回多行	长字符串只读展示、说明性 tooltip 文本
+		true	false	用户可按 Enter 换行，文本可含 \n	各段不折行，超宽 → 水平滚动	代码编辑器、日志查看器、JSON 查看
+		true	true	用户可按 Enter 换行	各段在视图宽度处自动折回	普通段落编辑、聊天输入框、富文本编辑*/
+
 		/**
 		 * @brief 判断是否WordWrap
 		 * @details 用于判断是否WordWrap。具体行为由当前对象状态以及传入参数共同决定。
@@ -200,6 +215,18 @@ namespace FYUI
 		 * @param dwTextColor [in] 文本颜色值
 		 */
 		void SetTextColor(DWORD dwTextColor);
+		/**
+		 * @brief 获取文本对齐样式
+		 * @details 返回 GDI DT_* 标志位组合，包含水平 DT_LEFT/DT_CENTER/DT_RIGHT 与垂直 DT_TOP/DT_VCENTER/DT_BOTTOM。
+		 * @return UINT 对齐标志位组合
+		 */
+		UINT GetTextStyle() const;
+		/**
+		 * @brief 设置文本对齐样式
+		 * @details 用于一次性设置水平/垂直对齐标志位组合，组合方式与 CLabelUI 等控件一致。
+		 * @param uStyle [in] DT_* 对齐标志位组合
+		 */
+		void SetTextStyle(UINT uStyle);
 		/**
 		 * @brief 获取Limit文本
 		 * @details 用于获取Limit文本。具体行为由当前对象状态以及传入参数共同决定。
@@ -806,6 +833,13 @@ namespace FYUI
 		 */
 		void SetScrollPos(SIZE szPos, bool bMsg = true, bool bScroolVisible = true) override;
 		/**
+		 * @brief 获取滚动位置
+		 * @details 在单行 / 关闭水平滚动条的场景下，CRichEditUI 使用内部独立的水平偏移以保证 caret 可见，
+		 *          此函数在没有水平滚动条对象时返回内部偏移值，垂直方向仍委托给基类。
+		 * @return SIZE 水平 cx 与垂直 cy 的滚动位置
+		 */
+		SIZE GetScrollPos() const override;
+		/**
 		 * @brief 执行 LineUp 操作
 		 * @details 用于执行 LineUp 操作。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param bScroolVisible [in] 是否Scrool可见状态
@@ -1061,6 +1095,24 @@ namespace FYUI
 		 */
 		int MeasureTextWidth(std::wstring_view text) const;
 		/**
+		 * @brief 计算单行文本的水平对齐加性偏移
+		 * @details 当行宽小于视图宽度时按 m_uTextStyle 的水平对齐位返回偏移量；
+		 *          行宽大于等于视图宽度（即水平滚动场景）时返回 0，避免与水平滚动逻辑冲突。
+		 * @param lineWidth [in] 当前行已经渲染好的像素宽度
+		 * @param viewWidth [in] 编辑视图（去除滚动条与 padding 后）的可见宽度
+		 * @return int 需要加到行 left 上的水平偏移量（像素）
+		 */
+		int GetLineXOffset(int lineWidth, int viewWidth) const;
+		/**
+		 * @brief 计算整个文本块的垂直对齐加性偏移
+		 * @details 当总内容高度小于视图高度时按 m_uTextStyle 的垂直对齐位返回偏移量；
+		 *          总内容高度大于等于视图高度（垂直滚动场景）时返回 0。
+		 *          调用前需先 EnsureLayout() 以保证 m_nContentHeight 有效。
+		 * @param viewHeight [in] 编辑视图（去除滚动条与 padding 后）的可见高度
+		 * @return int 需要加到行 top 上的垂直偏移量（像素）
+		 */
+		int GetTextYOffset(int viewHeight) const;
+		/**
 		 * @brief 执行 HitTest 操作
 		 * @details 用于执行 HitTest 操作。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param pt [in] 坐标点
@@ -1200,6 +1252,7 @@ namespace FYUI
 		bool m_fAccumulateDBC;
 		UINT m_chLeadByte;
 		DWORD m_dwTextColor;
+		UINT m_uTextStyle;
 		DWORD m_dwEventMask;
 		int m_iFont;
 		int m_iLimitText;
@@ -1230,5 +1283,6 @@ namespace FYUI
 		mutable int m_nContentWidth;
 		mutable int m_nContentHeight;
 		mutable std::vector<TextLine> m_lines;
+		int m_nManualScrollX;
 	};
 }

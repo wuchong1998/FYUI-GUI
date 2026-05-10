@@ -94,7 +94,7 @@
 							<Label name="wordbreak" text="普通文本自动宽度测试。" autotextwidth="true" textpadding="5,0,0,0" bkcolor="#FFF4F8FC" hotbkcolor="#FFE5EEF7"
 							pushedbkcolor="#FFD4E4F4" bordercolor="#FFC8D5E2" bordersize="1" borderround="9,9" height="40"  bkcolor="#FFF7FAFD" bordercolor="#FFE0E7EF" bordersize="1" padding="8,6,8,6" />
 							
-							<Label name="auto_height" text="自动高度测试。" autotextheight="true" textpadding="5,0,0,0" hotbkcolor="#FFE5EEF7"
+							<Label name="auto_height" text="普通文本自动高度测试。+自动换行" autotextheight="true" textpadding="5,0,0,0" hotbkcolor="#FFE5EEF7"
 							pushedbkcolor="#FFD4E4F4"  borderround="9,9" width="150"  bkcolor="#FFF7FAFD" bordercolor="#FFE0E7EF" bordersize="1" padding="8,6,8,6" />
 						</HBox >
 						
@@ -102,16 +102,25 @@
 							<Label name="wordbreak" showhtml="true" text="html文字 {b}自动宽度{/b} {c #E67E22}测试测试测试{/c}" autotextwidth="true" textpadding="5,0,0,0" bkcolor="#FFF4F8FC" hotbkcolor="#FFE5EEF7"
 							pushedbkcolor="#FFD4E4F4" bordercolor="#FFC8D5E2" bordersize="1" borderround="9,9" height="86"  bkcolor="#FFF7FAFD" bordercolor="#FFE0E7EF" bordersize="1" padding="8,6,8,6" />
 							
-							<Label text="自动高度测试" autotextheight="true" textpadding="5,0,0,0"  hotbkcolor="#FFE5EEF7"
+							<Label showhtml="true" text="html文字 {b}自动高度{/b} {c #E67E22}测试测试测试{/c}" autotextheight="true" textpadding="5,0,0,0"  hotbkcolor="#FFE5EEF7"
 							pushedbkcolor="#FFD4E4F4" bordercolor="#FFC8D5E2" bordersize="1" borderround="9,9" width="100"  bkcolor="#FFF7FAFD" bordercolor="#FFE0E7EF" bordersize="1" padding="8,6,8,6" />
 						</HBox >
 						
                     </VBox>
 
                     <VBox style="Panel" inset="14,14,14,14" childpadding="10">
-                        <Label text="Input, combo and value controls" height="28" font="1" />
-                        <RichEdit name="richedit_single_tip" height="38" multiline="false" wanttab="false" wantreturn="false" wantctrlreturn="false" transparent="false" rich="false" wordwrap="false" font="0" textcolor="#FF243042" maxchar="64" textpadding="10,0,10,0" tipvalue="Single line RichEdit placeholder" tipvaluecolor="#FF8A98A8" tipvaluepadding="10,0,10,0" tipvaluealign="left" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
-                        <RichEdit name="richedit_multi_wrap" height="118" multiline="true" wanttab="true" wantreturn="true" wantctrlreturn="true" transparent="false" rich="true" wordwrap="true" vscrollbar="true" hscrollbar="false" font="3" textcolor="#FF2B3545" textpadding="8,6,8,6" text="Direct2D RichEdit multiline text.&#10;Tab inserts a tab when focused. Return inserts a new line. Word wrap keeps the text inside this surface." bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+                        <Label text="RichEdit控件和Combo控件" height="28" font="1" />
+                        <RichEdit name="richedit_single_tip" height="38" multiline="false" wanttab="false" wantreturn="false" wantctrlreturn="false" transparent="false" rich="false" 
+							wordwrap="false" font="0" textcolor="#FF243042" maxchar="64" textpadding="10,0,10,0" valign="vcenter"
+							tipvalue="tipvalue 设置居中，文字设置了居中" tipvaluecolor="#FF8A98A8" tipvaluepadding="50,0,10,0" tipvaluealign="left" tipvaluevalign="center"
+							bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+                        
+						<RichEdit name="richedit_multi_wrap" height="118" multiline="true" wanttab="true" wantreturn="false" wantctrlreturn="true" 
+						rich="true" wordwrap="true" vscrollbar="true" hscrollbar="false" font="3" textcolor="#FF2B3545" textpadding="8,6,0,6" scrollfloat="true"
+						text="Direct2D RichEdit 多行文本。
+Tab键在聚焦时插入制表符。Return键插入换行。自动换行功能可保持文本在该区域内的显示。
+滚动条设置为悬浮模式"
+						bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
                         <HBox height="38" childpadding="10">
                             <Combo name="combo_basic" width="210" height="34" text="Combo item A" normalimage="file='menubk.png'" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" dropboxsize="220,140">
                                 <ListLabelElement text="Combo item A" height="30" selected="true" />
@@ -132,17 +141,46 @@
 
                 <HBox height="380" childpadding="12">
                     <VBox style="Panel" width="560" inset="14,14,14,14" childpadding="10">
-                        <Label text="RichEdit attributes: text, readonly and image states" height="28" font="1" />
-                        <RichEdit name="richedit_readonly" height="76" readonly="true" multiline="true" transparent="true" wordwrap="true" font="0" textcolor="#FF4B5563" textpadding="10,8,10,8" text="Readonly RichEdit keeps selection and scroll behavior but rejects text editing." bkcolor="#FFF7FAFD" bordercolor="#FFD9E1EA" bordersize="1" borderround="3,3" />
-                        <RichEdit name="richedit_image_state" height="72" multiline="false" transparent="false" rich="true" font="0" textcolor="#FFFFFFFF" textpadding="12,0,12,0" text="Normal, hot, focused and disabled image attributes" normalimage="file='btn_def.png'" hotimage="file='ClickButton.png'" focusedimage="file='Default.png'" disabledimage="file='bt1.png'" bkcolor="#FF3E8ED0" bordercolor="#FF2567C4" bordersize="1" borderround="3,3" />
-                        <RichEdit name="richedit_limit" height="72" multiline="true" maxchar="96" limittext="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" wanttab="true" wantreturn="true" textpadding="10,8,10,8" tipvalue="Max 96 chars, limit text string stored for API tests" tipvaluecolor="#FF8A98A8" tipvaluepadding="10,8,10,8" tipvaluealign="center" bkcolor="#FFFFFBEB" bordercolor="#FFE6C36A" bordersize="1" borderround="3,3" />
+                        <Label text="RichEdit属性：文本、只读和图像状态" height="28" font="1" />
+                        <RichEdit name="richedit_readonly" height="70" readonly="true" multiline="true"  wordwrap="true" font="0" scrollfloat="false"  vscrollbar="true"
+						textcolor="#FF4B5563" textpadding="10,8,0,8" text="只读RichEdit保留选择和滚动行为，但拒绝文本编辑。滚动条为占位模式,只读RichEdit保留选择和滚动行为，但拒绝文本编辑。只读RichEdit保留选择和滚动行为，但拒绝文本编辑。滚动条为占位模式滚动条为占位模式,只读RichEdit保留选择和滚动行为，但拒绝文本编辑。滚动条为占位模式" 
+						bkcolor="#FFF7FAFD" bordercolor="#FFD9E1EA" bordersize="1" borderround="8,8" />
+						
+                        <RichEdit name="richedit_image_state" height="72" multiline="false" transparent="false" rich="true" font="0" textcolor="#FFFFFFFF" textpadding="12,0,12,0" 
+						text="原始图片，和鼠标移动上的图片和焦点图片，图片随便找的，图片和控件比例不对会失真" normalimage="file='102L.png'" hotimage="361.png" focusedimage="file='Default.png'" disabledimage="file='bt1.png'"
+						bordercolor="#FF2567C4" bordersize="1" borderround="8,8" />
+                       
+					   <RichEdit name="richedit_limit" height="72" multiline="true" maxchar="96" limittext="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" wanttab="true" wantreturn="true" textpadding="10,8,10,8"
+						tipvalue="最多96个字符，为API测试存储的限制文本字符串" tipvaluecolor="#FF8A98A8" tipvaluepadding="10,8,10,8" tipvaluealign="center" 
+						bkcolor="#FFFFFBEB" bordercolor="#FFE6C36A" bordersize="1" borderround="8,8" />
                     </VBox>
 
                     <VBox style="Panel" inset="14,14,14,14" childpadding="10">
-                        <Label text="RichEdit attributes: scrolling, wrapping and disabled" height="28" font="1" />
-                        <RichEdit name="richedit_scroll_nowrap" height="118" multiline="true" wordwrap="false" vscrollbar="true" hscrollbar="true" wanttab="true" wantreturn="true" font="3" textcolor="#FF1F2937" textpadding="8,6,8,6" text="No word wrap: this very long line should use the horizontal scrollbar so Direct2D text clipping and scroll offsets can be checked.&#10;Second line for vertical scrolling coverage.&#10;Third line for caret movement coverage.&#10;Fourth line for scroll range coverage." bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
-                        <RichEdit name="richedit_disabled" height="70" enabled="false" multiline="false" transparent="false" wordwrap="false" font="0" textcolor="#FF6B7280" textpadding="10,0,10,0" text="Disabled RichEdit with disabled image" disabledimage="file='bt2.png'" bkcolor="#FFE5E7EB" bordercolor="#FFD1D5DB" bordersize="1" borderround="3,3" />
-                        <RichEdit name="richedit_transparent_tip" height="70" multiline="false" transparent="true" rich="false" readonly="false" font="2" textcolor="#FF0F766E" textpadding="10,0,10,0" tipvalue="Transparent empty RichEdit placeholder, right aligned" tipvaluecolor="#FF0F766E" tipvaluepadding="10,0,10,0" tipvaluealign="right" bordercolor="#FF99D7CF" bordersize="1" borderround="3,3" />
+                        <Label text="RichEdit属性：滚动、换行和禁用" height="28" font="1" />
+                        <RichEdit name="richedit_scroll_nowrap" height="118" multiline="false" wordwrap="false" vscrollbar="false" hscrollbar="true" wanttab="true" 
+						wantreturn="true" font="3" textcolor="#FF1F2937" textpadding="8,6,8,6" 
+						text="无换行：这条很长的线应该使用水平滚动条，这样就可以检查Direct2D文本剪切和滚动偏移。第二行用于垂直滚动覆盖。护理人员运动覆盖的第三条线。第四行用于滚动范围覆盖。" 
+						bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="8,8" />
+                       
+					   <RichEdit name="richedit_disabled" height="70" enabled="false" multiline="true"  wordwrap="true" font="0" textcolor="#FF6B7280" textpadding="10,0,10,0" 
+					   text="禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，" 
+					   disabledimage="file='bt2.png'" bkcolor="#FFE5E7EB" bordercolor="#FFD1D5DB" bordersize="1" borderround="8,8" />
+                       
+					   <RichEdit name="richedit_transparent_tip" height="70" multiline="false" transparent="true" rich="false" readonly="false" font="2"
+					   textcolor="#FF0F766E" textpadding="10,0,10,0" tipvalue="透明的空白RichEdit占位符，右对齐" 
+					   tipvaluecolor="#FF0F766E" tipvaluepadding="10,0,10,0" tipvaluealign="right" bordercolor="#FF99D7CF" bordersize="1" borderround="8,8" />
+                        <Label text="RichEdit align/valign 文本对齐演示" height="22" font="1" />
+                        <HBox height="92" childpadding="8">
+                            <RichEdit name="richedit_align_left_top" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" align="left" valign="top" text="left + top" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+                            <RichEdit name="richedit_align_center_vcenter" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" align="center" valign="vcenter" text="center + vcenter" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+                            <RichEdit name="richedit_align_right_bottom" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" align="right" valign="bottom" text="right + bottom" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+                        </HBox>
+                        <Label text="RichEdit tipvaluealign / tipvaluevalign 提示文本对齐演示" height="22" font="1" />
+                        <HBox height="92" childpadding="8">
+                            <RichEdit name="richedit_tip_left_top" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" tipvalue="tip left + top" tipvaluecolor="#FF8A98A8" tipvaluealign="left" tipvaluevalign="top" tipvaluepadding="8,6,8,6" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+                            <RichEdit name="richedit_tip_center_vcenter" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" tipvalue="tip center + vcenter" tipvaluecolor="#FF8A98A8" tipvaluealign="center" tipvaluevalign="vcenter" tipvaluepadding="8,6,8,6" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+                            <RichEdit name="richedit_tip_right_bottom" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" tipvalue="tip right + bottom" tipvaluecolor="#FF8A98A8" tipvaluealign="right" tipvaluevalign="bottom" tipvaluepadding="8,6,8,6" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
+                        </HBox>
                     </VBox>
                 </HBox>
             </VBox>

@@ -15,6 +15,8 @@ namespace FYUI
 		const LONG kDefaultTextMax = (32 * 1024) - 1;
 		const DWORD kSelectionColor = 0x663399FF;
 		const DWORD kCaretColor = 0xFF1F2937;
+		// caret 在文本末尾时需要在视图右边界内预留的像素数，避免与 rcView.right 相切后被 IntersectRect 裁成空矩形
+		const int kCaretMargin = 2;
 		const UINT kRichEditMenuUndo = 51001;
 		const UINT kRichEditMenuRedo = 51002;
 		const UINT kRichEditMenuCut = 51003;
@@ -48,7 +50,7 @@ namespace FYUI
 		m_bRich(true),
 		m_bReadOnly(false),
 		m_bPasswordMode(false),
-		m_bWordWrap(false),
+		m_bWordWrap(true),
 		m_bHideSelection(false),
 		m_bAutoURLDetect(false),
 		m_bModified(false),
@@ -58,6 +60,7 @@ namespace FYUI
 		m_fAccumulateDBC(false),
 		m_chLeadByte(0),
 		m_dwTextColor(0),
+		m_uTextStyle(DT_LEFT | DT_TOP),
 		m_dwEventMask(0),
 		m_iFont(-1),
 		m_iLimitText(kDefaultTextMax),
@@ -75,7 +78,8 @@ namespace FYUI
 		m_bLayoutDirty(true),
 		m_nLayoutWidth(0),
 		m_nContentWidth(0),
-		m_nContentHeight(0)
+		m_nContentHeight(0),
+		m_nManualScrollX(0)
 	{
 		::ZeroMemory(&m_rcTextPadding, sizeof(m_rcTextPadding));
 		::ZeroMemory(&m_defaultCharFormat, sizeof(m_defaultCharFormat));
@@ -120,6 +124,18 @@ namespace FYUI
 	void CRichEditUI::SetEnabled(bool bEnabled)
 	{
 		CContainerUI::SetEnabled(bEnabled);
+		// CContainerUI::SetEnabled 仅同步 m_items 中的子控件，但 m_pVerticalScrollBar / m_pHorizontalScrollBar
+		// 不在 m_items 列表中，需在此显式同步，否则禁用时依然能拖动滚动条 thumb。
+		if (m_pVerticalScrollBar != NULL) m_pVerticalScrollBar->SetEnabled(bEnabled);
+		if (m_pHorizontalScrollBar != NULL) m_pHorizontalScrollBar->SetEnabled(bEnabled);
+		if (!bEnabled) {
+			// 进入禁用态：收拾可能正在进行的交互，避免状态悬挂导致后续行为异常。
+			if (m_bDraggingSelection) {
+				m_bDraggingSelection = false;
+				if (m_pManager && m_pManager->IsCaptured()) m_pManager->ReleaseCapture();
+			}
+			m_uButtonState &= ~UISTATE_HOT;
+		}
 		Invalidate();
 	}
 
@@ -467,9 +483,28 @@ namespace FYUI
 	void CRichEditUI::SetScrollPos(SIZE szPos, bool, bool)
 	{
 		if (m_pVerticalScrollBar != NULL) m_pVerticalScrollBar->SetScrollPos(static_cast<int>((std::max<LONG>)(0L, szPos.cy)));
-		if (m_pHorizontalScrollBar != NULL) m_pHorizontalScrollBar->SetScrollPos(static_cast<int>((std::max<LONG>)(0L, szPos.cx)));
+		if (m_pHorizontalScrollBar != NULL) {
+			m_pHorizontalScrollBar->SetScrollPos(static_cast<int>((std::max<LONG>)(0L, szPos.cx)));
+		}
+		else {
+			// 无水平滚动条（单行 / hscrollbar=false）场景仍需保持水平滚动以保证 caret 与文本可见。
+			// range 额外预留 kCaretMargin 以保证文本末尾时 caret 仍能在视图内绘制。
+			EnsureLayout();
+			const RECT rcView = GetViewRect();
+			const int viewW = (std::max<int>)(0, static_cast<int>(rcView.right - rcView.left));
+			const int range = (std::max)(0, m_nContentWidth + kCaretMargin - viewW);
+			const LONG cx = (std::max<LONG>)(0L, szPos.cx);
+			m_nManualScrollX = static_cast<int>((std::min<LONG>)(cx, static_cast<LONG>(range)));
+		}
 		UpdateImeCompositionWindow();
 		Invalidate();
+	}
+
+	SIZE CRichEditUI::GetScrollPos() const
+	{
+		SIZE sz = CContainerUI::GetScrollPos();
+		if (m_pHorizontalScrollBar == NULL) sz.cx = m_nManualScrollX;
+		return sz;
 	}
 	void CRichEditUI::LineUp(bool) { SIZE pos = GetScrollPos(); pos.cy -= GetLineHeight(); SetScrollPos(pos); }
 	void CRichEditUI::LineDown(bool) { SIZE pos = GetScrollPos(); pos.cy += GetLineHeight(); SetScrollPos(pos); }
@@ -510,6 +545,25 @@ namespace FYUI
 
 	void CRichEditUI::DoEvent(TEventUI& event)
 	{
+		// 禁用态拒绝所有交互式输入：避免点击选中文字、键盘移动 caret、滚轮滚动、右键菜单等操作。
+		// enter/leave/focus/timer 仍交由基类，以保持 hover 视觉、disabledimage 切换等被动行为正常。
+		if (!IsEnabled()) {
+			switch (event.Type) {
+			case UIEVENT_BUTTONDOWN:
+			case UIEVENT_BUTTONUP:
+			case UIEVENT_DBLCLICK:
+			case UIEVENT_RBUTTONDOWN:
+			case UIEVENT_MOUSEMOVE:
+			case UIEVENT_CONTEXTMENU:
+			case UIEVENT_SCROLLWHEEL:
+			case UIEVENT_KEYDOWN:
+			case UIEVENT_KEYUP:
+			case UIEVENT_CHAR:
+				return;
+			default:
+				break;
+			}
+		}
 		if (event.Type == UIEVENT_SETFOCUS) {
 			CControlUI::DoEvent(event);
 			ResetCaretBlink();
@@ -519,6 +573,28 @@ namespace FYUI
 		if (event.Type == UIEVENT_KILLFOCUS) {
 			if (m_pManager) m_pManager->KillTimer(this, DEFAULT_TIMERID);
 			CControlUI::DoEvent(event);
+			return;
+		}
+		if (event.Type == UIEVENT_MOUSEENTER) {
+			// 与 CButtonUI / CListContainerElementUI 等控件保持一致：在鼠标进入/离开时显式维护 UISTATE_HOT，
+			// 否则 PaintStatusImage 中针对 hotimage 的判断永远不会成立，hover 时图片无法切换。
+			if (IsEnabled()) {
+				if ((m_uButtonState & UISTATE_HOT) == 0) {
+					m_uButtonState |= UISTATE_HOT;
+					Invalidate();
+				}
+			}
+			CContainerUI::DoEvent(event);
+			return;
+		}
+		if (event.Type == UIEVENT_MOUSELEAVE) {
+			if (IsEnabled()) {
+				if ((m_uButtonState & UISTATE_HOT) != 0) {
+					m_uButtonState &= ~UISTATE_HOT;
+					Invalidate();
+				}
+			}
+			CContainerUI::DoEvent(event);
 			return;
 		}
 		if (event.Type == UIEVENT_TIMER && event.wParam == DEFAULT_TIMERID) {
@@ -588,10 +664,14 @@ namespace FYUI
 			}
 		}
 
-		if (m_pVerticalScrollBar != NULL && m_pVerticalScrollBar->IsVisible() && m_pVerticalScrollBar != pStopControl) {
+		// scrollfloat=true 时滚动条悬浮显示，仅在鼠标 hover / 正在拖拽时绘制；scrollfloat=false 时始终显示。与 CContainerUI::DoPaint 保持一致。
+		// 额外约束：禁用态（!IsEnabled()）下，scrollfloat=true 的 hover 显示需求被抑制，避免禁用控件 hover 时还冒出滚动条；
+		// scrollfloat=false 的占位滚动条仍按原逻辑绘制（IsScrollFloatShown 在 m_bScrollFloat=false 时直接返回 true）。
+		const bool bScrollVisualAllowed = IsEnabled() || !m_bScrollFloat;
+		if (m_pVerticalScrollBar != NULL && m_pVerticalScrollBar->IsVisible() && m_pVerticalScrollBar != pStopControl && IsScrollFloatShown() && bScrollVisualAllowed) {
 			m_pVerticalScrollBar->Paint(renderContext, pStopControl);
 		}
-		if (m_pHorizontalScrollBar != NULL && m_pHorizontalScrollBar->IsVisible() && m_pHorizontalScrollBar != pStopControl) {
+		if (m_pHorizontalScrollBar != NULL && m_pHorizontalScrollBar->IsVisible() && m_pHorizontalScrollBar != pStopControl && IsScrollFloatShown() && bScrollVisualAllowed) {
 			m_pHorizontalScrollBar->Paint(renderContext, pStopControl);
 		}
 		return true;
@@ -646,9 +726,38 @@ namespace FYUI
 		else if (StringUtil::EqualsNoCase(name, L"tipvaluealign")) {
 			std::wstring lower(pstrValue);
 			StringUtil::MakeLower(lower);
-			if (lower.find(L"center") != std::wstring::npos) m_uTipValueAlign = DT_SINGLELINE | DT_CENTER;
-			else if (lower.find(L"right") != std::wstring::npos) m_uTipValueAlign = DT_SINGLELINE | DT_RIGHT;
-			else m_uTipValueAlign = DT_SINGLELINE | DT_LEFT;
+			UINT u = (m_uTipValueAlign & ~(DT_LEFT | DT_CENTER | DT_RIGHT)) | DT_SINGLELINE;
+			if (lower.find(L"center") != std::wstring::npos) u |= DT_CENTER;
+			else if (lower.find(L"right") != std::wstring::npos) u |= DT_RIGHT;
+			else u |= DT_LEFT;
+			m_uTipValueAlign = u;
+		}
+		else if (StringUtil::EqualsNoCase(name, L"tipvaluevalign")) {
+			std::wstring lower(pstrValue);
+			StringUtil::MakeLower(lower);
+			UINT u = (m_uTipValueAlign & ~(DT_TOP | DT_VCENTER | DT_BOTTOM)) | DT_SINGLELINE;
+			if (lower.find(L"vcenter") != std::wstring::npos || lower == L"center") u |= DT_VCENTER;
+			else if (lower.find(L"bottom") != std::wstring::npos) u |= DT_BOTTOM;
+			else u |= DT_TOP;
+			m_uTipValueAlign = u;
+		}
+		else if (StringUtil::EqualsNoCase(name, L"align")) {
+			std::wstring lower(pstrValue);
+			StringUtil::MakeLower(lower);
+			UINT uStyle = m_uTextStyle & ~(DT_LEFT | DT_CENTER | DT_RIGHT);
+			if (lower.find(L"center") != std::wstring::npos) uStyle |= DT_CENTER;
+			else if (lower.find(L"right") != std::wstring::npos) uStyle |= DT_RIGHT;
+			else uStyle |= DT_LEFT;
+			SetTextStyle(uStyle);
+		}
+		else if (StringUtil::EqualsNoCase(name, L"valign")) {
+			std::wstring lower(pstrValue);
+			StringUtil::MakeLower(lower);
+			UINT uStyle = m_uTextStyle & ~(DT_TOP | DT_VCENTER | DT_BOTTOM);
+			if (lower.find(L"vcenter") != std::wstring::npos || lower == L"center") uStyle |= DT_VCENTER;
+			else if (lower.find(L"bottom") != std::wstring::npos) uStyle |= DT_BOTTOM;
+			else uStyle |= DT_TOP;
+			SetTextStyle(uStyle);
 		}
 		else CContainerUI::SetAttribute(pstrName, pstrValue);
 	}
@@ -687,6 +796,7 @@ namespace FYUI
 		SetPasswordMode(pControl->IsPasswordMode());
 		SetWordWrap(pControl->IsWordWrap());
 		SetTextColor(pControl->GetTextColor());
+		SetTextStyle(pControl->GetTextStyle());
 		SetFont(pControl->GetFont());
 		SetLimitText(pControl->GetLimitText());
 		SetNormalImage(pControl->GetNormalImage());
@@ -873,9 +983,12 @@ namespace FYUI
 						}
 
 						// Word-wrap: backtrack to nearest preceding whitespace if mid-word.
+						// Tab（\t）是宽度控制符，不是词边界（参考 CSS 的 tab-size / Word 的行为），
+						// 不应作为回退断点；否则在一行末尾/中间插入 Tab 时会从 Tab 位置直接换行。
 						if (m_bWordWrap && lineRel + k < paraLen) {
 							for (size_t i = k; i > 1; --i) {
-								if (iswspace(text[paragraphStart + lineRel + i - 1])) {
+								const wchar_t wc = text[paragraphStart + lineRel + i - 1];
+								if (iswspace(wc) && wc != L'\t') {
 									k = i;
 									break;
 								}
@@ -959,6 +1072,34 @@ namespace FYUI
 		return rc.right - rc.left;
 	}
 
+	UINT CRichEditUI::GetTextStyle() const
+	{
+		return m_uTextStyle;
+	}
+
+	void CRichEditUI::SetTextStyle(UINT uStyle)
+	{
+		if (m_uTextStyle == uStyle) return;
+		m_uTextStyle = uStyle;
+		Invalidate();
+	}
+
+	int CRichEditUI::GetLineXOffset(int lineWidth, int viewWidth) const
+	{
+		if (lineWidth >= viewWidth) return 0;
+		if ((m_uTextStyle & DT_CENTER) != 0) return (viewWidth - lineWidth) / 2;
+		if ((m_uTextStyle & DT_RIGHT) != 0) return viewWidth - lineWidth;
+		return 0;
+	}
+
+	int CRichEditUI::GetTextYOffset(int viewHeight) const
+	{
+		if (m_nContentHeight >= viewHeight) return 0;
+		if ((m_uTextStyle & DT_VCENTER) != 0) return (viewHeight - m_nContentHeight) / 2;
+		if ((m_uTextStyle & DT_BOTTOM) != 0) return viewHeight - m_nContentHeight;
+		return 0;
+	}
+
 	size_t CRichEditUI::HitTest(CDuiPoint pt) const
 	{
 		EnsureLayout();
@@ -966,10 +1107,14 @@ namespace FYUI
 		const RECT rcView = GetViewRect();
 		const SIZE scroll = GetScrollPos();
 		const int lineHeight = GetLineHeight();
-		int lineIndex = (pt.y - rcView.top + scroll.cy) / (std::max)(1, lineHeight);
+		const int viewW = (std::max<int>)(0, static_cast<int>(rcView.right - rcView.left));
+		const int viewH = (std::max<int>)(0, static_cast<int>(rcView.bottom - rcView.top));
+		const int yOff = GetTextYOffset(viewH);
+		int lineIndex = (pt.y - rcView.top - yOff + scroll.cy) / (std::max)(1, lineHeight);
 		lineIndex = (std::max)(0, (std::min)(lineIndex, static_cast<int>(m_lines.size()) - 1));
 		const TextLine& line = m_lines[static_cast<size_t>(lineIndex)];
-		const int localX = pt.x - rcView.left + scroll.cx;
+		const int xOff = GetLineXOffset(line.width, viewW);
+		const int localX = pt.x - rcView.left - xOff + scroll.cx;
 
 		if (line.length == 0 || localX <= 0) return line.start;
 		if (localX >= line.width) return line.start + line.length;
@@ -991,17 +1136,21 @@ namespace FYUI
 		EnsureLayout();
 		const RECT rcView = GetViewRect();
 		const SIZE scroll = GetScrollPos();
+		const int viewW = (std::max<int>)(0, static_cast<int>(rcView.right - rcView.left));
+		const int viewH = (std::max<int>)(0, static_cast<int>(rcView.bottom - rcView.top));
+		const int yOff = GetTextYOffset(viewH);
 		for (size_t i = 0; i < m_lines.size(); ++i) {
 			const TextLine& line = m_lines[i];
 			if (index >= line.start && index <= line.start + line.length) {
 				const size_t count = (std::min)(index - line.start, line.length);
-				const int xOff = (count < line.charOffsets.size()) ? line.charOffsets[count] : 0;
-				const int x = rcView.left - scroll.cx + xOff;
-				const int y = rcView.top - scroll.cy + static_cast<int>(i) * GetLineHeight();
+				const int charOff = (count < line.charOffsets.size()) ? line.charOffsets[count] : 0;
+				const int xOff = GetLineXOffset(line.width, viewW);
+				const int x = rcView.left - scroll.cx + xOff + charOff;
+				const int y = rcView.top - scroll.cy + yOff + static_cast<int>(i) * GetLineHeight();
 				return CDuiPoint(x, y);
 			}
 		}
-		return CDuiPoint(rcView.left, rcView.top);
+		return CDuiPoint(rcView.left + GetLineXOffset(0, viewW), rcView.top + yOff);
 	}
 
 	size_t CRichEditUI::CurrentLineIndex() const
@@ -1042,19 +1191,31 @@ namespace FYUI
 			m_pVerticalScrollBar->SetVisible(range > 0 && m_bShowScrollbar);
 			m_pVerticalScrollBar->SetScrollRange(range);
 			m_pVerticalScrollBar->SetLineSize(GetLineHeight());
-			RECT rcBar = { rcEdit.right - barWidth, rcEdit.top, rcEdit.right, rcEdit.bottom };
+			// Float 模式：滚动条悬浮在内容上方，并内缩 GetVSpace 像素与边界保持距离（GetVSpace 已含 DPI 缩放），与 CContainerUI 行为一致。
+			const int nVSpace = m_bScrollFloat ? m_pVerticalScrollBar->GetVSpace() : 0;
+			RECT rcBar = { rcEdit.right - barWidth - nVSpace, rcEdit.top, rcEdit.right - nVSpace, rcEdit.bottom };
 			if (m_pHorizontalScrollBar != NULL && m_pHorizontalScrollBar->IsVisible()) rcBar.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
 			m_pVerticalScrollBar->SetPos(rcBar, false);
 		}
 		if (m_pHorizontalScrollBar != NULL) {
 			const int barHeight = m_pHorizontalScrollBar->GetFixedHeight();
-			const int range = (std::max)(0, m_nContentWidth - viewWidth);
-			m_pHorizontalScrollBar->SetVisible(range > 0 && m_bShowScrollbar && !m_bWordWrap);
-			m_pHorizontalScrollBar->SetScrollRange(range);
+			// “是否显示滚动条”仍以文本实际宽度为准；但允许滚动上限额外加上 kCaretMargin，以保证末尾 caret 可见。
+			const int textRange = (std::max)(0, m_nContentWidth - viewWidth);
+			const int scrollRange = (std::max)(0, m_nContentWidth + kCaretMargin - viewWidth);
+			m_pHorizontalScrollBar->SetVisible(textRange > 0 && m_bShowScrollbar && !m_bWordWrap);
+			m_pHorizontalScrollBar->SetScrollRange(scrollRange);
 			m_pHorizontalScrollBar->SetLineSize(MeasureTextWidth(L"M"));
-			RECT rcBar = { rcEdit.left, rcEdit.bottom - barHeight, rcEdit.right, rcEdit.bottom };
+			// Float 模式：滚动条悬浮在内容上方，并内缩 GetHSpace 像素与边界保持距离（GetHSpace 已含 DPI 缩放），与 CContainerUI 行为一致。
+			const int nHSpace = m_bScrollFloat ? m_pHorizontalScrollBar->GetHSpace() : 0;
+			RECT rcBar = { rcEdit.left, rcEdit.bottom - barHeight - nHSpace, rcEdit.right, rcEdit.bottom - nHSpace };
 			if (m_pVerticalScrollBar != NULL && m_pVerticalScrollBar->IsVisible()) rcBar.right -= m_pVerticalScrollBar->GetFixedWidth();
 			m_pHorizontalScrollBar->SetPos(rcBar, false);
+		}
+		else {
+			// 无水平滚动条时同步收敛内部偏移，避免内容变短后仍残留过大偏移。
+			const int range = (std::max)(0, m_nContentWidth + kCaretMargin - viewWidth);
+			if (m_nManualScrollX > range) m_nManualScrollX = range;
+			if (m_nManualScrollX < 0) m_nManualScrollX = 0;
 		}
 	}
 
@@ -1114,19 +1275,23 @@ namespace FYUI
 		const std::wstring text = GetDisplayText();
 		const size_t caret = (std::min)(m_nCaret, text.size());
 		const int lineHeight = GetLineHeight();
+		const int viewW = (std::max<int>)(0, static_cast<int>(rcView.right - rcView.left));
+		const int viewH = (std::max<int>)(0, static_cast<int>(rcView.bottom - rcView.top));
+		const int yOff = GetTextYOffset(viewH);
 		for (size_t i = 0; i < m_lines.size(); ++i) {
 			const TextLine& line = m_lines[i];
 			if (caret >= line.start && caret <= line.start + line.length) {
 				const size_t count = (std::min)(caret - line.start, line.length);
-				const int xOff = (count < line.charOffsets.size()) ? line.charOffsets[count] : 0;
-				ptCaret.x = rcView.left - scroll.cx + xOff;
-				ptCaret.y = rcView.top - scroll.cy + static_cast<LONG>(i) * lineHeight;
+				const int charOff = (count < line.charOffsets.size()) ? line.charOffsets[count] : 0;
+				const int xOff = GetLineXOffset(line.width, viewW);
+				ptCaret.x = rcView.left - scroll.cx + xOff + charOff;
+				ptCaret.y = rcView.top - scroll.cy + yOff + static_cast<LONG>(i) * lineHeight;
 				return true;
 			}
 		}
 
-		ptCaret.x = rcView.left;
-		ptCaret.y = rcView.top;
+		ptCaret.x = rcView.left + GetLineXOffset(0, viewW);
+		ptCaret.y = rcView.top + yOff;
 		return true;
 	}
 
@@ -1176,6 +1341,9 @@ namespace FYUI
 		const SIZE scroll = GetScrollPos();
 		const int lineHeight = GetLineHeight();
 		const int blankWidth = (std::max)(MeasureTextWidth(L" "), 4);
+		const int viewW = (std::max<int>)(0, static_cast<int>(rcView.right - rcView.left));
+		const int viewH = (std::max<int>)(0, static_cast<int>(rcView.bottom - rcView.top));
+		const int yOff = GetTextYOffset(viewH);
 		for (size_t i = 0; i < m_lines.size(); ++i) {
 			const TextLine& line = m_lines[i];
 			const size_t lineStart = line.start;
@@ -1184,8 +1352,9 @@ namespace FYUI
 			const size_t logicalEnd = hasNewline ? lineEnd + 1 : lineEnd;
 			if (selEnd <= lineStart || selStart >= logicalEnd) continue;
 
-			const LONG lineLeft = rcView.left - scroll.cx;
-			const LONG lineTop = rcView.top - scroll.cy + static_cast<LONG>(i) * lineHeight;
+			const int xOff = GetLineXOffset(line.width, viewW);
+			const LONG lineLeft = rcView.left - scroll.cx + xOff;
+			const LONG lineTop = rcView.top - scroll.cy + yOff + static_cast<LONG>(i) * lineHeight;
 			LONG left = lineLeft;
 			LONG right = lineLeft;
 			if (selStart > lineStart && selStart <= lineEnd) {
@@ -1222,17 +1391,26 @@ namespace FYUI
 			? (m_dwTextColor != 0 ? m_dwTextColor : (m_pManager ? m_pManager->GetDefaultFontColor() : 0xFF000000))
 			: (m_pManager ? m_pManager->GetDefaultDisabledColor() : 0xFF999999);
 		const std::wstring text = GetDisplayText();
+		const int viewW = (std::max<int>)(0, static_cast<int>(rcView.right - rcView.left));
+		const int viewH = (std::max<int>)(0, static_cast<int>(rcView.bottom - rcView.top));
+		const int yOff = GetTextYOffset(viewH);
 		for (size_t i = 0; i < m_lines.size(); ++i) {
+			const TextLine& line = m_lines[i];
+			const int xOff = GetLineXOffset(line.width, viewW);
 			RECT rcLine = {
-				rcView.left - scroll.cx,
-				rcView.top - scroll.cy + static_cast<LONG>(i) * lineHeight,
+				rcView.left - scroll.cx + xOff,
+				rcView.top - scroll.cy + yOff + static_cast<LONG>(i) * lineHeight,
 				rcView.right,
-				rcView.top - scroll.cy + static_cast<LONG>(i + 1) * lineHeight
+				rcView.top - scroll.cy + yOff + static_cast<LONG>(i + 1) * lineHeight
 			};
 			if (rcLine.bottom < rcView.top || rcLine.top > rcView.bottom) continue;
-			const TextLine& line = m_lines[i];
 			RECT rcDraw = rcLine;
-			CRenderEngine::DrawText(renderContext, rcDraw, std::wstring_view(text).substr(line.start, line.length), color, m_iFont, DT_LEFT | DT_SINGLELINE | DT_NOPREFIX);
+			// 绘制端把 \t 替换为空格，与 GetTextPrefixWidths / MeasureTextWidth 的度量保持一致；
+			// 否则 GDI 在 DT_SINGLELINE 下对 \t 绘制宽度 ≈ 0，会与 charOffsets 记录的 Tab=1空格宽度错位，
+			// 造成 Tab 后的字符视觉位置与 caret / HitTest 计算不符。字符数不变，charOffsets 无需调整。
+			std::wstring drawText(text.data() + line.start, line.length);
+			std::replace(drawText.begin(), drawText.end(), L'\t', L' ');
+			CRenderEngine::DrawText(renderContext, rcDraw, drawText, color, m_iFont, DT_LEFT | DT_SINGLELINE | DT_NOPREFIX);
 		}
 	}
 
@@ -1241,8 +1419,10 @@ namespace FYUI
 		if (!IsFocused() || !m_bDrawCaret || !IsEnabled() || m_bReadOnly) return;
 		const CDuiPoint pt = CharPos(m_nCaret);
 		RECT rcCaret = { pt.x, pt.y, pt.x + 1, pt.y + GetLineHeight() };
-		if (::IntersectRect(&rcCaret, &rcCaret, &rcView)) {
-			CRenderEngine::DrawRoundColor(renderContext, rcCaret, 0, 0, kCaretColor);
+		// IntersectRect 遵循“右下不含”语义，需额外检查裁剪后矩形是否仍有面积，避免 caret 贴边被当作不相交从而不绘制。
+		RECT rcDraw = {};
+		if (::IntersectRect(&rcDraw, &rcCaret, &rcView) && rcDraw.right > rcDraw.left && rcDraw.bottom > rcDraw.top) {
+			CRenderEngine::DrawRoundColor(renderContext, rcDraw, 0, 0, kCaretColor);
 		}
 	}
 

@@ -18,11 +18,6 @@ namespace
 			return iFont;
 		}
 
-		iFont = paintManager.GetFontIndex(fontName, nFontSize, false, false, false, false, true);
-		if (iFont >= 0) {
-			return iFont;
-		}
-
 		const int iTooltipFontId = kTooltipMeasureFontIdBase + static_cast<int>(paintManager.GetDPI()) * 100 + nFontSize;
 		paintManager.AddFont(iTooltipFontId, fontName, nFontSize, false, false, false, false);
 		return iTooltipFontId;

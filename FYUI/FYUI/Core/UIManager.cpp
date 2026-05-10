@@ -1966,14 +1966,12 @@ namespace FYUI {
 		if (m_pRoot != NULL) delete m_pRoot;
 
 		ReleaseFontHandle(m_ResInfo.m_DefaultFontInfo, true);
-		RemoveAllFonts();
-		RemoveAllImages();
-		RemoveAllStyle();
+		// 字体/图片/样式/DrawInfo 已统一为全局共享池（m_SharedResInfo），
+		// 不能在单个窗口销毁时清理，否则会连累其它窗口。其释放放在 ReleaseSharedRes()。
 		RemoveAllDefaultAttributeList();
 		RemoveAllWindowCustomAttribute();
 		RemoveAllOptionGroups();
 		RemoveAllTimers();
-		RemoveAllDrawInfos();
 
 		if (m_hwndTooltip != NULL) {
 			::DestroyWindow(m_hwndTooltip);
@@ -2006,9 +2004,7 @@ namespace FYUI {
 	void CPaintManagerUI::Init(HWND hWnd, std::wstring_view name)
 	{
 		m_mapName.clear();
-		RemoveAllFonts();
-		RemoveAllImages();
-		RemoveAllStyle();
+		// 字体/图片/样式 全部共享，不在 Init 中清理。
 		RemoveAllDefaultAttributeList();
 		RemoveAllWindowCustomAttribute();
 		RemoveAllOptionGroups();
@@ -4329,9 +4325,6 @@ namespace FYUI {
 		RemoveAllDrawInfos();
 		RemoveAllImages();;
 
-		for (const auto& entry : m_ResInfo.m_CustomFonts) {
-			RebuildFont(entry.second);
-		}
 		RebuildFont(&m_ResInfo.m_DefaultFontInfo);
 
 		for (const auto& entry : m_SharedResInfo.m_CustomFonts) {
@@ -5013,15 +5006,12 @@ namespace FYUI {
 		}
 	}
 
-	DWORD CPaintManagerUI::GetCustomFontCount(bool bShared) const
+	DWORD CPaintManagerUI::GetCustomFontCount() const
 	{
-		if (bShared)
-			return static_cast<DWORD>(m_SharedResInfo.m_CustomFonts.size());
-		else
-			return static_cast<DWORD>(m_ResInfo.m_CustomFonts.size());
+		return static_cast<DWORD>(m_SharedResInfo.m_CustomFonts.size());
 	}
 
-	HFONT CPaintManagerUI::AddFont(int id, std::wstring_view fontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout, bool bShared)
+	HFONT CPaintManagerUI::AddFont(int id, std::wstring_view fontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout)
 	{
 		LOGFONT lf = { 0 };
 		::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), &lf);
@@ -5051,7 +5041,7 @@ namespace FYUI {
 		pFontInfo->bStrikeout = bStrikeout;
 		UpdateFontTextMetricsForManager(pFontInfo);
 		const std::wstring idKey = std::to_wstring(id);
-		auto& fontMap = (bShared || m_bForceUseSharedRes) ? m_SharedResInfo.m_CustomFonts : m_ResInfo.m_CustomFonts;
+		auto& fontMap = m_SharedResInfo.m_CustomFonts;
 		const auto it = fontMap.find(idKey);
 		if (it != fontMap.end())
 		{
@@ -5092,27 +5082,13 @@ namespace FYUI {
 		if (id < 0) return GetDefaultFontInfo()->hFont;
 
 		const std::wstring idKey = std::to_wstring(id);
-		TFontInfo* pFontInfo = NULL;
-		const auto localIt = m_ResInfo.m_CustomFonts.find(idKey);
-		if (localIt != m_ResInfo.m_CustomFonts.end()) pFontInfo = localIt->second;
-		if (!pFontInfo) {
-			const auto sharedIt = m_SharedResInfo.m_CustomFonts.find(idKey);
-			if (sharedIt != m_SharedResInfo.m_CustomFonts.end()) pFontInfo = sharedIt->second;
-		}
-		if (!pFontInfo) return GetDefaultFontInfo()->hFont;
-		return pFontInfo->hFont;
+		const auto sharedIt = m_SharedResInfo.m_CustomFonts.find(idKey);
+		if (sharedIt != m_SharedResInfo.m_CustomFonts.end() && sharedIt->second) return sharedIt->second->hFont;
+		return GetDefaultFontInfo()->hFont;
 	}
 
 	HFONT CPaintManagerUI::GetFont(std::wstring_view fontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout)
 	{
-		for (const auto& entry : m_ResInfo.m_CustomFonts) {
-			TFontInfo* pFontInfo = entry.second;
-			if (pFontInfo && pFontInfo->sFontName == fontName && pFontInfo->iSize == nSize &&
-				pFontInfo->bBold == bBold && pFontInfo->bUnderline == bUnderline && pFontInfo->bItalic == bItalic
-				&& pFontInfo->bStrikeout == bStrikeout) {
-				return pFontInfo->hFont;
-			}
-		}
 		for (const auto& entry : m_SharedResInfo.m_CustomFonts) {
 			TFontInfo* pFontInfo = entry.second;
 			if (pFontInfo && pFontInfo->sFontName == fontName && pFontInfo->iSize == nSize &&
@@ -5125,143 +5101,73 @@ namespace FYUI {
 		return NULL;
 	}
 
-	int CPaintManagerUI::GetFontIndex(HFONT hFont, bool bShared)
+	int CPaintManagerUI::GetFontIndex(HFONT hFont)
 	{
-		if (bShared)
-		{
-			for (const auto& entry : m_SharedResInfo.m_CustomFonts) {
-				TFontInfo* pFontInfo = entry.second;
-				int index = -1;
-				if (pFontInfo && pFontInfo->hFont == hFont && StringUtil::TryParseInt(entry.first, index)) return index;
-			}
+		for (const auto& entry : m_SharedResInfo.m_CustomFonts) {
+			TFontInfo* pFontInfo = entry.second;
+			int index = -1;
+			if (pFontInfo && pFontInfo->hFont == hFont && StringUtil::TryParseInt(entry.first, index)) return index;
 		}
-		else
-		{
-			for (const auto& entry : m_ResInfo.m_CustomFonts) {
-				TFontInfo* pFontInfo = entry.second;
+
+		return -1;
+	}
+
+	int CPaintManagerUI::GetFontIndex(std::wstring_view fontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout)
+	{
+		for (const auto& entry : m_SharedResInfo.m_CustomFonts) {
+			TFontInfo* pFontInfo = entry.second;
+			if (pFontInfo && pFontInfo->sFontName == fontName && pFontInfo->iSize == nSize &&
+				pFontInfo->bBold == bBold && pFontInfo->bUnderline == bUnderline && pFontInfo->bItalic == bItalic
+				&& pFontInfo->bStrikeout == bStrikeout) {
 				int index = -1;
-				if (pFontInfo && pFontInfo->hFont == hFont && StringUtil::TryParseInt(entry.first, index)) return index;
+				return StringUtil::TryParseInt(entry.first, index) ? index : -1;
 			}
 		}
 
 		return -1;
 	}
 
-	int CPaintManagerUI::GetFontIndex(std::wstring_view fontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout, bool bShared)
+	void CPaintManagerUI::RemoveFont(HFONT hFont)
 	{
-		if (bShared)
+		for (auto it = m_SharedResInfo.m_CustomFonts.begin(); it != m_SharedResInfo.m_CustomFonts.end(); ++it)
 		{
-			for (const auto& entry : m_SharedResInfo.m_CustomFonts) {
-				TFontInfo* pFontInfo = entry.second;
-				if (pFontInfo && pFontInfo->sFontName == fontName && pFontInfo->iSize == nSize &&
-					pFontInfo->bBold == bBold && pFontInfo->bUnderline == bUnderline && pFontInfo->bItalic == bItalic
-					&& pFontInfo->bStrikeout == bStrikeout) {
-					int index = -1;
-					return StringUtil::TryParseInt(entry.first, index) ? index : -1;
-				}
-			}
-		}
-		else
-		{
-			for (const auto& entry : m_ResInfo.m_CustomFonts) {
-				TFontInfo* pFontInfo = entry.second;
-				if (pFontInfo && pFontInfo->sFontName == fontName && pFontInfo->iSize == nSize &&
-					pFontInfo->bBold == bBold && pFontInfo->bUnderline == bUnderline && pFontInfo->bItalic == bItalic
-					&& pFontInfo->bStrikeout == bStrikeout) {
-					int index = -1;
-					return StringUtil::TryParseInt(entry.first, index) ? index : -1;
-				}
-			}
-		}
-
-		return -1;
-	}
-
-	void CPaintManagerUI::RemoveFont(HFONT hFont, bool bShared)
-	{
-		if (bShared)
-		{
-			for (auto it = m_SharedResInfo.m_CustomFonts.begin(); it != m_SharedResInfo.m_CustomFonts.end(); ++it)
+			TFontInfo* pFontInfo = it->second;
+			if (pFontInfo && pFontInfo->hFont == hFont)
 			{
-				TFontInfo* pFontInfo = it->second;
-				if (pFontInfo && pFontInfo->hFont == hFont)
-				{
-					::DeleteObject(pFontInfo->hFont);
-					delete pFontInfo;
-					m_SharedResInfo.m_CustomFonts.erase(it);
-					return;
-				}
-			}
-		}
-		else
-		{
-			for (auto it = m_ResInfo.m_CustomFonts.begin(); it != m_ResInfo.m_CustomFonts.end(); ++it)
-			{
-				TFontInfo* pFontInfo = it->second;
-				if (pFontInfo && pFontInfo->hFont == hFont)
-				{
-					::DeleteObject(pFontInfo->hFont);
-					delete pFontInfo;
-					m_ResInfo.m_CustomFonts.erase(it);
-					return;
-				}
-			}
-		}
-	}
-
-	void CPaintManagerUI::RemoveFont(int id, bool bShared)
-	{
-		const std::wstring idKey = std::to_wstring(id);
-		if (bShared)
-		{
-			const auto it = m_SharedResInfo.m_CustomFonts.find(idKey);
-			if (it != m_SharedResInfo.m_CustomFonts.end())
-			{
-				TFontInfo* pFontInfo = it->second;
 				::DeleteObject(pFontInfo->hFont);
 				delete pFontInfo;
 				m_SharedResInfo.m_CustomFonts.erase(it);
-			}
-		}
-		else
-		{
-			const auto it = m_ResInfo.m_CustomFonts.find(idKey);
-			if (it != m_ResInfo.m_CustomFonts.end())
-			{
-				TFontInfo* pFontInfo = it->second;
-				::DeleteObject(pFontInfo->hFont);
-				delete pFontInfo;
-				m_ResInfo.m_CustomFonts.erase(it);
+				return;
 			}
 		}
 	}
 
-	void CPaintManagerUI::RemoveAllFonts(bool bShared)
+	void CPaintManagerUI::RemoveFont(int id)
 	{
-		if (bShared)
+		const std::wstring idKey = std::to_wstring(id);
+		const auto it = m_SharedResInfo.m_CustomFonts.find(idKey);
+		if (it != m_SharedResInfo.m_CustomFonts.end())
 		{
-			for (auto& entry : m_SharedResInfo.m_CustomFonts) {
-				TFontInfo* pFontInfo = entry.second;
-				if (pFontInfo) {
-					::DeleteObject(pFontInfo->hFont);
-					delete pFontInfo;
-					entry.second = NULL;
-				}
+			TFontInfo* pFontInfo = it->second;
+			if (pFontInfo) {
+				::DeleteObject(pFontInfo->hFont);
+				delete pFontInfo;
 			}
-			m_SharedResInfo.m_CustomFonts.clear();
+			m_SharedResInfo.m_CustomFonts.erase(it);
 		}
-		else
-		{
-			for (auto& entry : m_ResInfo.m_CustomFonts) {
-				TFontInfo* pFontInfo = entry.second;
-				if (pFontInfo) {
-					::DeleteObject(pFontInfo->hFont);
-					delete pFontInfo;
-					entry.second = NULL;
-				}
+	}
+
+	void CPaintManagerUI::RemoveAllFonts()
+	{
+		for (auto& entry : m_SharedResInfo.m_CustomFonts) {
+			TFontInfo* pFontInfo = entry.second;
+			if (pFontInfo) {
+				::DeleteObject(pFontInfo->hFont);
+				delete pFontInfo;
+				entry.second = NULL;
 			}
-			m_ResInfo.m_CustomFonts.clear();
 		}
+		m_SharedResInfo.m_CustomFonts.clear();
 	}
 
 	TFontInfo* CPaintManagerUI::GetFontInfo(int id)
@@ -5270,12 +5176,8 @@ namespace FYUI {
 
 		const std::wstring idKey = std::to_wstring(id);
 		TFontInfo* pFontInfo = NULL;
-		const auto localIt = m_ResInfo.m_CustomFonts.find(idKey);
-		if (localIt != m_ResInfo.m_CustomFonts.end()) pFontInfo = localIt->second;
-		if (!pFontInfo) {
-			const auto sharedIt = m_SharedResInfo.m_CustomFonts.find(idKey);
-			if (sharedIt != m_SharedResInfo.m_CustomFonts.end()) pFontInfo = sharedIt->second;
-		}
+		const auto sharedIt = m_SharedResInfo.m_CustomFonts.find(idKey);
+		if (sharedIt != m_SharedResInfo.m_CustomFonts.end()) pFontInfo = sharedIt->second;
 		if (!pFontInfo) pFontInfo = GetDefaultFontInfo();
 		if (pFontInfo->tm.tmHeight == 0)
 		{
@@ -5287,18 +5189,11 @@ namespace FYUI {
 	TFontInfo* CPaintManagerUI::GetFontInfo(HFONT hFont)
 	{
 		TFontInfo* pFontInfo = NULL;
-		for (const auto& entry : m_ResInfo.m_CustomFonts)
+		for (const auto& entry : m_SharedResInfo.m_CustomFonts)
 		{
 			pFontInfo = entry.second;
 			if (pFontInfo && pFontInfo->hFont == hFont) break;
-		}
-		if (!pFontInfo)
-		{
-			for (const auto& entry : m_SharedResInfo.m_CustomFonts)
-			{
-				pFontInfo = entry.second;
-				if (pFontInfo && pFontInfo->hFont == hFont) break;
-			}
+			pFontInfo = NULL;
 		}
 		if (!pFontInfo) pFontInfo = GetDefaultFontInfo();
 		if (pFontInfo->tm.tmHeight == 0) {
@@ -5313,14 +5208,9 @@ namespace FYUI {
 			return nullptr;
 		}
 		const std::wstring bitmapKey(bitmap);
-		TImageInfo* data = nullptr;
-		auto it = m_ResInfo.m_ImageHash.find(bitmapKey);
-		if (it != m_ResInfo.m_ImageHash.end()) data = it->second;
-		if (!data) {
-			auto it2 = m_SharedResInfo.m_ImageHash.find(bitmapKey);
-			if (it2 != m_SharedResInfo.m_ImageHash.end()) data = it2->second;
-		}
-		return data;
+		auto it = m_SharedResInfo.m_ImageHash.find(bitmapKey);
+		if (it != m_SharedResInfo.m_ImageHash.end()) return it->second;
+		return nullptr;
 	}
 
 	const TImageInfo* CPaintManagerUI::GetImageEx(std::wstring_view bitmap, std::wstring_view type, DWORD mask, bool bUseHSL, bool bGdiplus, HINSTANCE instance)
@@ -5328,22 +5218,16 @@ namespace FYUI {
 		const TImageInfo* data = GetImage(bitmap);
 		if (!data) {
 			const std::wstring bitmapString(bitmap);
-			if (AddImage(bitmap, type, mask, bUseHSL, bGdiplus, false, instance)) {
-				if (m_bForceUseSharedRes) {
-					auto it = m_SharedResInfo.m_ImageHash.find(bitmapString);
-					if (it != m_SharedResInfo.m_ImageHash.end()) data = it->second;
-				}
-				else {
-					auto it = m_ResInfo.m_ImageHash.find(bitmapString);
-					if (it != m_ResInfo.m_ImageHash.end()) data = it->second;
-				}
+			if (AddImage(bitmap, type, mask, bUseHSL, bGdiplus, instance)) {
+				auto it = m_SharedResInfo.m_ImageHash.find(bitmapString);
+				if (it != m_SharedResInfo.m_ImageHash.end()) data = it->second;
 			}
 		}
 
 		return data;
 	}
 
-	const TImageInfo* CPaintManagerUI::AddImage(std::wstring_view bitmap, std::wstring_view type, DWORD mask, bool bUseHSL, bool bGdiplus, bool bShared, HINSTANCE instance)
+	const TImageInfo* CPaintManagerUI::AddImage(std::wstring_view bitmap, std::wstring_view type, DWORD mask, bool bUseHSL, bool bGdiplus, HINSTANCE instance)
 	{
 		if (bitmap.empty()) return NULL;
 
@@ -5387,34 +5271,20 @@ namespace FYUI {
 		if (m_bUseHSL) CRenderEngine::AdjustImage(true, data, m_H, m_S, m_L);
 		if (data)
 		{
-			if (bShared || m_bForceUseSharedRes)
+			auto it = m_SharedResInfo.m_ImageHash.find(bitmapKey);
+			if (it != m_SharedResInfo.m_ImageHash.end())
 			{
-				auto it = m_SharedResInfo.m_ImageHash.find(bitmapKey);
-				if (it != m_SharedResInfo.m_ImageHash.end())
-				{
-					CRenderEngine::FreeImage(it->second);
-					m_SharedResInfo.m_ImageHash.erase(it);
-				}
-
-				m_SharedResInfo.m_ImageHash[bitmapKey] = data;
+				CRenderEngine::FreeImage(it->second);
+				m_SharedResInfo.m_ImageHash.erase(it);
 			}
-			else
-			{
-				auto it = m_ResInfo.m_ImageHash.find(bitmapKey);
-				if (it != m_ResInfo.m_ImageHash.end())
-				{
-					CRenderEngine::FreeImage(it->second);
-					m_ResInfo.m_ImageHash.erase(it);
-				}
 
-				m_ResInfo.m_ImageHash[bitmapKey] = data;
-			}
+			m_SharedResInfo.m_ImageHash[bitmapKey] = data;
 		}
 
 		return data;
 	}
 
-	const TImageInfo* CPaintManagerUI::AddImage(std::wstring_view bitmap, HBITMAP hBitmap, int iWidth, int iHeight, bool bAlpha, bool bShared)
+	const TImageInfo* CPaintManagerUI::AddImage(std::wstring_view bitmap, HBITMAP hBitmap, int iWidth, int iHeight, bool bAlpha)
 	{
         // Empty keys are invalid for bitmap resource registration.
         if (bitmap.empty()) return NULL;
@@ -5434,7 +5304,7 @@ namespace FYUI {
 		data->pSrcBits = NULL;
 		data->dwMask = 0;
 
-		auto& imageMap = (bShared || m_bForceUseSharedRes) ? m_SharedResInfo.m_ImageHash : m_ResInfo.m_ImageHash;
+		auto& imageMap = m_SharedResInfo.m_ImageHash;
 		const auto it = imageMap.find(bitmapKey);
 		if (it != imageMap.end())
 		{
@@ -5449,53 +5319,29 @@ namespace FYUI {
 		return data;
 	}
 
-	void CPaintManagerUI::RemoveImage(std::wstring_view bitmap, bool bShared)
+	void CPaintManagerUI::RemoveImage(std::wstring_view bitmap)
 	{
 		if (bitmap.empty()) {
 			return;
 		}
 
 		const std::wstring bitmapKey(bitmap);
-		if (bShared)
+		auto it = m_SharedResInfo.m_ImageHash.find(bitmapKey);
+		if (it != m_SharedResInfo.m_ImageHash.end())
 		{
-			auto it = m_SharedResInfo.m_ImageHash.find(bitmapKey);
-			if (it != m_SharedResInfo.m_ImageHash.end())
-			{
-				CRenderEngine::FreeImage(it->second);
-				m_SharedResInfo.m_ImageHash.erase(it);
-			}
-		}
-		else
-		{
-			auto it = m_ResInfo.m_ImageHash.find(bitmapKey);
-			if (it != m_ResInfo.m_ImageHash.end())
-			{
-				CRenderEngine::FreeImage(it->second);
-				m_ResInfo.m_ImageHash.erase(it);
-			}
+			CRenderEngine::FreeImage(it->second);
+			m_SharedResInfo.m_ImageHash.erase(it);
 		}
 	}
 
-	void CPaintManagerUI::RemoveAllImages(bool bShared)
+	void CPaintManagerUI::RemoveAllImages()
 	{
-		if (bShared)
-		{
-			for (auto& pair : m_SharedResInfo.m_ImageHash) {
-				if (pair.second) {
-					CRenderEngine::FreeImage(pair.second);
-				}
+		for (auto& pair : m_SharedResInfo.m_ImageHash) {
+			if (pair.second) {
+				CRenderEngine::FreeImage(pair.second);
 			}
-			m_SharedResInfo.m_ImageHash.clear();
 		}
-		else
-		{
-			for (auto& pair : m_ResInfo.m_ImageHash) {
-				if (pair.second) {
-					CRenderEngine::FreeImage(pair.second);
-				}
-			}
-			m_ResInfo.m_ImageHash.clear();
-		}
+		m_SharedResInfo.m_ImageHash.clear();
 	}
 
 	void CPaintManagerUI::AdjustSharedImagesHSL()
@@ -5512,13 +5358,13 @@ namespace FYUI {
 	void CPaintManagerUI::AdjustImagesHSL()
 	{
 		TImageInfo* data;
-		for (auto& pair : m_ResInfo.m_ImageHash) {
+		for (auto& pair : m_SharedResInfo.m_ImageHash) {
 			data = pair.second;
 			if (data && data->bUseHSL) {
 				CRenderEngine::AdjustImage(m_bUseHSL, data, m_H, m_S, m_L);
 			}
 		}
-		for (auto& pair : m_ResInfo.m_DrawInfoHash) {
+		for (auto& pair : m_SharedResInfo.m_DrawInfoHash) {
 			if (pair.second != NULL) {
 				pair.second->ClearCachedBitmap();
 			}
@@ -5581,48 +5427,9 @@ namespace FYUI {
 
 	void CPaintManagerUI::ReloadImages()
 	{
-		RemoveAllDrawInfos();
-
-		TImageInfo* data = NULL;
-		TImageInfo* pNewData = NULL;
-		// 濠电偠鎻紞鈧繛澶嬫礋瀵?vector 闂備浇銆€閸嬫捇鏌涢锝嗙闁艰尙濞€濮婂宕堕敐鍛闂佽崵鍠愬ú鎴犵矆娓氣偓瀹曠銇愰幒鎾寖闂侀潧鐗嗗ú锕傛偩?key闂備焦瀵х粙鎴︽儗閸屾稑顕遍柍鍝勬噹缁€鍌溾偓骞垮劚椤︻噣骞夋ィ鍐╃厱婵☆垳鍎らˉ鐐翠繆閻愭彃鈧湱绮氶柆宥庢晩闁兼亽鍎插В澶愭煟鎼粹剝璐￠柟铏尭閳?
-		std::vector<std::wstring> keysToRemove;
-		for (auto& pair : m_ResInfo.m_ImageHash) {
-			data = pair.second;
-			pNewData = NULL;
-				if (data != NULL) {
-					if (!data->sResType.empty()) {
-						int iIndex = -1;
-						if (TryParseNonNegativeInt(pair.first, iIndex)) {
-							pNewData = CRenderEngine::LoadImage(iIndex, ScaleValue(100), data->sResType.c_str(), data->dwMask);
-						}
-					}
-					else {
-						pNewData = CRenderEngine::LoadImage(pair.first, ScaleValue(100), {}, data->dwMask);
-					}
-					if (pNewData == NULL) {
-						CRenderEngine::FreeImage(data);
-						keysToRemove.push_back(pair.first);
-						continue;
-					}
-					CRenderEngine::FreeImage(data, false);
-					AdoptImagePayload(*data, *pNewData);
-					data->pSrcBits = NULL;
-					if (data->bUseHSL) {
-						data->pSrcBits = new BYTE[data->nX * data->nY * 4];
-						::CopyMemory(data->pSrcBits, data->pBits, data->nX * data->nY * 4);
-					}
-					else data->pSrcBits = NULL;
-					if (m_bUseHSL) CRenderEngine::AdjustImage(true, data, m_H, m_S, m_L);
-
-					delete pNewData;
-				}
-		}
-		for (auto& key : keysToRemove) {
-			m_ResInfo.m_ImageHash.erase(key);
-		}
-
-		if (m_pRoot) m_pRoot->Invalidate();
+		// 全局图片表已改为共享池，单窗口重新加载等价于重新加载所有共享图片。
+		ReloadSharedImages();
+				if (m_pRoot) m_pRoot->Invalidate();
 	}
 
 	const TImageInfo* CPaintManagerUI::ModifyImage(std::wstring_view bitmap, HBITMAP hBitmap, LPBYTE pBits, int iWidth, int iHeight, bool bAlpha)
@@ -5633,12 +5440,8 @@ namespace FYUI {
 
 		const std::wstring bitmapKey(bitmap);
 		TImageInfo* data = nullptr;
-		auto it = m_ResInfo.m_ImageHash.find(bitmapKey);
-		if (it != m_ResInfo.m_ImageHash.end()) data = it->second;
-		if (!data) {
-			auto it2 = m_SharedResInfo.m_ImageHash.find(bitmapKey);
-			if (it2 != m_SharedResInfo.m_ImageHash.end()) data = it2->second;
-		}
+		auto it = m_SharedResInfo.m_ImageHash.find(bitmapKey);
+		if (it != m_SharedResInfo.m_ImageHash.end()) data = it->second;
 		if (!data) {
 			return nullptr;
 		}
@@ -5672,12 +5475,12 @@ namespace FYUI {
 			modify);
 
 		TDrawInfo* pDrawInfo = nullptr;
-		auto it = m_ResInfo.m_DrawInfoHash.find(sKey.c_str());
-		if (it != m_ResInfo.m_DrawInfoHash.end()) pDrawInfo = it->second;
+		auto it = m_SharedResInfo.m_DrawInfoHash.find(sKey.c_str());
+		if (it != m_SharedResInfo.m_DrawInfoHash.end()) pDrawInfo = it->second;
 		if (pDrawInfo == NULL && !sKey.empty()) {
 			pDrawInfo = new TDrawInfo();
 			pDrawInfo->Parse(std::wstring(image), modify.empty() ? std::wstring() : std::wstring(modify), this);
-			m_ResInfo.m_DrawInfoHash[sKey.c_str()] = pDrawInfo;
+			m_SharedResInfo.m_DrawInfoHash[sKey.c_str()] = pDrawInfo;
 		}
 		return pDrawInfo;
 	}
@@ -5687,21 +5490,21 @@ namespace FYUI {
 		std::wstring sKey = StringUtil::Format(L"{}{}",
 			image,
 			modify);
-		auto it = m_ResInfo.m_DrawInfoHash.find(sKey.c_str());
-		if (it != m_ResInfo.m_DrawInfoHash.end()) {
+		auto it = m_SharedResInfo.m_DrawInfoHash.find(sKey.c_str());
+		if (it != m_SharedResInfo.m_DrawInfoHash.end()) {
 			delete it->second;
-			m_ResInfo.m_DrawInfoHash.erase(it);
+			m_SharedResInfo.m_DrawInfoHash.erase(it);
 		}
 	}
 
 	void CPaintManagerUI::RemoveAllDrawInfos()
 	{
-		for (auto& pair : m_ResInfo.m_DrawInfoHash) {
+		for (auto& pair : m_SharedResInfo.m_DrawInfoHash) {
 			if (pair.second) {
 				delete pair.second;
 			}
 		}
-		m_ResInfo.m_DrawInfoHash.clear();
+		m_SharedResInfo.m_DrawInfoHash.clear();
 	}
 
 	void CPaintManagerUI::AddDefaultAttributeList(std::wstring_view controlName, std::wstring_view controlAttrList, bool bShared)
@@ -6019,51 +5822,40 @@ namespace FYUI {
 		m_bUsedVirtualWnd = bUsed;
 	}
 
-	// 闂備礁鎼粔鎾床閼碱剚顫曢柨娑樺娑撳秹鏌ㄥ☉妯侯仾闁?	void CPaintManagerUI::AddStyle(std::wstring_view name, std::wstring_view declarationList, bool bShared)
-	void CPaintManagerUI::AddStyle(std::wstring_view name, std::wstring_view declarationList, bool bShared)
+	void CPaintManagerUI::AddStyle(std::wstring_view name, std::wstring_view declarationList)
 	{
-		if (bShared || m_bForceUseSharedRes) {
-			m_SharedResInfo.m_StyleHash.try_emplace(std::wstring(name), declarationList);
-		}
-		else
-		{
-			m_ResInfo.m_StyleHash.try_emplace(std::wstring(name), declarationList);
-		}
+		m_SharedResInfo.m_StyleHash.try_emplace(std::wstring(name), declarationList);
 	}
 
 	std::wstring_view CPaintManagerUI::GetStyle(std::wstring_view name) const
 	{
-		const auto it = m_ResInfo.m_StyleHash.find(name);
-		if (it != m_ResInfo.m_StyleHash.end()) return it->second;
 		const auto sharedIt = m_SharedResInfo.m_StyleHash.find(name);
-		if (sharedIt != m_SharedResInfo.m_StyleHash.end()) return sharedIt->second;
+		if (sharedIt != m_SharedResInfo.m_StyleHash.end()) 
+			return sharedIt->second;
 		return std::wstring_view();
 	}
 
-	BOOL CPaintManagerUI::RemoveStyle(std::wstring_view name, bool bShared)
+	BOOL CPaintManagerUI::RemoveStyle(std::wstring_view name)
 	{
 		if (name.empty()) {
 			return FALSE;
 		}
 
-		auto& styleMap = bShared ? m_SharedResInfo.m_StyleHash : m_ResInfo.m_StyleHash;
-		const auto it = styleMap.find(name);
-		if (it != styleMap.end()) {
-			styleMap.erase(it);
+		const auto it = m_SharedResInfo.m_StyleHash.find(name);
+		if (it != m_SharedResInfo.m_StyleHash.end()) {
+			m_SharedResInfo.m_StyleHash.erase(it);
 		}
 		return true;
 	}
 
-	const std::map<std::wstring, std::wstring, std::less<>>& CPaintManagerUI::GetStyles(bool bShared) const
+	const std::map<std::wstring, std::wstring, std::less<>>& CPaintManagerUI::GetStyles() const
 	{
-		if (bShared) return m_SharedResInfo.m_StyleHash;
-		else return m_ResInfo.m_StyleHash;
+		return m_SharedResInfo.m_StyleHash;
 	}
 
-	void CPaintManagerUI::RemoveAllStyle(bool bShared)
+	void CPaintManagerUI::RemoveAllStyle()
 	{
-		auto& styleMap = bShared ? m_SharedResInfo.m_StyleHash : m_ResInfo.m_StyleHash;
-		styleMap.clear();
+		m_SharedResInfo.m_StyleHash.clear();
 	}
 
 	const TImageInfo* CPaintManagerUI::GetImageString(std::wstring_view image, std::wstring_view modify)

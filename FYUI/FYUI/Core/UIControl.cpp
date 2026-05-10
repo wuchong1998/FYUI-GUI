@@ -314,6 +314,7 @@ namespace FYUI
 
 	void CControlUI::SetManager(CPaintManagerUI* pManager, CControlUI* pParent, bool bInit)
 	{
+		const bool bManagerChanged = (m_pManager != pManager);
 		m_pManager = pManager;
 		m_pParent = pParent;
 		m_uPaddingDpiGeneration = 0;
@@ -321,6 +322,13 @@ namespace FYUI
 		m_uFixedDpiGeneration = 0;
 		m_uMinDpiGeneration = 0;
 		m_uMaxDpiGeneration = 0;
+		// Resolve a style name that ApplyAttributeList() deferred when no manager
+		// was attached yet (e.g. ApplyAttributeList("ActionButton") before Add()).
+		if (bManagerChanged && m_pManager != NULL && !m_sPendingStyleName.empty()) {
+			std::wstring sPending = std::move(m_sPendingStyleName);
+			m_sPendingStyleName.clear();
+			ApplyAttributeList(sPending);
+		}
 		if( bInit && m_pParent ) Init();
 	}
 
@@ -1757,10 +1765,24 @@ namespace FYUI
 
 	CControlUI* CControlUI::ApplyAttributeList(std::wstring_view pstrValue)
 	{
+		// 閻熸瑱绲鹃悗浠嬪冀瀹勬壆纭€閻?
 		if(m_pManager != NULL) {
 			const std::wstring_view pStyle = m_pManager->GetStyle(pstrValue);
 			if (!pStyle.empty()) {
 				return ApplyAttributeList(pStyle);
+			}
+		}
+		else {
+			// Without a manager we can't resolve a style name yet. If the input
+			// looks like a bare style name (no '=' attribute syntax), defer it
+			// until SetManager() attaches us. Without this, callers that do
+			//   ctrl->ApplyAttributeList(L"ActionButton");
+			//   container->Add(ctrl);
+			// would silently lose the style — the parser below sees no '='
+			// and bails out as a no-op.
+			if (pstrValue.find(L'=') == std::wstring_view::npos) {
+				m_sPendingStyleName.assign(pstrValue);
+				return this;
 			}
 		}
 		std::wstring sXmlData(pstrValue);

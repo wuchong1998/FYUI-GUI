@@ -168,11 +168,11 @@ namespace FYUI
 				cxFixedRemaining -= info.sz.cx;
 			}
 
-			info.sz.cy = info.iControlMaxHeight;
-			if( info.sz.cy == 0 ) 
+			info.sz.cy = MAX(info.sz.cy, 0);
+			if( info.sz.cy == 0 )
 				info.sz.cy = szAvailable.cy - info.rcPadding.top - info.rcPadding.bottom;
 			if( info.sz.cy < 0 ) info.sz.cy = 0;
-			if( info.sz.cy > szControlAvailable.cy ) 
+			if( info.sz.cy > szControlAvailable.cy )
 				info.sz.cy = szControlAvailable.cy;
 
 			const int minHeight = info.pControl->GetMinHeight();

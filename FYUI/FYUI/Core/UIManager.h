@@ -1063,10 +1063,9 @@ namespace FYUI
 		/**
 		 * @brief 获取Custom字体数量
 		 * @details 用于获取Custom字体数量。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param bShared [in] 是否Shared
 		 * @return DWORD 返回对应的数值结果
 		 */
-		DWORD GetCustomFontCount(bool bShared = false) const;
+		DWORD GetCustomFontCount() const;
 		/**
 		 * @brief 添加字体Array
 		 * @details 用于添加字体Array。具体行为由当前对象状态以及传入参数共同决定。
@@ -1083,10 +1082,9 @@ namespace FYUI
 		 * @param bUnderline [in] 是否Underline
 		 * @param bItalic [in] 是否Italic
 		 * @param bStrikeout [in] 是否Strikeout
-		 * @param bShared [in] 是否Shared
 		 * @return HFONT 返回 添加字体 的结果
 		 */
-		HFONT AddFont(int id, std::wstring_view fontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout, bool bShared = false);
+		HFONT AddFont(int id, std::wstring_view fontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout);
 		/**
 		 * @brief 获取字体
 		 * @details 用于获取字体。具体行为由当前对象状态以及传入参数共同决定。
@@ -1110,10 +1108,9 @@ namespace FYUI
 		 * @brief 获取字体索引
 		 * @details 用于获取字体索引。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param hFont [in] h字体参数
-		 * @param bShared [in] 是否Shared
 		 * @return int 返回对应的数值结果
 		 */
-		int GetFontIndex(HFONT hFont, bool bShared = false);
+		int GetFontIndex(HFONT hFont);
 		/**
 		 * @brief 获取字体索引
 		 * @details 用于获取字体索引。具体行为由当前对象状态以及传入参数共同决定。
@@ -1123,30 +1120,26 @@ namespace FYUI
 		 * @param bUnderline [in] 是否Underline
 		 * @param bItalic [in] 是否Italic
 		 * @param bStrikeout [in] 是否Strikeout
-		 * @param bShared [in] 是否Shared
 		 * @return int 返回对应的数值结果
 		 */
-		int GetFontIndex(std::wstring_view fontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout, bool bShared = false);
+		int GetFontIndex(std::wstring_view fontName, int nSize, bool bBold, bool bUnderline, bool bItalic, bool bStrikeout);
 		/**
 		 * @brief 移除字体
 		 * @details 用于移除字体。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param hFont [in] h字体参数
-		 * @param bShared [in] 是否Shared
 		 */
-		void RemoveFont(HFONT hFont, bool bShared = false);
+		void RemoveFont(HFONT hFont);
 		/**
 		 * @brief 移除字体
 		 * @details 用于移除字体。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param id [in] id参数
-		 * @param bShared [in] 是否Shared
 		 */
-		void RemoveFont(int id, bool bShared = false);
+		void RemoveFont(int id);
 		/**
 		 * @brief 移除AllFonts
 		 * @details 用于移除AllFonts。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param bShared [in] 是否Shared
 		 */
-		void RemoveAllFonts(bool bShared = false);
+		void RemoveAllFonts();
 		/**
 		 * @brief 获取字体信息
 		 * @details 用于获取字体信息。具体行为由当前对象状态以及传入参数共同决定。
@@ -1189,11 +1182,10 @@ namespace FYUI
 		 * @param mask [in] mask参数
 		 * @param bUseHSL [in] 是否UseHSL 颜色
 		 * @param bGdiplus [in] 是否Gdiplus
-		 * @param bShared [in] 是否Shared
 		 * @param instance [in] 模块实例句柄
 		 * @return const TImageInfo* 返回结果对象指针，失败时返回 nullptr
 		 */
-		const TImageInfo* AddImage(std::wstring_view bitmap, std::wstring_view type = {}, DWORD mask = 0, bool bUseHSL = false, bool bGdiplus = false, bool bShared = false, HINSTANCE instance = NULL);
+		const TImageInfo* AddImage(std::wstring_view bitmap, std::wstring_view type = {}, DWORD mask = 0, bool bUseHSL = false, bool bGdiplus = false, HINSTANCE instance = NULL);
 		/**
 		 * @brief 添加图像
 		 * @details 用于添加图像。具体行为由当前对象状态以及传入参数共同决定。
@@ -1202,23 +1194,20 @@ namespace FYUI
 		 * @param iWidth [in] 宽度值
 		 * @param iHeight [in] 高度值
 		 * @param bAlpha [in] 是否Alpha
-		 * @param bShared [in] 是否Shared
 		 * @return const TImageInfo* 返回结果对象指针，失败时返回 nullptr
 		 */
-		const TImageInfo* AddImage(std::wstring_view bitmap, HBITMAP hBitmap, int iWidth, int iHeight, bool bAlpha, bool bShared = false);
+		const TImageInfo* AddImage(std::wstring_view bitmap, HBITMAP hBitmap, int iWidth, int iHeight, bool bAlpha);
 		/**
 		 * @brief 移除图像
 		 * @details 用于移除图像。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param bitmap [in] 位图参数
-		 * @param bShared [in] 是否Shared
 		 */
-		void RemoveImage(std::wstring_view bitmap, bool bShared = false);
+		void RemoveImage(std::wstring_view bitmap);
 		/**
 		 * @brief 移除AllImages
 		 * @details 用于移除AllImages。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param bShared [in] 是否Shared
 		 */
-		void RemoveAllImages(bool bShared = false);
+		void RemoveAllImages();
 		/**
 		 * @brief 重新加载SharedImages
 		 * @details 用于重新加载SharedImages。具体行为由当前对象状态以及传入参数共同决定。
@@ -1326,9 +1315,8 @@ namespace FYUI
 		 * @details 用于添加样式。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param name [in] 名称字符串
 		 * @param style [in] 样式参数
-		 * @param bShared [in] 是否Shared
 		 */
-		void AddStyle(std::wstring_view name, std::wstring_view style, bool bShared = false);
+		void AddStyle(std::wstring_view name, std::wstring_view style);
 		/**
 		 * @brief 获取样式
 		 * @details 用于获取样式。具体行为由当前对象状态以及传入参数共同决定。
@@ -1340,23 +1328,20 @@ namespace FYUI
 		 * @brief 移除样式
 		 * @details 用于移除样式。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param name [in] 名称字符串
-		 * @param bShared [in] 是否Shared
 		 * @return BOOL 返回 移除样式 的结果
 		 */
-		BOOL RemoveStyle(std::wstring_view name, bool bShared = false);
+		BOOL RemoveStyle(std::wstring_view name);
 		/**
 		 * @brief 获取Styles
 		 * @details 用于获取Styles。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param bShared [in] 是否Shared
 		 * @return 返回对应的字符串内容
 		 */
-		const std::map<std::wstring, std::wstring, std::less<>>& GetStyles(bool bShared = false) const;
+		const std::map<std::wstring, std::wstring, std::less<>>& GetStyles() const;
 		/**
 		 * @brief 移除All样式
 		 * @details 用于移除All样式。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param bShared [in] 是否Shared
 		 */
-		void RemoveAllStyle(bool bShared = false);
+		void RemoveAllStyle();
 
 		/**
 		 * @brief 获取图像String

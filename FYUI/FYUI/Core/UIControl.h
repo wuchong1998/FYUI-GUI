@@ -1270,6 +1270,11 @@ namespace FYUI
 		std::map<std::wstring, std::wstring> m_mapUserData;
 		std::map<std::wstring, std::wstring, std::less<>> m_mCustomAttrHash;
 
+		// Pending style name applied via ApplyAttributeList() before this control
+		// was attached to a manager. Resolved against m_pManager->GetStyle() in
+		// SetManager() so callers can call ApplyAttributeList("Foo") before Add().
+		std::wstring m_sPendingStyleName;
+
 		ToolTipType m_emToolTipType = Tool_Bottom;
 	};
 

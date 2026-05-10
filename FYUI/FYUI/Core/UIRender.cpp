@@ -1795,9 +1795,19 @@ namespace FYUI
 				state.currentStyle.fontStyle = DWRITE_FONT_STYLE_ITALIC;
 				break;
 			case HtmlTagType::Selected:
+			{
+				DWORD bgColor = 0;
+				const std::wstring trimmedBody = TrimWideString(body);
+				if (trimmedBody.empty()) {
+					bgColor = pManager->GetDefaultSelectedBkColor();
+				}
+				else if (!TryParseHexColor(trimmedBody, bgColor)) {
+					return false;
+				}
 				state.currentStyle.hasBackground = true;
-				state.currentStyle.backgroundColor = ResolveTextColorInternal(pManager, pManager->GetDefaultSelectedBkColor());
+				state.currentStyle.backgroundColor = ResolveTextColorInternal(pManager, bgColor);
 				break;
+			}
 			case HtmlTagType::Underline:
 				state.currentStyle.underline = true;
 				break;

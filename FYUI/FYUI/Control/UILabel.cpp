@@ -11,8 +11,8 @@ namespace FYUI
 		m_dwDisabledTextColor(0),
 		m_iFont(-1),
 		m_bShowHtml(false),
-		m_bAutoCalcWidth(false),
-		m_bAutoCalcHeight(false),
+		m_bAutoTextWidth(false),
+		m_bAutoTextHeight(false),
 		m_bNeedEstimateSize(false)
 	{
 		m_cxyFixedLast.cx = m_cxyFixedLast.cy = 0;
@@ -41,7 +41,10 @@ namespace FYUI
 	}
 	void CLabelUI::SetTextStyle(UINT uStyle)
 	{
+		if (m_uTextStyle == uStyle) return;
 		m_uTextStyle = uStyle;
+		m_bNeedEstimateSize = true;
+		if (GetAutoTextWidth() || GetAutoTextHeight()) NeedParentUpdate();
 		Invalidate();
 	}
 
@@ -80,6 +83,7 @@ namespace FYUI
 			return;
 		m_iFont = index;
 		m_bNeedEstimateSize = true;
+		if (GetAutoTextWidth() || GetAutoTextHeight()) NeedParentUpdate();
 		Invalidate();
 	}
 
@@ -97,8 +101,13 @@ namespace FYUI
 
 	void CLabelUI::SetTextPadding(RECT rc)
 	{
+		if (m_rcTextPadding.left == rc.left && m_rcTextPadding.top == rc.top
+			&& m_rcTextPadding.right == rc.right && m_rcTextPadding.bottom == rc.bottom) {
+			return;
+		}
 		m_rcTextPadding = rc;
 		m_bNeedEstimateSize = true;
+		if (GetAutoTextWidth() || GetAutoTextHeight()) NeedParentUpdate();
 		Invalidate();
 	}
 
@@ -113,6 +122,7 @@ namespace FYUI
 
 		m_bShowHtml = bShowHtml;
 		m_bNeedEstimateSize = true;
+		if (GetAutoTextWidth() || GetAutoTextHeight()) NeedParentUpdate();
 		Invalidate();
 	}
 
@@ -154,7 +164,7 @@ namespace FYUI
 				}
 				// 鐎硅棄瀹?
 				if (m_cxyFixedLast.cx == 0) {
-					if(m_bAutoCalcWidth) {
+					if(m_bAutoTextWidth) {
 						RECT rcText = { 0, 0, 9999999, m_cxyFixedLast.cy };
 						CPaintRenderContext measureContext = m_pManager->CreateMeasureRenderContext(rcText);
 						if( m_bShowHtml ) {
@@ -170,7 +180,7 @@ namespace FYUI
 			}
 			// 閼奉亜濮╃拋锛勭暬妤傛ê瀹?
 			else if(m_cxyFixedLast.cy == 0) {
-				if(m_bAutoCalcHeight) {
+				if(m_bAutoTextHeight) {
 					RECT rcText = { 0, 0, m_cxyFixedLast.cx, 9999999 };
 					rcText.left += rcTextPadding.left;
 					rcText.right -= rcTextPadding.right;
@@ -207,6 +217,7 @@ namespace FYUI
 
 	void CLabelUI::SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue)
 	{
+		const UINT uOldTextStyle = m_uTextStyle;
 		const std::wstring valueText(pstrValue);
 		if( StringUtil::CompareNoCase(pstrName, _T("align")) == 0 ) {
 			if( valueText.find(_T("left")) != std::wstring::npos ) {
@@ -285,17 +296,28 @@ namespace FYUI
 			}
 		}
 		else if( StringUtil::CompareNoCase(pstrName, _T("showhtml")) == 0 ) SetShowHtml(StringUtil::ParseBool(pstrValue));
-		else if( StringUtil::CompareNoCase(pstrName, _T("autocalcwidth")) == 0 ) {
-			SetAutoCalcWidth(StringUtil::ParseBool(pstrValue));
+		else if( StringUtil::CompareNoCase(pstrName, _T("autotextwidth")) == 0 ) {
+			SetAutoTextWidth(StringUtil::ParseBool(pstrValue));
 		}
-		else if( StringUtil::CompareNoCase(pstrName, _T("autocalcheight")) == 0 ) {
-			SetAutoCalcHeight(StringUtil::ParseBool(pstrValue));
+		else if( StringUtil::CompareNoCase(pstrName, _T("autotextheight")) == 0 ) {
+			const bool bEnable = StringUtil::ParseBool(pstrValue);
+			SetAutoTextHeight(bEnable);
+			if (bEnable) {
+				m_uTextStyle &= ~DT_SINGLELINE;
+				m_uTextStyle |= DT_WORDBREAK | DT_EDITCONTROL;
+			}
 		}
 
 		else if( StringUtil::CompareNoCase(pstrName, _T("followsize")) == 0 ) {
 			SetFollowSize(StringUtil::ParseBool(pstrValue));
 		}
 		else CControlUI::SetAttribute(pstrName, pstrValue);
+
+		if (m_uTextStyle != uOldTextStyle) {
+			m_bNeedEstimateSize = true;
+			if (GetAutoTextWidth() || GetAutoTextHeight()) NeedParentUpdate();
+			Invalidate();
+		}
 	}
 
 	void CLabelUI::PaintText(CPaintRenderContext& renderContext)
@@ -333,24 +355,32 @@ namespace FYUI
 		}
 	}
 
-	bool CLabelUI::GetAutoCalcWidth() const
+	bool CLabelUI::GetAutoTextWidth() const
 	{
-		return m_bAutoCalcWidth;
+		return m_bAutoTextWidth;
 	}
 
-	void CLabelUI::SetAutoCalcWidth(bool bAutoCalcWidth)
+	void CLabelUI::SetAutoTextWidth(bool bAutoTextWidth)
 	{
-		m_bAutoCalcWidth = bAutoCalcWidth;
+		if (m_bAutoTextWidth == bAutoTextWidth)
+			return;
+		m_bAutoTextWidth = bAutoTextWidth;
+		m_bNeedEstimateSize = true;
+		NeedParentUpdate();
 	}
 
-	bool CLabelUI::GetAutoCalcHeight() const
+	bool CLabelUI::GetAutoTextHeight() const
 	{
-		return m_bAutoCalcHeight;
+		return m_bAutoTextHeight;
 	}
 
-	void CLabelUI::SetAutoCalcHeight(bool bAutoCalcHeight)
+	void CLabelUI::SetAutoTextHeight(bool bAutoTextHeight)
 	{
-		m_bAutoCalcHeight = bAutoCalcHeight;
+		if (m_bAutoTextHeight == bAutoTextHeight)
+			return;
+		m_bAutoTextHeight = bAutoTextHeight;
+		m_bNeedEstimateSize = true;
+		NeedParentUpdate();
 	}
 
 	void CLabelUI::SetText(std::wstring_view pstrText)
@@ -359,7 +389,7 @@ namespace FYUI
 			return;
 		m_szAvailableLast .cx = m_szAvailableLast.cy =0;
 		CControlUI::SetText(pstrText);
-		if(GetAutoCalcWidth() || GetAutoCalcHeight()) {
+		if(GetAutoTextWidth() || GetAutoTextHeight()) {
 			NeedParentUpdate();
 		}
 	}
@@ -378,8 +408,8 @@ namespace FYUI
 		m_uTextStyle = pControl->m_uTextStyle;
 		m_rcTextPadding = pControl->m_rcTextPadding;
 		m_bShowHtml = pControl->m_bShowHtml;
-		m_bAutoCalcWidth = pControl->m_bAutoCalcWidth; 
-		m_bAutoCalcHeight = pControl->m_bAutoCalcHeight;
+		m_bAutoTextWidth = pControl->m_bAutoTextWidth;
+		m_bAutoTextHeight = pControl->m_bAutoTextHeight;
 		m_szAvailableLast = pControl->m_szAvailableLast;
 		m_cxyFixedLast = pControl->m_cxyFixedLast;
 		m_bNeedEstimateSize = pControl->m_bNeedEstimateSize;

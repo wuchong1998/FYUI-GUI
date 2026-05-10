@@ -661,15 +661,22 @@ namespace FYUI
 
 		bool TryParseRect(std::wstring_view text, RECT& value)
 		{
-			std::array<int, 4> values = { 0, 0, 0, 0 };
-			if (!TryParseIntList(text, values)) {
+			const std::vector<std::wstring_view> tokens = SplitView(text, L',', true);
+			if (tokens.empty() || tokens.size() > 4) {
 				return false;
 			}
 
-			value.left = values[0];
-			value.top = values[1];
-			value.right = values[2];
-			value.bottom = values[3];
+			int parsed[4] = { 0, 0, 0, 0 };
+			for (size_t i = 0; i < tokens.size(); ++i) {
+				if (!TryParseInt(tokens[i], parsed[i])) {
+					return false;
+				}
+			}
+
+			value.left = parsed[0];
+			value.top = parsed[1];
+			value.right = parsed[2];
+			value.bottom = parsed[3];
 			return true;
 		}
 

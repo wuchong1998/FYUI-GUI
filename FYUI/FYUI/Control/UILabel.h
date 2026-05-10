@@ -154,29 +154,29 @@ namespace FYUI
 		void PaintText(CPaintRenderContext& renderContext) override;
 
 		/**
-		 * @brief 获取AutoCalc宽度
-		 * @details 用于获取AutoCalc宽度。具体行为由当前对象状态以及传入参数共同决定。
+		 * @brief 获取AutoText宽度
+		 * @details 用于获取AutoText宽度。具体行为由当前对象状态以及传入参数共同决定。
 		 * @return bool 操作成功返回 true，否则返回 false
 		 */
-		virtual bool GetAutoCalcWidth() const;
+		virtual bool GetAutoTextWidth() const;
 		/**
-		 * @brief 设置AutoCalc宽度
-		 * @details 用于设置AutoCalc宽度。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param bAutoCalcWidth [in] 是否AutoCalc宽度
+		 * @brief 设置AutoText宽度
+		 * @details 用于设置AutoText宽度。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param bAutoTextWidth [in] 是否AutoText宽度
 		 */
-		virtual void SetAutoCalcWidth(bool bAutoCalcWidth);
+		virtual void SetAutoTextWidth(bool bAutoTextWidth);
 		/**
-		 * @brief 获取AutoCalc高度
-		 * @details 用于获取AutoCalc高度。具体行为由当前对象状态以及传入参数共同决定。
+		 * @brief 获取AutoText高度
+		 * @details 用于获取AutoText高度。具体行为由当前对象状态以及传入参数共同决定。
 		 * @return bool 操作成功返回 true，否则返回 false
 		 */
-		virtual bool GetAutoCalcHeight() const;
+		virtual bool GetAutoTextHeight() const;
 		/**
-		 * @brief 设置AutoCalc高度
-		 * @details 用于设置AutoCalc高度。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param bAutoCalcHeight [in] 是否AutoCalc高度
+		 * @brief 设置AutoText高度
+		 * @details 用于设置AutoText高度。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param bAutoTextHeight [in] 是否AutoText高度
 		 */
-		virtual void SetAutoCalcHeight(bool bAutoCalcHeight);
+		virtual void SetAutoTextHeight(bool bAutoTextHeight);
 		using CControlUI::SetText;
 		/**
 		 * @brief 设置文本
@@ -216,8 +216,8 @@ namespace FYUI
 		UINT	m_uTextStyle;
 		RECT	m_rcTextPadding;
 		bool	m_bShowHtml;
-		bool	m_bAutoCalcWidth;
-		bool	m_bAutoCalcHeight;
+		bool	m_bAutoTextWidth;
+		bool	m_bAutoTextHeight;
 		bool    m_bFollowSize = false;
 		SIZE    m_szAvailableLast;
 		SIZE    m_cxyFixedLast;

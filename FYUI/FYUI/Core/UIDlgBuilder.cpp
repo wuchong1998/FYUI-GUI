@@ -175,7 +175,7 @@ namespace FYUI
 						}
 					}
 					if( id >= 0 ) {
-						pManager->AddFont(id, pFontName, size, bold, underline, italic, strikeout, shared);
+						pManager->AddFont(id, pFontName, size, bold, underline, italic, strikeout);
 						if( defaultfont ) pManager->SetDefaultFont(pFontName, size, bold, underline, italic, strikeout, shared);
 					}
 				}
@@ -255,7 +255,7 @@ namespace FYUI
 						const std::wstring_view declarations = pStyle.empty()
 							? std::wstring_view(inlineAttrs)
 							: pStyle;
-						pManager->AddStyle(pName, declarations, shared);
+						pManager->AddStyle(pName, declarations);
 					}
 				}
 				else if (EqualsNoCase(pstrClass, L"Import")) {

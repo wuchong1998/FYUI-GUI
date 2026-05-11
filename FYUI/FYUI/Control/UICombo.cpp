@@ -24,13 +24,37 @@ namespace FYUI {
 		virtual UINT GetClassStyle() const;
 #endif
 		bool IsHitItem(POINT ptMouse);
+
+		// 推进一次滑动动画帧（展开或收起，由 m_bClosing 决定方向）；返回 true 表示动画已完成。
+		bool TickExpandAnimation();
+		// 启动收起动画：把 m_rcFinal 重新指派为"当前窗口位置"，保证收起从当前可见状态开始。
+		void StartCollapseAnimation();
 	public:
 		CPaintManagerUI m_pm;
 		CComboUI* m_pOwner;
 		CVerticalLayoutUI* m_pLayout;
 		int m_iOldSel;
 		bool m_bHitItem;
+
+		// === 滑动动画状态 ===
+		// 动画结束时的目标矩形（屏幕坐标）
+		RECT m_rcFinal{};
+		// 动画起始矩形：高度=0，根据展开方向贴在最终矩形的顶/底
+		RECT m_rcStart{};
+		// 实际展开方向：true=向下展开，false=向上展开（综合 owner 偏好与屏幕空间检查后）
+		bool m_bExpandDown{ true };
+		// 当前是否处于"收起动画"阶段（用于让 TickExpandAnimation 反向插值，并拦截重入关闭）
+		bool m_bClosing{ false };
+		// 动画总时长（毫秒），<=0 表示无动画
+		int  m_nAnimDurationMs{ 0 };
+		// 动画起始 tick（GetTickCount）
+		DWORD m_dwAnimStart{ 0 };
+		// 动画 timer 的 ID（0 表示当前没有 timer 在跑）
+		UINT_PTR m_idAnimTimer{ 0 };
 	};
+
+	// 滑动展开动画专用 timer id（避免与 CPaintManagerUI 内部使用的 timer 冲突）
+	static constexpr UINT_PTR kComboExpandTimerId = 0xC0B0;
 
 	void CComboWnd::Notify(TNotifyUI& msg)
 	{
@@ -64,53 +88,83 @@ namespace FYUI {
 		SIZE szDrop = m_pOwner->GetDropBoxSize();
 		RECT rcInset = m_pOwner->GetDropBoxInset();
 
-		RECT rcOwner = pOwner->GetPos();
-		RECT rc = rcOwner;
-		rc.top = rc.bottom;		// 閻栧墎鐛ラ崣顤瞖ft閵嗕攻ottom娴ｅ秶鐤嗘担婊€璐熷鐟板毉缁愭褰涚挧椋庡仯
-		rc.bottom = rc.top + szDrop.cy;	// 鐠侊紕鐣诲鐟板毉缁愭褰涙妯哄
-		if( szDrop.cx > 0 ) rc.right = rc.left + szDrop.cx;	// 鐠侊紕鐣诲鐟板毉缁愭褰涚€硅棄瀹?
+		const RECT rcOwner = pOwner->GetPos();
 
-
-		SIZE szAvailable = { rc.right - rc.left, rc.bottom - rc.top };
+		// 估算下拉内容总高度（含 inset），用于自动尺寸 / 反向计算。
+		SIZE szAvailableMeasure = { rcOwner.right - rcOwner.left, szDrop.cy };
+		if (szDrop.cx > 0) szAvailableMeasure.cx = szDrop.cx;
 		int cyFixed = rcInset.top;
-		for( int it = 0; it < pOwner->GetCount(); it++ ) {
+		for (int it = 0; it < pOwner->GetCount(); it++) {
 			CControlUI* pControl = static_cast<CControlUI*>(pOwner->GetItemAt(it));
-			if( !pControl->IsVisible() ) continue;
-			SIZE sz = pControl->EstimateSize(szAvailable);
+			if (!pControl->IsVisible()) continue;
+			SIZE sz = pControl->EstimateSize(szAvailableMeasure);
 			cyFixed += sz.cy;
 		}
 		cyFixed += 4;
-		if (m_pOwner->m_bIsAutoDropBoxSize)
-			rc.bottom = rc.top + MIN(cyFixed, szDrop.cy);
+		const int cyContent = m_pOwner->m_bIsAutoDropBoxSize ? MIN(cyFixed, szDrop.cy) : szDrop.cy;
 
+		const RECT rcDropPadding = m_pOwner->GetDropBoxPadding();
 
-		RECT rcDropPadding = m_pOwner->GetDropBoxPadding();
-		rc.left +=rcDropPadding.left;
-		rc.right +=rcDropPadding.left;
-		rc.top +=rcDropPadding.top;
-		rc.bottom +=rcDropPadding.top;
+		// 构造一个候选 rect：基于 rcOwner 在 client 坐标，再追加 padding。
+		auto buildCandidate = [&](bool bDownward) {
+			RECT rc = rcOwner;
+			if (bDownward) {
+				rc.top = rcOwner.bottom;
+				rc.bottom = rc.top + cyContent;
+			}
+			else {
+				rc.bottom = rcOwner.top;
+				rc.top = rc.bottom - cyContent;
+			}
+			if (szDrop.cx > 0) rc.right = rc.left + szDrop.cx;
+			rc.left += rcDropPadding.left;
+			rc.right += rcDropPadding.left;
+			rc.top += rcDropPadding.top;
+			rc.bottom += rcDropPadding.top;
+			::MapWindowRect(pOwner->GetManager()->GetPaintWindow(), HWND_DESKTOP, &rc);
+			return rc;
+		};
 
-		::MapWindowRect(pOwner->GetManager()->GetPaintWindow(), HWND_DESKTOP, &rc);
+		// 按用户偏好生成首选方向 rect；若超出屏幕工作区且反向能放下，则反转。
+		bool bDownward = m_pOwner->m_bExpansionDirection;
+		RECT rcCandidate = buildCandidate(bDownward);
 
 		MONITORINFO oMonitor = {};
 		oMonitor.cbSize = sizeof(oMonitor);
-		::GetMonitorInfo(::MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST), &oMonitor);
-		CDuiRect rcWork = oMonitor.rcWork;
-		if( rc.bottom > rcWork.bottom ) {
-			rc.left = rcOwner.left;
-			rc.right = rcOwner.right;
-			if( szDrop.cx > 0 ) rc.right = rc.left + szDrop.cx;
-			rc.top = rcOwner.top - MIN(cyFixed, szDrop.cy);
-			rc.bottom = rcOwner.top;
-			::MapWindowRect(pOwner->GetManager()->GetPaintWindow(), HWND_DESKTOP, &rc);
+		::GetMonitorInfo(::MonitorFromRect(&rcCandidate, MONITOR_DEFAULTTONEAREST), &oMonitor);
+		const CDuiRect rcWork = oMonitor.rcWork;
+		if (bDownward && rcCandidate.bottom > rcWork.bottom) {
+			RECT rcAlt = buildCandidate(false);
+			if (rcAlt.top >= rcWork.top) { bDownward = false; rcCandidate = rcAlt; }
+		}
+		else if (!bDownward && rcCandidate.top < rcWork.top) {
+			RECT rcAlt = buildCandidate(true);
+			if (rcAlt.bottom <= rcWork.bottom) { bDownward = true; rcCandidate = rcAlt; }
 		}
 
-		Create(pOwner->GetManager()->GetPaintWindow(), {}, WS_POPUP, WS_EX_TOOLWINDOW, rc);
+		m_rcFinal = rcCandidate;
+		m_bExpandDown = bDownward;
+		m_nAnimDurationMs = m_pOwner->m_nExpansionAnimDuration;
+
+		// 起始矩形：高度=0，贴在最终矩形的顶（向下展开）或底（向上展开）。
+		m_rcStart = m_rcFinal;
+		if (m_bExpandDown) m_rcStart.bottom = m_rcStart.top;
+		else               m_rcStart.top = m_rcStart.bottom;
+
+		const RECT rcCreate = (m_nAnimDurationMs > 0) ? m_rcStart : m_rcFinal;
+
+		Create(pOwner->GetManager()->GetPaintWindow(), {}, WS_POPUP, WS_EX_TOOLWINDOW, rcCreate);
 		// HACK: Don't deselect the parent's caption
 		HWND hWndParent = m_hWnd;
-		while( ::GetParent(hWndParent) != NULL ) hWndParent = ::GetParent(hWndParent);
+		while (::GetParent(hWndParent) != NULL) hWndParent = ::GetParent(hWndParent);
 		::ShowWindow(m_hWnd, SW_SHOW);
 		::SendMessage(hWndParent, WM_NCACTIVATE, TRUE, 0L);
+
+		// 启动滑动展开动画。
+		if (m_nAnimDurationMs > 0) {
+			m_dwAnimStart = ::GetTickCount();
+			m_idAnimTimer = ::SetTimer(m_hWnd, kComboExpandTimerId, 16, NULL);
+		}
 	}
 
 	std::wstring_view CComboWnd::GetWindowClassName() const
@@ -120,10 +174,63 @@ namespace FYUI {
 
 	void CComboWnd::OnFinalMessage(HWND hWnd)
 	{
+		// 销毁前确保动画 timer 被清理，避免遗留 timer 投递到已销毁窗口。
+		if (m_idAnimTimer != 0) {
+			::KillTimer(hWnd, m_idAnimTimer);
+			m_idAnimTimer = 0;
+		}
 		m_pOwner->m_pWindow = NULL;
 		m_pOwner->m_uButtonState &= ~ UISTATE_PUSHED;
 		m_pOwner->Invalidate();
 		delete this;
+	}
+
+	bool CComboWnd::TickExpandAnimation()
+	{
+		if (m_nAnimDurationMs <= 0) return true;
+		const DWORD now = ::GetTickCount();
+		const DWORD elapsed = now - m_dwAnimStart;
+		double t = static_cast<double>(elapsed) / static_cast<double>(m_nAnimDurationMs);
+		bool bDone = false;
+		if (t >= 1.0) { t = 1.0; bDone = true; }
+		// 展开：ease-out cubic（起步快、收尾慢，"飞出来"的感觉）
+		// 收起：ease-in cubic（起步慢、收尾快，"被吸回去"的感觉），与展开视觉对称
+		double eased;
+		if (m_bClosing) {
+			eased = t * t * t;
+		}
+		else {
+			const double inv = 1.0 - t;
+			eased = 1.0 - inv * inv * inv;
+		}
+		// 收起时方向反过来：从当前 m_rcFinal（启动收起时已经被改写为"当前位置"）滑向 m_rcStart
+		const RECT& from = m_bClosing ? m_rcFinal : m_rcStart;
+		const RECT& to   = m_bClosing ? m_rcStart : m_rcFinal;
+		RECT rc;
+		rc.left = m_rcFinal.left;
+		rc.right = m_rcFinal.right;
+		rc.top    = from.top    + static_cast<LONG>((to.top    - from.top   ) * eased);
+		rc.bottom = from.bottom + static_cast<LONG>((to.bottom - from.bottom) * eased);
+		::SetWindowPos(m_hWnd, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+			SWP_NOZORDER | SWP_NOACTIVATE);
+		return bDone;
+	}
+
+	void CComboWnd::StartCollapseAnimation()
+	{
+		// 若展开 timer 还在跑（动画途中被关闭），先停掉，并把"当前窗口位置"作为收起动画的起点，
+		// 避免视觉跳到完全展开后再收起。
+		if (m_idAnimTimer != 0) {
+			::KillTimer(m_hWnd, m_idAnimTimer);
+			m_idAnimTimer = 0;
+		}
+		RECT rcNow = {};
+		::GetWindowRect(m_hWnd, &rcNow);
+		m_rcFinal = rcNow;                // 收起动画起点（屏幕坐标）
+		// m_rcStart 维持创建时的"折叠态"，作为收起动画终点
+		m_bClosing = true;
+		m_dwAnimStart = ::GetTickCount();
+		m_idAnimTimer = ::SetTimer(m_hWnd, kComboExpandTimerId, 16, NULL);
 	}
 
 	bool CComboWnd::IsHitItem(POINT ptMouse)
@@ -186,6 +293,12 @@ namespace FYUI {
 			return 0;
 		}
 		else if( uMsg == WM_CLOSE ) {
+			// 首次收到关闭请求且启用动画时，拦截 WM_CLOSE 启动收起动画；
+			// 动画结束后会再次 PostMessage(WM_CLOSE)，那时 m_bClosing==true 走真销毁分支。
+			if (!m_bClosing && m_nAnimDurationMs > 0) {
+				StartCollapseAnimation();
+				return 0;
+			}
 			m_pOwner->SetManager(m_pOwner->GetManager(), m_pOwner->GetParent(), false);
 			RECT rcNull = { 0 };
 			for( int i = 0; i < m_pOwner->GetCount(); i++ ) static_cast<CControlUI*>(m_pOwner->GetItemAt(i))->SetPos(rcNull);
@@ -201,13 +314,16 @@ namespace FYUI {
 			POINT pt = { 0 };
 			::GetCursorPos(&pt);
 			::ScreenToClient(m_pm.GetPaintWindow(), &pt);
-			if(m_bHitItem && IsHitItem(pt)) {
+			// 收起动画期间忽略 item 命中关闭，避免重入。
+			if(!m_bClosing && m_bHitItem && IsHitItem(pt)) {
 				PostMessage(WM_KILLFOCUS);
 			}
 			m_bHitItem = false;
 		}
 		else if( uMsg == WM_KEYDOWN )
 		{
+			// 收起动画期间不再响应键盘关闭/导航，避免重入。
+			if (m_bClosing) return 0;
 			switch( wParam ) {
 			case VK_ESCAPE:
 				m_pOwner->SelectItem(m_iOldSel, true);
@@ -242,7 +358,22 @@ namespace FYUI {
 			}
 		}
 		else if( uMsg == WM_KILLFOCUS ) {
-			if( m_hWnd != (HWND) wParam ) PostMessage(WM_CLOSE);
+			// 收起动画期间忽略后续 KILLFOCUS，避免重复触发 WM_CLOSE 打断收起动画。
+			if( !m_bClosing && m_hWnd != (HWND) wParam ) PostMessage(WM_CLOSE);
+		}
+		else if (uMsg == WM_TIMER && wParam == kComboExpandTimerId) {
+			// 滑动动画帧推进：m_bClosing==false 时是展开（ease-out cubic）；
+			// m_bClosing==true 时是收起（ease-in cubic）。收起完成后 PostMessage(WM_CLOSE) 触发真正销毁。
+			if (TickExpandAnimation()) {
+				if (m_idAnimTimer != 0) {
+					::KillTimer(m_hWnd, m_idAnimTimer);
+					m_idAnimTimer = 0;
+				}
+				if (m_bClosing) {
+					PostMessage(WM_CLOSE);
+				}
+			}
+			return 0;
 		}
 
 		LRESULT lRes = 0;
@@ -301,6 +432,8 @@ namespace FYUI {
 		, m_bShowShadow(false)
 		, m_bShowSelectedItemText(true)
 		, m_bIsAutoDropBoxSize(true)
+		, m_bExpansionDirection(true)
+		, m_nExpansionAnimDuration(180)
 	{
 		m_szDropBox = CDuiSize(0, 150);
 		::ZeroMemory(&m_rcTextPadding, sizeof(m_rcTextPadding));
@@ -733,6 +866,26 @@ namespace FYUI {
 
 		m_bIsAutoDropBoxSize = bIsShow;
 		Invalidate();
+	}
+
+	bool CComboUI::IsExpansionDirection() const
+	{
+		return m_bExpansionDirection;
+	}
+
+	void CComboUI::SetExpansionDirection(bool bDownward)
+	{
+		m_bExpansionDirection = bDownward;
+	}
+
+	int CComboUI::GetExpansionAnimDuration() const
+	{
+		return m_nExpansionAnimDuration;
+	}
+
+	void CComboUI::SetExpansionAnimDuration(int nMs)
+	{
+		m_nExpansionAnimDuration = nMs;
 	}
 
 
@@ -1189,6 +1342,15 @@ namespace FYUI {
             if (StringUtil::TryParseColor(pstrValueView, color)) SetDropBoxBkColor(color);
         }
         else if (StringUtil::EqualsNoCase(name, L"autodropboxsize")) SetAutoDropBoxSize(StringUtil::ParseBool(pstrValueView));
+        else if (StringUtil::EqualsNoCase(name, L"expansion_direction")
+              || StringUtil::EqualsNoCase(name, L"expansiondirection")) {
+            SetExpansionDirection(StringUtil::ParseBool(pstrValueView));
+        }
+        else if (StringUtil::EqualsNoCase(name, L"expansion_animation_duration")
+              || StringUtil::EqualsNoCase(name, L"expansionanimationduration")) {
+            int value = 0;
+            if (StringUtil::TryParseInt(pstrValueView, value)) SetExpansionAnimDuration(value);
+        }
         else if (StringUtil::EqualsNoCase(name, L"itemfont")) {
             int value = 0;
             if (StringUtil::TryParseInt(pstrValueView, value)) SetItemFont(value);
@@ -1376,6 +1538,8 @@ namespace FYUI {
 		m_ListInfo = pControl->m_ListInfo;
 		m_bShowSelectedItemText = pControl->m_bShowSelectedItemText;
 		m_bIsAutoDropBoxSize = pControl->m_bIsAutoDropBoxSize;
+		m_bExpansionDirection = pControl->m_bExpansionDirection;
+		m_nExpansionAnimDuration = pControl->m_nExpansionAnimDuration;
 		__super::CopyData(pControl);
 	}
 

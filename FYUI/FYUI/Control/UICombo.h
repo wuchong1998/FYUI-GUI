@@ -618,6 +618,32 @@ namespace FYUI {
 
 
 		/**
+		 * @brief 获取弹出方向
+		 * @details true 表示下拉框向下展开（默认），false 表示向上展开。
+		 *          屏幕空间不足时仍会自动反向，避免弹出窗口超出工作区。
+		 * @return bool 返回当前弹出方向偏好
+		 */
+		bool IsExpansionDirection() const;
+		/**
+		 * @brief 设置弹出方向
+		 * @details 设置下拉框默认弹出方向；true=向下，false=向上。
+		 * @param bDownward [in] 是否向下弹出
+		 */
+		void SetExpansionDirection(bool bDownward);
+		/**
+		 * @brief 获取滑动展开动画时长（毫秒）
+		 * @details <=0 表示关闭动画，立即显示最终大小（兼容旧行为）；>0 时按 ease-out 曲线滑动展开。
+		 * @return int 当前动画时长（毫秒）
+		 */
+		int GetExpansionAnimDuration() const;
+		/**
+		 * @brief 设置滑动展开动画时长（毫秒）
+		 * @details 控制下拉窗口从 0 高度滑动到目标高度的动画时长；<=0 关闭动画。
+		 * @param nMs [in] 动画时长（毫秒）
+		 */
+		void SetExpansionAnimDuration(int nMs);
+
+		/**
 		 * @brief 计算预估尺寸
 		 * @details 用于计算预估尺寸。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param szAvailable [in] 可用尺寸
@@ -744,6 +770,11 @@ namespace FYUI {
 		TListInfoUI m_ListInfo;
 		bool m_bShowSelectedItemText;
 		bool m_bIsAutoDropBoxSize;
+
+		// 下拉框弹出方向：true=向下（默认），false=向上；屏幕空间不足时仍自动反向。
+		bool m_bExpansionDirection;
+		// 滑动展开动画时长（毫秒），<=0 关闭动画。
+		int  m_nExpansionAnimDuration;
 	};
 
 } 

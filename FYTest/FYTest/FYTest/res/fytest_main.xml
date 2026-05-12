@@ -125,7 +125,15 @@ Tab键在聚焦时插入制表符。Return键插入换行。自动换行功能�
 						 <Label text="Combo 控件" height="28" font="1" />
 						 
                         <HBox height="38" childpadding="10">
-                            <Combo name="combo_basic" width="210" height="34" text="Combo item A" normalimage="file='menubk.png'" itemfont="2" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" dropboxsize="210,140">
+                            <Combo name="combo_basic" width="160" height="34" text="Combo item A" normalimage="file='menubk.png'"
+							itemfont="2" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" dropboxsize="160,140">
+                                <ListLabelElement text="Combo item A" height="25" selected="true" font="2" />
+                                <ListLabelElement text="Combo item B" height="25" font="2" />
+                                <ListLabelElement text="Combo item C" height="25" font="2" />
+                            </Combo>
+							
+							 <Combo name="combo_basic2" width="160" height="34" text="Combo item A" expansiondirection="false" normalimage="file='menubk.png'"
+							 itemfont="2" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" dropboxsize="160,140">
                                 <ListLabelElement text="Combo item A" height="25" selected="true" font="2" />
                                 <ListLabelElement text="Combo item B" height="25" font="2" />
                                 <ListLabelElement text="Combo item C" height="25" font="2" />
@@ -138,7 +146,8 @@ Tab键在聚焦时插入制表符。Return键插入换行。自动换行功能�
 						 
                         <Slider name="slider_horizontal" height="28" min="0" max="100" value="35" step="5" sendmove="true" bkcolor="#FFEAF0F6" forecolor="#FF3E8ED0" 
 						thumbimage="file='SliderPlayThumb.png' source='0,0,9,9' " thumbsize="18,18" borderround="15,15" />
-                        <Slider name="slider_vertical" width="42" height="110" hor="false" min="0" max="100" value="70" bkcolor="#FFEAF0F6" forecolor="#FFB66A4C" 
+						
+                        <Slider name="slider_vertical" width="42" height="90" hor="false" min="0" max="100" value="70" bkcolor="#FFEAF0F6" forecolor="#FFB66A4C" 
 						thumbimage="file='SliderPlayThumb.png' source='0,0,9,9' " thumbsize="18,18" borderround="15,15" />
 						
 						
@@ -161,79 +170,109 @@ Tab键在聚焦时插入制表符。Return键插入换行。自动换行功能�
 						bkcolor="#FFFFFBEB" bordercolor="#FFE6C36A" bordersize="1" borderround="8,8" />
                     </VBox>
 
-                    <VBox style="Panel" inset="14,14,14,14" childpadding="10">
+                    <VBox style="Panel" inset="14,14,14,14" childpadding="10" vscrollbar="true">
                         <Label text="RichEdit属性：滚动、换行和禁用" height="28" font="1" />
                         <RichEdit name="richedit_scroll_nowrap" height="118" multiline="false" wordwrap="false" vscrollbar="false" hscrollbar="true" wanttab="true" 
 						wantreturn="true" font="3" textcolor="#FF1F2937" textpadding="8,6,8,6" 
-						text="无换行：这条很长的线应该使用水平滚动条，这样就可以检查Direct2D文本剪切和滚动偏移。第二行用于垂直滚动覆盖。护理人员运动覆盖的第三条线。第四行用于滚动范围覆盖。" 
+						text="无换行：这条很长的线应该使用水平滚动条，这样就可以检查Direct2D文本剪切和滚动偏移。第二行用于垂直滚动覆盖。护理人员运动覆盖的第三条线。第二行用于垂直滚动覆盖。护理人员运动覆盖的第三条线。第二行用于垂直滚动覆盖。护理人员运动覆盖的第三条线。第四行用于滚动范围覆盖。" 
 						bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="8,8" />
                        
 					   <RichEdit name="richedit_disabled" height="70" enabled="false" multiline="true"  wordwrap="true" font="0" textcolor="#FF6B7280" textpadding="10,0,10,0" 
 					   text="禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，禁用RichEdit，禁用图像 ,图像和控件大小不一致，会失真，" 
 					   disabledimage="file='bt2.png'" bkcolor="#FFE5E7EB" bordercolor="#FFD1D5DB" bordersize="1" borderround="8,8" />
                        
+					   <RichEdit name="richedit_auto_height" height="80" multiline="true"  rich="false"  font="2" autotextheight="true"
+					   textcolor="#FF0F766E" textpadding="10,0,10,0" tipvalue="Richedit控件自动设置高度" 
+					   tipvaluecolor="#FF0F766E" tipvaluepadding="10,0,10,0" tipvaluealign="right" bordercolor="#FF99D7CF" bordersize="1" borderround="8,8" />
+					   
+					   
 					   <RichEdit name="richedit_transparent_tip" height="70" multiline="false" transparent="true" rich="false" readonly="false" font="2"
 					   textcolor="#FF0F766E" textpadding="10,0,10,0" tipvalue="透明的空白RichEdit占位符，右对齐" 
 					   tipvaluecolor="#FF0F766E" tipvaluepadding="10,0,10,0" tipvaluealign="right" bordercolor="#FF99D7CF" bordersize="1" borderround="8,8" />
                         <Label text="RichEdit align/valign 文本对齐演示" height="22" font="1" />
-                        <HBox height="92" childpadding="8">
-                            <RichEdit name="richedit_align_left_top" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" align="left" valign="top" text="left + top" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
-                            <RichEdit name="richedit_align_center_vcenter" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" align="center" valign="vcenter" text="center + vcenter" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
-                            <RichEdit name="richedit_align_right_bottom" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" align="right" valign="bottom" text="right + bottom" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
-                        </HBox>
+                        <VBox height="170" childpadding="8">
+                            <RichEdit name="richedit_align_left_top" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" height="50"
+							 align="left" valign="top" text="left + top" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="8,8" height="50" />
+							 
+                            <RichEdit name="richedit_align_center_vcenter" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" 
+							align="center" valign="vcenter" text="center + vcenter" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" height="50" borderround="8,8" />
+							
+                            <RichEdit name="richedit_align_right_bottom" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" height="50"
+							 align="right" valign="bottom" text="right + bottom" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" 
+							bordersize="1" borderround="8,8" />
+                        </VBox>
                         <Label text="RichEdit tipvaluealign / tipvaluevalign 提示文本对齐演示" height="22" font="1" />
-                        <HBox height="92" childpadding="8">
-                            <RichEdit name="richedit_tip_left_top" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" tipvalue="tip left + top" tipvaluecolor="#FF8A98A8" tipvaluealign="left" tipvaluevalign="top" tipvaluepadding="8,6,8,6" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
-                            <RichEdit name="richedit_tip_center_vcenter" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" tipvalue="tip center + vcenter" tipvaluecolor="#FF8A98A8" tipvaluealign="center" tipvaluevalign="vcenter" tipvaluepadding="8,6,8,6" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
-                            <RichEdit name="richedit_tip_right_bottom" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" tipvalue="tip right + bottom" tipvaluecolor="#FF8A98A8" tipvaluealign="right" tipvaluevalign="bottom" tipvaluepadding="8,6,8,6" bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="3,3" />
-                        </HBox>
+                        <VBox height="120" childpadding="8">
+                            <RichEdit name="richedit_tip_left_top" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937"
+							textpadding="8,6,8,6" tipvalue="tip left + top" tipvaluecolor="#FF8A98A8" tipvaluealign="left" 
+							tipvaluevalign="top"  bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="8,8" />
+							
+                            <RichEdit name="richedit_tip_center_vcenter" multiline="true" wordwrap="true" 
+							font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" tipvalue="tip center + vcenter" tipvaluecolor="#FF8A98A8" 
+							tipvaluealign="center" tipvaluevalign="vcenter"  bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2"
+							bordersize="1" borderround="8,8" />
+							
+                            <RichEdit name="richedit_tip_right_bottom" multiline="true" wordwrap="true" font="0" textcolor="#FF1F2937" textpadding="8,6,8,6" 
+							tipvalue="tip right + bottom" tipvaluecolor="#FF8A98A8" tipvaluealign="right" tipvaluevalign="bottom" 
+							bkcolor="#FFFFFFFF" bordercolor="#FFC8D5E2" bordersize="1" borderround="8,8" />
+                        </VBox>
+						
+					
                     </VBox>
                 </HBox>
             </VBox>
 
-            <VBox name="page_data" childpadding="12">
+            <VBox name="page_data" childpadding="12" vscrollbar="true" >
                 <HBox height="500" childpadding="12">
-                    <List name="list_basic" style="Panel" width="520" header="show" itemalign="left" itemvalign="vcenter" itemtextpadding="8,0,8,0" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" itemshowrowline="true" itemlinecolor="#FFE0E7EF" vscrollbar="true">
-                        <ListHeader height="34" bkcolor="#FFF1F5F9">
-                            <ListHeaderItem text="Control" width="160" sepwidth="1" textcolor="#FF243042" />
-                            <ListHeaderItem text="Scenario" width="210" sepwidth="1" />
-                            <ListHeaderItem text="Status" width="120" />
+                    <List name="list_basic" style="Panel" width="520" header="show" itemalign="left" itemvalign="vcenter" itemtextpadding="8,0,8,0" itempadding="5,2,2,2"
+					itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" itemshowrowline="true" itemlinecolor="#FFE0E7EF" vscrollbar="true" itemborderround="8,8" >
+                        <ListHeader height="34" bkcolor="#FFF1F5F9" padding="5,5,5,5" borderround="8,8">
+                            <ListHeaderItem text="控制" width="160" sepwidth="1" textcolor="#FF243042" />
+                            <ListHeaderItem text="场景" width="210" sepwidth="1" />
+                            <ListHeaderItem text="状态" width="120" />
                         </ListHeader>
-                        <ListTextElement text="Button states|normal hot pushed disabled|ready" height="34" selected="true" />
-                        <ListTextElement text="Slider|drag, wheel and keyboard|ready" height="34" />
-                        <ListTextElement text="Text rendering|DirectWrite labels and html text|ready" height="34" />
-                        <ListTextElement text="Combo|popup list ownership|ready" height="34" />
-                        <ListTextElement text="List|header, lines and scroll|ready" height="34" />
-                        <ListTextElement text="TreeView|nested node layout|ready" height="34" />
-                        <ListTextElement text="ColorPalette|color change notify|ready" height="34" />
+                        <ListTextElement text="按钮状态|正常 热态 按下 禁用|就绪" height="34" selected="true" borderround="8,8" />
+                        <ListTextElement text="滑块|拖动、滚轮和键盘|就绪" height="34"  borderround="8,8" />
+                        <ListTextElement text="文本渲染|DirectWrite标签和html文本|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="组合|弹出列表所有权|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="列表|标题、行和滚动|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="TreeView |嵌套节点布局|就绪" height="34"borderround="8,8"  />
+                        <ListTextElement text="调色板|颜色更改通知|准备就绪" height="34" borderround="8,8" />
+						 <ListTextElement text="按钮状态|正常 热态 按下 禁用|就绪" height="34" selected="true" borderround="8,8" />
+                        <ListTextElement text="滑块|拖动、滚轮和键盘|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="文本渲染|DirectWrite标签和html文本|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="组合|弹出列表所有权|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="列表|标题、行和滚动|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="TreeView |嵌套节点布局|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="调色板|颜色更改通知|准备就绪" height="34" borderround="8,8" />
+						 <ListTextElement text="按钮状态|正常 热态 按下 禁用|就绪" height="34" selected="true" borderround="8,8" />
+                        <ListTextElement text="滑块|拖动、滚轮和键盘|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="文本渲染|DirectWrite标签和html文本|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="组合|弹出列表所有权|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="列表|标题、行和滚动|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="TreeView |嵌套节点布局|就绪" height="34" borderround="8,8" />
+                        <ListTextElement text="调色板|颜色更改通知|准备就绪" height="34" borderround="8,8" />
                     </List>
                     <VBox style="Panel" inset="12,12,12,12" childpadding="10">
-                        <Label text="VirtualList test bench" height="26" font="1" />
+                        <Label text="虚拟列表测试" height="26" font="1" />
                         <HBox height="34" childpadding="8">
-                            <Button name="virt_apply_fixed_demo" text="Fixed 240" style="ActionButton" width="118" />
-                            <Button name="virt_apply_large_demo" text="Fixed 10M" style="ActionButton" width="118" />
-                            <Button name="virt_apply_variable_demo" text="Variable" style="ActionButton" width="118" />
+                            <Button name="virt_apply_fixed_demo" text="预设240个控件" style="ActionButton" width="118" />
+                            <Button name="virt_apply_large_demo" text="预设100W个控件" style="ActionButton" width="118" />
+                            <Button name="virt_apply_variable_demo" text="180W个可变高度控件" style="ActionButton" width="125" />
                         </HBox>
                         <HBox height="34" childpadding="8">
-                            <Button name="virt_mutate_height" text="Mutate height" style="ActionButton" width="118" />
-                            <Button name="virt_change_count" text="Mutate count" style="ActionButton" width="118" />
-                            <Button name="virt_clear_selection" text="Clear select" style="ActionButton" width="118" />
+                            <Button name="virt_mutate_height" text="修改子项高度" style="ActionButton" width="118" />
+                            <Button name="virt_change_count" text="修改子项个数" style="ActionButton" width="118" />
+                            <Button name="virt_clear_selection" text="清除被选择按钮" style="ActionButton" width="118" />
                         </HBox>
-                        <VirtualList name="virtual_list_demo" height="182" itemcount="240" itemheight="32" overscan="8" vscrollbar="true" allowselectioncancel="true" itembkcolor="#FFF7FAFD" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA" bordercolor="#FFE0E7EF" bordersize="1" />
+                        <VirtualList name="virtual_list_demo" height="182" itemcount="240" itemheight="32" overscan="8"  padding="0,0,10"
+						vscrollbar="true" allowselectioncancel="true" itembkcolor="#FFF7FAFD" itemhotbkcolor="#FFEAF2FA" 
+						itemselectedbkcolor="#FFDCEBFA" bordercolor="#FFE0E7EF" bordersize="1"  borderround="8,8"/>
                         <Label name="virtual_list_status" text="VirtualList ready." height="54" wordbreak="true" font="2" textcolor="#FF667789" />
                     </VBox>
                 </HBox>
                 <HBox height="240" childpadding="12">
-                    <XList name="xlist_demo" style="Panel" width="620" header="show" itemtextpadding="8,0,8,0" itemhotbkcolor="#FFEAF2FA" itemselectedbkcolor="#FFDCEBFA">
-                        <ListHeader height="34" bkcolor="#FFF1F5F9">
-                            <ListContainerHeaderItem text="Editable" width="160" editable="true" sepwidth="1" />
-                            <ListContainerHeaderItem text="Combo" width="160" comboable="true" sepwidth="1" />
-                            <ListContainerHeaderItem text="Check" width="160" checkable="true" checkboxwidth="18" checkboxheight="18" />
-                        </ListHeader>
-                        <ListTextExElement text="Cell edit|Choice A|Checked" height="34" checkboxwidth="18" checkboxheight="18" />
-                        <ListTextExElement text="Inline text|Choice B|Unchecked" height="34" checkboxwidth="18" checkboxheight="18" />
-                        <ListTextExElement text="Validation|Choice C|Checked" height="34" checkboxwidth="18" checkboxheight="18" />
-                    </XList>
+                   
                     <VBox style="Panel" inset="12,12,12,12" childpadding="10">
                         <Label text="Standalone popup menu" height="26" font="1" />
                         <Button name="open_menu" text="Open XML menu" style="ActionButton" width="190" foreimage="file='menu.png' dest='10,8,28,26'" textpadding="30,0,8,0" />
@@ -245,43 +284,43 @@ Tab键在聚焦时插入制表符。Return键插入换行。自动换行功能�
             <VBox name="page_layouts" childpadding="14" vscrollbar="true" scrollstepsize="100" smooth="true">
                 <HBox height="230" childpadding="12">
                     <VBox style="Panel" width="560" inset="16,16,16,16" childpadding="12">
-                        <Label text="UIHorizontalLayout with rounded child surfaces" height="28" font="1" />
+                        <Label text="带圆角的水平布局" height="28" font="1" />
                         <HBox height="128" childpadding="10">
                             <VBox style="RoundProbe" width="116" inset="12,10,12,10" childpadding="8">
-                                <Label text="H item 01" height="24" align="center" />
+                                <Label text="纵向布局 01" height="24" align="center" />
                                 <Progress value="22" />
                                 <Button text="Round bg" style="ActionButton" width="92" />
                             </VBox>
                             <VBox style="RoundProbe" width="116" inset="12,10,12,10" childpadding="8" bkimage="file='VideoCut_2.png' fade='48'">
-                                <Label text="H image" height="24" align="center" />
+                                <Label text="纵向布局带图片" height="24" align="center" />
                                 <Progress value="44" forecolor="#FF3E8ED0" />
                                 <Button text="Image clip" style="ActionButton" width="92" />
                             </VBox>
                             <VBox style="RoundProbe" width="116" inset="12,10,12,10" childpadding="8" bkcolor="#FFEAF7EE">
-                                <Label text="H item 03" height="24" align="center" />
+                                <Label text="纵向布局 03" height="24" align="center" />
                                 <Progress value="68" forecolor="#FF6D9E3B" />
                                 <Button text="Green" style="ActionButton" width="92" />
                             </VBox>
                             <VBox style="RoundProbe" width="116" inset="12,10,12,10" childpadding="8" bkcolor="#FFF4EDFF">
-                                <Label text="H item 04" height="24" align="center" />
+                                <Label text="纵向布局04" height="24" align="center" />
                                 <Progress value="86" forecolor="#FF8E5AD7" />
                                 <Button text="Purple" style="ActionButton" width="92" />
                             </VBox>
                         </HBox>
                     </VBox>
                     <VBox style="Panel" inset="16,16,16,16" childpadding="12">
-                        <Label text="UIVerticalLayout with progress children" height="28" font="1" />
+                        <Label text="纵向布局和滚动条子控件" height="28" font="1" />
                         <VBox height="140" childpadding="9">
                             <HBox style="SubPanel" height="34" inset="12,0,12,0" childpadding="10" childvalign="vcenter">
-                                <Label text="Vertical row A" width="130" />
+                                <Label text="水平布局 row A" width="130" />
                                 <Progress value="31" />
                             </HBox>
                             <HBox style="SubPanel" height="34" inset="12,0,12,0" childpadding="10" childvalign="vcenter" bkcolor="#FFFFF7E5">
-                                <Label text="Vertical row B" width="130" />
+                                <Label text="水平布局 row B" width="130" />
                                 <Progress value="57" forecolor="#FFE6A23C" />
                             </HBox>
                             <HBox style="SubPanel" height="34" inset="12,0,12,0" childpadding="10" childvalign="vcenter" bkcolor="#FFE9F6F5">
-                                <Label text="Vertical row C" width="130" />
+                                <Label text="水平布局 row C" width="130" />
                                 <Progress value="79" forecolor="#FF0EA5A3" />
                             </HBox>
                         </VBox>
@@ -289,37 +328,37 @@ Tab键在聚焦时插入制表符。Return键插入换行。自动换行功能�
                 </HBox>
 
                 <HBox height="260" childpadding="12">
-                    <VBox style="Panel" width="520" inset="16,16,16,16" childpadding="10">
-                        <Label text="UITabLayout with multiple child pages" height="28" font="1" />
+                    <VBox style="Panel" width="560" inset="16,16,16,16" childpadding="10" vscrollbar="true" >
+                        <Label text="Tab控件和多个子控件" height="28" font="1" />
                         <HBox height="38" childpadding="8">
                             <Button text="Metrics" style="ActionButton" width="116" bindtablayoutname="nested_tabs" bindtabindex="0" />
                             <Button text="Render" style="ActionButton" width="116" bindtablayoutname="nested_tabs" bindtabindex="1" />
                             <Button text="Scroll" style="ActionButton" width="116" bindtablayoutname="nested_tabs" bindtabindex="2" />
                         </HBox>
                         <TabBox name="nested_tabs" selectedid="0" bkcolor="#FFF8FAFC" bordercolor="#FFE0E7EF" bordersize="1" borderround="10,10">
-                            <VBox inset="14,14,14,14" childpadding="10">
+                            <VBox inset="14,14,14,14" childpadding="10" vscrollbar="true" >
                                 <Label text="Tab child 01: metrics" height="26" />
                                 <Progress value="36" />
                                 <Progress value="58" forecolor="#FF3E8ED0" />
-                                <Button text="Focusable child" style="ActionButton" width="170" />
+                                <Button text="button控件" style="ActionButton" width="170" />
                             </VBox>
                             <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFFFF7E5" borderround="10,10">
                                 <Label text="Tab child 02: rounded background" height="26" />
                                 <Progress value="67" forecolor="#FFE6A23C" />
                                 <Button text="Orange page" style="ActionButton" width="170" />
-                                <CheckBox text="Check child" EnableAutoCheck="true" selected="true" />
+                                
                             </VBox>
-                            <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFEAF7EE" borderround="10,10">
+                            <VBox inset="14,14,14,14" childpadding="10" bkcolor="#FFEAF7EE" borderround="10,10" vscrollbar="true"  >
                                 <Label text="Tab child 03: scroll target" height="26" />
                                 <Progress value="88" forecolor="#FF2EA97D" />
                                 <Slider height="28" value="48" thumbimage="file='SliderPlayThumb.png'" />
-                                <Button text="Another child" style="ActionButton" width="170" />
+                                <Button text="button控件" style="ActionButton" width="170" />
                             </VBox>
                         </TabBox>
                     </VBox>
 
                     <VBox style="Panel" inset="16,16,16,16" childpadding="10">
-                        <Label text="UIAnimationTabLayout with multiple child pages" height="28" font="1" />
+                        <Label text="动画tab控件" height="28" font="1" />
                         <HBox height="38" childpadding="8">
                             <Button text="Anim A" style="ActionButton" width="100" bindtablayoutname="anim_tabs" bindtabindex="0" />
                             <Button text="Anim B" style="ActionButton" width="100" bindtablayoutname="anim_tabs" bindtabindex="1" />
@@ -344,6 +383,57 @@ Tab键在聚焦时插入制表符。Return键插入换行。自动换行功能�
                         </AnimationTabLayout>
                     </VBox>
                 </HBox>
+				
+				 <HBox height="350" childpadding="12">
+				 
+					<VBox style="Panel" width="560"  childpadding="10"  >
+						 <Button text="测试从左到右缩放隐藏" style="ActionButton" width="92" name="hor_left_to_right" />
+						 <HBox>
+							<VBox>
+							    <Label text="用于测试" width="130" height="30" />
+                                <Progress value="79" forecolor="#FF0EA5A3" />
+								<Button text="Green" style="ActionButton" width="92" />
+							</VBox>
+							
+							<VBox>
+							    <Label text="用于测试" width="130" height="30" />
+                                <Progress value="79" forecolor="#FF0EA5A3" />
+								<Button text="Green" style="ActionButton" width="92" />
+							</VBox>
+							
+						 </HBox>
+					</VBox >
+					
+					<VBox style="Panel"  inset="16,16,16,16" childpadding="10" vscrollbar="true" >
+					
+						 <Button text="测试从右到左缩放隐藏" style="ActionButton" width="92" name="hor_left_to_right" />
+						 <HBox>
+							<VBox>
+							    <Label text="用于测试" width="130" height="30" />
+                                <Progress value="79" forecolor="#FF0EA5A3" />
+								<Button text="Green" style="ActionButton" width="92" />
+							</VBox>
+							
+							<VBox>
+							    <Label text="用于测试" width="130" height="30" />
+                                <Progress value="79" forecolor="#FF0EA5A3" />
+								<Button text="Green" style="ActionButton" width="92" />
+							</VBox>
+							
+						 </HBox>
+					</VBox >
+					
+				 </HBox>
+				 
+				  <HBox height="350" childpadding="12">
+				 
+					<VBox style="Panel" width="560" inset="16,16,16,16" childpadding="10" vscrollbar="true" >
+					</VBox >
+					
+					<VBox style="Panel"  inset="16,16,16,16" childpadding="10" vscrollbar="true" >
+					</VBox >
+					
+				 </HBox>
 
                 <HBox height="330" childpadding="12">
                     <TileBox name="tile_demo" style="Panel" width="760" inset="16,16,16,16" itemsize="142,104" columns="5" hor_spacing="8" vscrollbar="true">

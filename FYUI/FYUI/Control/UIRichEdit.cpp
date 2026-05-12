@@ -51,6 +51,7 @@ namespace FYUI
 		m_bReadOnly(false),
 		m_bPasswordMode(false),
 		m_bWordWrap(true),
+		m_bAutoTextHeight(false),
 		m_bHideSelection(false),
 		m_bAutoURLDetect(false),
 		m_bModified(false),
@@ -181,6 +182,67 @@ namespace FYUI
 		EnableScrollBar(true, !m_bWordWrap);
 		InvalidateLayout();
 		UpdateScrollBars();
+		// wordwrap 切换会改变行数 → 若 autotextheight 开启，需要同步控件高度。
+		ApplyAutoTextHeight();
+	}
+
+	bool CRichEditUI::IsAutoTextHeight() const { return m_bAutoTextHeight; }
+	void CRichEditUI::SetAutoTextHeight(bool bAuto)
+	{
+		if (m_bAutoTextHeight == bAuto) return;
+		m_bAutoTextHeight = bAuto;
+		if (m_bAutoTextHeight) ApplyAutoTextHeight();
+	}
+
+	bool CRichEditUI::IsScrollFloatShown() const
+	{
+		// 拖拽选择期间（BUTTONDOWN → BUTTONUP 之间鼠标移动选择文本），
+		// 鼠标可能临时离开控件矩形，此时基类会认为应隐藏浮动滚动条。
+		// 这里扩展显示条件：只要还在拖拽选择，就保持滚动条可见，避免选择过程中滚动条闪退。
+		if (m_bDraggingSelection) return true;
+		return CContainerUI::IsScrollFloatShown();
+	}
+
+	void CRichEditUI::ApplyAutoTextHeight()
+	{
+		if (!m_bAutoTextHeight) return;
+		// 按当前视图宽度 (= 控件宽 - padding - vscrollbar) 强制重排得到 m_nContentHeight（物理像素）。
+		InvalidateLayout();
+		EnsureLayout();
+
+		// 下面所有参与相加的量都统一用「物理像素（scaled）」：
+		//   m_nContentHeight               : scaled（GetLineHeight 返回 GDI tm.tmHeight 已是物理像素）
+		//   GetTextPadding()               : scaled（内部对 m_rcTextPadding 做了 ScaleRect）
+		//   HorizontalScrollBar->GetFixedHeight() : scaled
+		const RECT paddingScaled = GetTextPadding();
+		int desiredScaled = m_nContentHeight + paddingScaled.top + paddingScaled.bottom;
+		// 非 float 的水平滚动条占用内容区外的垂直空间，需要把它也计入目标高度。
+		if (!IsScrollFloat()
+			&& m_pHorizontalScrollBar != NULL
+			&& m_pHorizontalScrollBar->IsVisible()) {
+			desiredScaled += m_pHorizontalScrollBar->GetFixedHeight();
+		}
+		// 留出最小可视高度（至少 1 行高 + padding），防止空文本时塌成 0。
+		const int minScaled = GetLineHeight() + paddingScaled.top + paddingScaled.bottom;
+		if (desiredScaled < minScaled) desiredScaled = minScaled;
+
+		// SetFixedHeight 存入的是「逻辑值」(m_cxyFixed.cy)，后续 GetFixedSize() 会再做一次 ScaleValue。
+		// 因此必须把上面算出的物理像素 UnscaleValue 回逻辑值再写。否则在 DPI>1 时
+		// 会被二次放大 (例如 DPI=1.5 时高度变成设计期望的 1.5 倍)，表现为"richedit 高度不是文字高度"。
+		int desiredLogical = desiredScaled;
+		if (m_pManager != NULL) desiredLogical = m_pManager->UnscaleValue(desiredScaled);
+
+		// Unscale/Scale 都是整数除法，存在 ±1px 舍入。
+		// 用「再 ScaleValue 后的值」作为与当前 cxyFixed(scaled) 的比较对象，
+		// 保证收敛后下一次 ApplyAutoTextHeight 不再触发 SetFixedHeight，避免来回抖动。
+		int effectiveScaled = desiredLogical;
+		if (m_pManager != NULL) effectiveScaled = m_pManager->ScaleValue(desiredLogical);
+
+		const SIZE cxyFixedScaled = GetFixedSize();
+		if (cxyFixedScaled.cy != effectiveScaled) {
+			// SetFixedHeight 内部会调用 NeedParentUpdate，让父容器下一轮 layout 重新计算位置。
+			SetFixedHeight(desiredLogical);
+		}
 	}
 	int CRichEditUI::GetFont() { return m_iFont; }
 	void CRichEditUI::SetFont(int index)
@@ -534,6 +596,10 @@ namespace FYUI
 		const LONG newWidth = m_rcItem.right - m_rcItem.left;
 		if (newWidth != oldWidth) {
 			InvalidateLayout();
+			// 宽度变化会影响 wordwrap 后的行数 → 若 autotextheight 开启则需要同步高度。
+			// SetFixedHeight 内部 NeedParentUpdate 会让父容器下一轮再 SetPos，
+			// 那次宽度未变不会再进入此分支，避免循环。
+			ApplyAutoTextHeight();
 		}
 		UpdateScrollBars();
 	}
@@ -711,6 +777,7 @@ namespace FYUI
 		else if (StringUtil::EqualsNoCase(name, L"readonly")) SetReadOnly(StringUtil::ParseBool(pstrValue));
 		else if (StringUtil::EqualsNoCase(name, L"password")) SetPasswordMode(StringUtil::ParseBool(pstrValue));
 		else if (StringUtil::EqualsNoCase(name, L"wordwrap")) SetWordWrap(StringUtil::ParseBool(pstrValue));
+		else if (StringUtil::EqualsNoCase(name, L"autotextheight")) SetAutoTextHeight(StringUtil::ParseBool(pstrValue));
 		else if (StringUtil::EqualsNoCase(name, L"font")) { int value = 0; if (StringUtil::TryParseInt(pstrValue, value)) SetFont(value); }
 		else if (StringUtil::EqualsNoCase(name, L"textcolor")) { DWORD color = 0; if (StringUtil::TryParseColor(pstrValue, color)) SetTextColor(color); }
 		else if (StringUtil::EqualsNoCase(name, L"maxchar")) { int value = 0; if (StringUtil::TryParseInt(pstrValue, value)) SetLimitText(value); }
@@ -795,6 +862,7 @@ namespace FYUI
 		SetReadOnly(pControl->IsReadOnly());
 		SetPasswordMode(pControl->IsPasswordMode());
 		SetWordWrap(pControl->IsWordWrap());
+		SetAutoTextHeight(pControl->IsAutoTextHeight());
 		SetTextColor(pControl->GetTextColor());
 		SetTextStyle(pControl->GetTextStyle());
 		SetFont(pControl->GetFont());
@@ -836,6 +904,8 @@ namespace FYUI
 		UpdateScrollBars();
 		ScrollToCaret();
 		Invalidate();
+		// 文字变化后同步控件高度（autotextheight=true 时生效；否则直接返回，零成本）。
+		ApplyAutoTextHeight();
 		if (m_pManager != NULL) m_pManager->SendNotify(this, DUI_MSGTYPE_TEXTCHANGED);
 	}
 

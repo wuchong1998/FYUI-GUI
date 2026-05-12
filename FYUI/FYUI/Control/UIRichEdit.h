@@ -170,6 +170,18 @@ namespace FYUI
 		 */
 		void SetWordWrap(bool bWordWrap = true);
 		/**
+		 * @brief 获取 AutoTextHeight
+		 * @details 为 true 时 RichEdit 会按当前宽度重排文本并将控件高度自动设为文字排版高度。
+		 * @return bool 开启返回 true
+		 */
+		bool IsAutoTextHeight() const;
+		/**
+		 * @brief 设置 AutoTextHeight
+		 * @details 用于设置 AutoTextHeight。开启后控件高度会随文字内容/宽度自动同步为排版高度。
+		 * @param bAuto [in] 是否开启
+		 */
+		void SetAutoTextHeight(bool bAuto);
+		/**
 		 * @brief 获取字体
 		 * @details 用于获取字体。具体行为由当前对象状态以及传入参数共同决定。
 		 * @return int 返回对应的数值结果
@@ -946,6 +958,13 @@ namespace FYUI
 		void SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue) override;
 
 		/**
+		 * @brief 判断浮动滚动条当前是否应显示
+		 * @details 覆盖基类：在拖拽选择文本（鼠标按下移动选择）期间鼠标离开控件时仍保持滚动条可见，避免选择过程中滚动条闪退。
+		 * @return bool 应显示时返回 true
+		 */
+		bool IsScrollFloatShown() const override;
+
+		/**
 		 * @brief 处理窗口消息
 		 * @details 用于处理窗口消息。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param uMsg [in] Msg标志
@@ -1059,10 +1078,16 @@ namespace FYUI
 		 */
 		void EnsureLayout() const;
 		/**
-		 * @brief 执行 InvalidateLayout 操作
-		 * @details 用于执行 InvalidateLayout 操作。具体行为由当前对象状态以及传入参数共同决定。
+		 * @brief 标记布局脏
+		 * @details 通知下次 EnsureLayout 重新排版。常量方法（通过 mutable 成员标记脏位），便于在 const 接口内使用。
 		 */
 		void InvalidateLayout() const;
+		/**
+		 * @brief 应用 AutoTextHeight
+		 * @details m_bAutoTextHeight 为 true 时，根据当前视图宽度重排文字，将控件高度 (m_cxyFixed.cy) 自动同步为文字排版高度；
+		 *          调用时机：文字变化（MarkTextChanged）及容器宽度变化（SetPos）。
+		 */
+		void ApplyAutoTextHeight();
 		/**
 		 * @brief 获取Edit矩形
 		 * @details 用于获取Edit矩形。具体行为由当前对象状态以及传入参数共同决定。
@@ -1243,6 +1268,8 @@ namespace FYUI
 		bool m_bReadOnly;
 		bool m_bPasswordMode;
 		bool m_bWordWrap;
+		// 为 true 时按当前宽度重排文字并将控件高度自动同步为排版高度（随文字/宽度变化更新）。
+		bool m_bAutoTextHeight;
 		bool m_bHideSelection;
 		bool m_bAutoURLDetect;
 		bool m_bModified;

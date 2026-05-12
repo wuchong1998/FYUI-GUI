@@ -66,6 +66,9 @@ namespace FYUI
 		m_ListInfo.bRSelected = false;
 		::ZeroMemory(&m_ListInfo.rcTextPadding, sizeof(m_ListInfo.rcTextPadding));
 		::ZeroMemory(&m_ListInfo.rcColumn, sizeof(m_ListInfo.rcColumn));
+		::ZeroMemory(&m_ListInfo.rcItemPadding, sizeof(m_ListInfo.rcItemPadding));
+		m_ListInfo.szItemBorderRound.cx = 0;
+		m_ListInfo.szItemBorderRound.cy = 0;
 
 	}
 
@@ -189,6 +192,8 @@ namespace FYUI
 				}
 				if (bLabelElementFound)
 				{
+					ApplyItemPaddingToItem(pControl);
+					ApplyItemBorderRoundToItem(pControl);
 					return m_pList->Add(pControl);
 				}
 			}
@@ -197,6 +202,8 @@ namespace FYUI
 		if (pListItem != NULL) {
 			pListItem->SetOwner(this);
 			pListItem->SetIndex(GetCount());
+			ApplyItemPaddingToItem(pControl);
+			ApplyItemBorderRoundToItem(pControl);
 			return m_pList->Add(pControl);
 		}
 		return CVerticalLayoutUI::Add(pControl);
@@ -228,6 +235,8 @@ namespace FYUI
 		if (pListItem != NULL) {
 			pListItem->SetOwner(this);
 			pListItem->SetIndex(iIndex);
+			ApplyItemPaddingToItem(pControl);
+			ApplyItemBorderRoundToItem(pControl);
 		}
 
 			ReindexListItems(iIndex + 1);
@@ -958,6 +967,68 @@ namespace FYUI
 		return rect;
 	}
 
+	void CListUI::SetItemPadding(RECT rc)
+	{
+		m_ListInfo.rcItemPadding = rc;
+		// Apply the new default to any item whose padding is still {0,0,0,0}.
+		for (int i = 0; i < m_pList->GetCount(); ++i) {
+			ApplyItemPaddingToItem(m_pList->GetItemAt(i));
+		}
+		NeedUpdate();
+	}
+
+	RECT CListUI::GetItemPadding() const
+	{
+		RECT rect = m_ListInfo.rcItemPadding;
+		if (GetManager() != NULL) GetManager()->ScaleRect(&rect);
+		return rect;
+	}
+
+	void CListUI::ApplyItemPaddingToItem(CControlUI* pItem)
+	{
+		if (pItem == NULL) return;
+		const RECT& rcDefault = m_ListInfo.rcItemPadding;
+		if (rcDefault.left == 0 && rcDefault.top == 0 &&
+			rcDefault.right == 0 && rcDefault.bottom == 0) {
+			return;
+		}
+		// GetPadding() returns DPI-scaled value, but zero stays zero regardless of DPI.
+		// Skip items that have already been given an explicit padding by their own XML.
+		RECT rcCur = pItem->GetPadding();
+		if (rcCur.left != 0 || rcCur.top != 0 || rcCur.right != 0 || rcCur.bottom != 0) {
+			return;
+		}
+		pItem->SetPadding(rcDefault, false);
+	}
+
+	void CListUI::SetItemBorderRound(SIZE szRound)
+	{
+		m_ListInfo.szItemBorderRound = szRound;
+		for (int i = 0; i < m_pList->GetCount(); ++i) {
+			ApplyItemBorderRoundToItem(m_pList->GetItemAt(i));
+		}
+		Invalidate();
+	}
+
+	SIZE CListUI::GetItemBorderRound() const
+	{
+		SIZE sz = m_ListInfo.szItemBorderRound;
+		if (GetManager() != NULL) GetManager()->ScaleSize(&sz);
+		return sz;
+	}
+
+	void CListUI::ApplyItemBorderRoundToItem(CControlUI* pItem)
+	{
+		if (pItem == NULL) return;
+		const SIZE& szDefault = m_ListInfo.szItemBorderRound;
+		if (szDefault.cx == 0 && szDefault.cy == 0) return;
+		// GetBorderRound() returns the DPI-scaled value; zero stays zero across DPI scales,
+		// so a zero result reliably means "the item has no explicit borderround yet".
+		SIZE szCur = pItem->GetBorderRound();
+		if (szCur.cx != 0 || szCur.cy != 0) return;
+		pItem->SetBorderRound(szDefault);
+	}
+
 	void CListUI::SetItemTextColor(DWORD dwTextColor)
 	{
 		m_ListInfo.dwTextColor = dwTextColor;
@@ -1260,6 +1331,14 @@ namespace FYUI
         else if (StringUtil::EqualsNoCase(name, L"itemtextpadding")) {
             RECT rect = { 0 };
             if (StringUtil::TryParseRect(pstrValueView, rect)) SetItemTextPadding(rect);
+        }
+        else if (StringUtil::EqualsNoCase(name, L"itempadding")) {
+            RECT rect = { 0 };
+            if (StringUtil::TryParseRect(pstrValueView, rect)) SetItemPadding(rect);
+        }
+        else if (StringUtil::EqualsNoCase(name, L"itemborderround")) {
+            SIZE szRound = { 0, 0 };
+            if (StringUtil::TryParseSize(pstrValueView, szRound)) SetItemBorderRound(szRound);
         }
         else if (StringUtil::EqualsNoCase(name, L"itemtextcolor")) {
             DWORD color = 0;
@@ -1661,12 +1740,24 @@ namespace FYUI
 				cyFixedRemaining -= sz.cy;
 			}
 
-			sz.cx = MAX(cxNeeded, szAvailable.cx - rcPadding.left - rcPadding.right);
+			// Always reserve space for both left and right padding. Previously this line used
+			//   MAX(cxNeeded, szAvailable.cx - padLeft - padRight)
+			// which meant that when a ListHeader produced a large cxNeeded (~= szAvailable.cx),
+			// the right-padding was silently dropped. Compute the logical width first, then
+			// subtract the left + right padding uniformly so both sides behave symmetrically.
+			int cxBase = MAX(cxNeeded, szAvailable.cx);
+			sz.cx = cxBase - rcPadding.left - rcPadding.right;
+			if (sz.cx < 0) sz.cx = 0;
 
 			if (sz.cx < pControl->GetMinWidth()) sz.cx = pControl->GetMinWidth();
 			if (sz.cx > pControl->GetMaxWidth()) sz.cx = pControl->GetMaxWidth();
 
-			RECT rcCtrl = { iPosX + rcPadding.left, iPosY + rcPadding.top, iPosX + rcPadding.left + sz.cx, iPosY + sz.cy + rcPadding.top + rcPadding.bottom };
+			// Padding follows margin semantics (the control occupies exactly sz.cy in height,
+			// rcPadding only shifts the control's position and advances iPosY).
+			// The previous code added rcPadding.bottom to rcCtrl.bottom, inflating the control's
+			// own height by padding.bottom (symptom reported by user: bottom=10 grew the row by 10).
+			RECT rcCtrl = { iPosX + rcPadding.left, iPosY + rcPadding.top,
+							iPosX + rcPadding.left + sz.cx, iPosY + rcPadding.top + sz.cy };
 			pControl->SetPos(rcCtrl);
 
 			iPosY += sz.cy + iChildPadding + rcPadding.top + rcPadding.bottom;
@@ -2589,8 +2680,15 @@ namespace FYUI
 			iBackColor = pInfo->dwDisabledBkColor;
 		}
 
+		// If the item carries a borderround (set via XML borderround= or List itemborderround=),
+		// fill the background with the rounded variant so the visual matches the requested radius.
+		SIZE szRound = GetBorderRound();
 		if (iBackColor != 0) {
-			CRenderEngine::DrawColor(renderContext, m_rcItem, GetAdjustColor(iBackColor));
+			if (szRound.cx > 0 || szRound.cy > 0) {
+				CRenderEngine::DrawRoundColor(renderContext, m_rcItem, szRound.cx, szRound.cy, GetAdjustColor(iBackColor));
+			} else {
+				CRenderEngine::DrawColor(renderContext, m_rcItem, GetAdjustColor(iBackColor));
+			}
 		}
 
 		if (!IsEnabled()) {
@@ -3534,8 +3632,15 @@ namespace FYUI
 		if (!IsEnabled() && pInfo->dwDisabledBkColor > 0) {
 			iBackColor = pInfo->dwDisabledBkColor;
 		}
+		// If the item carries a borderround (set via XML borderround= or List itemborderround=),
+		// fill the background with the rounded variant so the visual matches the requested radius.
+		SIZE szRound = GetBorderRound();
 		if (iBackColor != 0) {
-			CRenderEngine::DrawColor(renderContext, m_rcItem, GetAdjustColor(iBackColor));
+			if (szRound.cx > 0 || szRound.cy > 0) {
+				CRenderEngine::DrawRoundColor(renderContext, m_rcItem, szRound.cx, szRound.cy, GetAdjustColor(iBackColor));
+			} else {
+				CRenderEngine::DrawColor(renderContext, m_rcItem, GetAdjustColor(iBackColor));
+			}
 		}
 
 		if (!IsEnabled()) {

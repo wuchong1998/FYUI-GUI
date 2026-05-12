@@ -41,6 +41,8 @@ namespace FYUI
 		bool bShowHtml;
 		bool bMultiExpandable;
 		bool bRSelected;
+		RECT rcItemPadding;   // default list-item margin in logical units; set via XML <List itempadding="l,t,r,b">, applied to each ListItem when it is added.
+		SIZE szItemBorderRound;  // default list-item borderround in logical units; set via XML <List itemborderround="rx,ry">, applied to each ListItem when it is added.
 	} TListInfoUI;
 
 
@@ -547,6 +549,33 @@ namespace FYUI
 		 * @param rc [in] 矩形区域
 		 */
 		void SetItemTextPadding(RECT rc);
+		/**
+		 * @brief 设置子项默认 padding
+		 * @details 设置列表子项的默认外边距（margin 语义），XML 属性 `itempadding="l,t,r,b"`
+		 * 对应本接口。仅当某个子项自身未通过 `padding=` 显式设置过 padding 时生效；
+		 * 传入的 RECT 为逻辑值，由 `CControlUI::GetPadding()` 在使用时按当前 DPI 自动缩放。
+		 * @param rc [in] 矩形区域（逻辑值）
+		 */
+		void SetItemPadding(RECT rc);
+		/**
+		 * @brief 获取子项默认 padding
+		 * @details 返回 XML `itempadding` 指定的默认子项外边距，返回值为按当前 DPI 缩放后的 RECT。
+		 * @return 返回对应的几何结果
+		 */
+		RECT GetItemPadding() const;
+		/**
+		 * @brief 设置子项默认 borderround（圆角半径）
+		 * @details 对应 XML 属性 `itemborderround="rx,ry"`。仅当某个子项自身未通过
+		 * `borderround=` 显式设置过圆角时生效。传入 SIZE 为逻辑值，绘制时按当前 DPI 缩放。
+		 * @param szRound [in] 圆角半径（逻辑值）
+		 */
+		void SetItemBorderRound(SIZE szRound);
+		/**
+		 * @brief 获取子项默认 borderround
+		 * @details 返回 XML `itemborderround` 指定的默认圆角半径，返回值按当前 DPI 缩放。
+		 * @return 返回对应的尺寸结果
+		 */
+		SIZE GetItemBorderRound() const;
 		/**
 		 * @brief 设置子项文本颜色
 		 * @details 用于设置子项文本颜色。具体行为由当前对象状态以及传入参数共同决定。
@@ -1090,6 +1119,21 @@ namespace FYUI
 		 * @return bool 操作成功返回 true，否则返回 false
 		 */
 		bool HandleListScrollWheelEvent(const TEventUI& event);
+
+		/**
+		 * @brief 将默认 itempadding 应用到一个新加入的 ListItem
+		 * @details 仅当 pItem 自身 padding 仍为全 0（未通过 XML `padding=` 显式设置）
+		 * 且 `m_ListInfo.rcItemPadding` 非全 0 时，才覆盖 pItem 的 padding，避免破坏子项的显式设置。
+		 * @param pItem [in] 列表子项控件
+		 */
+		void ApplyItemPaddingToItem(CControlUI* pItem);
+		/**
+		 * @brief 将默认 itemborderround 应用到一个新加入的 ListItem
+		 * @details 仅当 pItem 自身 borderround 仍为 {0,0}（未通过 XML `borderround=` 显式设置）
+		 * 且 `m_ListInfo.szItemBorderRound` 非零时，才覆盖 pItem 的 borderround，避免破坏子项的显式设置。
+		 * @param pItem [in] 列表子项控件
+		 */
+		void ApplyItemBorderRoundToItem(CControlUI* pItem);
 
 	protected:
 		bool m_bScrollSelect;

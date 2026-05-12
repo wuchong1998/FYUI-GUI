@@ -34,7 +34,9 @@ namespace FYUI
 	IMPLEMENT_DUICONTROL(CScrollBarUI)
 
 		CScrollBarUI::CScrollBarUI() : m_bHorizontal(false), m_nRange(0), m_nScrollPos(0), m_nLineSize(8), m_nMinThumbSize(80),
-		m_pOwner(NULL), m_nLastScrollPos(0), m_nLastScrollOffset(0), m_nScrollRepeatDelay(0), m_uButton1State(0), \
+		m_pOwner(NULL), m_nLastScrollPos(0), m_nLastScrollOffset(0), m_nThumbAnchorOffset(0),
+		m_dwLastOwnerNotifyTick(0), m_nPendingOwnerScrollPos(0), m_bOwnerNotifyPending(false),
+		m_nScrollRepeatDelay(0), m_uButton1State(0), \
 		m_uButton2State(0), m_uThumbState(0), m_bShowButton1(true), m_bShowButton2(true), m_bShow(true), m_nSpaceX(0), m_nSpaceY(0)
 	{
 		m_cxyFixed.cx = DEFAULT_SCROLLBAR_SIZE;
@@ -498,11 +500,26 @@ namespace FYUI
 					int cxThumb = ClampInt64ToInt(thumbNumerator / (m_nRange + rc.right - rc.left));
 					//if( cxThumb < cxyFixed.cy ) cxThumb = cxyFixed.cy;
 					if (cxThumb < nMinSize) cxThumb = nMinSize;
-					m_rcThumb.left = ClampInt64ToLong(m_nScrollPos * static_cast<__int64>(cx - cxThumb) / m_nRange + m_rcButton1.right);
-					m_rcThumb.right = m_rcThumb.left + cxThumb;
-					if (m_rcThumb.right > m_rcButton2.left) {
-						m_rcThumb.left = m_rcButton2.left - cxThumb;
-						m_rcThumb.right = m_rcButton2.left;
+					if ((m_uThumbState & UISTATE_CAPTURED) != 0) {
+						// 拖动期间：thumb 像素位置由 MOUSEMOVE 直接驱动，绕过 m_nScrollPos × …/m_nRange
+						// 的双重整数除法精度损失。这里仅维护 thumb 长度与轨道边界 clamp。
+						m_rcThumb.right = m_rcThumb.left + cxThumb;
+						if (m_rcThumb.right > m_rcButton2.left) {
+							m_rcThumb.left = m_rcButton2.left - cxThumb;
+							m_rcThumb.right = m_rcButton2.left;
+						}
+						if (m_rcThumb.left < m_rcButton1.right) {
+							m_rcThumb.left = m_rcButton1.right;
+							m_rcThumb.right = m_rcThumb.left + cxThumb;
+						}
+					}
+					else {
+						m_rcThumb.left = ClampInt64ToLong(m_nScrollPos * static_cast<__int64>(cx - cxThumb) / m_nRange + m_rcButton1.right);
+						m_rcThumb.right = m_rcThumb.left + cxThumb;
+						if (m_rcThumb.right > m_rcButton2.left) {
+							m_rcThumb.left = m_rcButton2.left - cxThumb;
+							m_rcThumb.right = m_rcButton2.left;
+						}
 					}
 				}
 				else {
@@ -572,11 +589,26 @@ namespace FYUI
 					int cyThumb = ClampInt64ToInt(thumbNumerator / (m_nRange + rc.bottom - rc.top));
 					//if( cyThumb < nMinSize ) cyThumb = cxyFixed.cx;
 					if (cyThumb < nMinSize) cyThumb = nMinSize;
-					m_rcThumb.top = ClampInt64ToLong(m_nScrollPos * static_cast<__int64>(cy - cyThumb) / m_nRange + m_rcButton1.bottom);
-					m_rcThumb.bottom = m_rcThumb.top + cyThumb;
-					if (m_rcThumb.bottom > m_rcButton2.top) {
-						m_rcThumb.top = m_rcButton2.top - cyThumb;
-						m_rcThumb.bottom = m_rcButton2.top;
+					if ((m_uThumbState & UISTATE_CAPTURED) != 0) {
+						// 拖动期间：thumb 像素位置由 MOUSEMOVE 直接驱动，绕过 m_nScrollPos × …/m_nRange
+						// 的双重整数除法精度损失。这里仅维护 thumb 长度与轨道边界 clamp。
+						m_rcThumb.bottom = m_rcThumb.top + cyThumb;
+						if (m_rcThumb.bottom > m_rcButton2.top) {
+							m_rcThumb.top = m_rcButton2.top - cyThumb;
+							m_rcThumb.bottom = m_rcButton2.top;
+						}
+						if (m_rcThumb.top < m_rcButton1.bottom) {
+							m_rcThumb.top = m_rcButton1.bottom;
+							m_rcThumb.bottom = m_rcThumb.top + cyThumb;
+						}
+					}
+					else {
+						m_rcThumb.top = ClampInt64ToLong(m_nScrollPos * static_cast<__int64>(cy - cyThumb) / m_nRange + m_rcButton1.bottom);
+						m_rcThumb.bottom = m_rcThumb.top + cyThumb;
+						if (m_rcThumb.bottom > m_rcButton2.top) {
+							m_rcThumb.top = m_rcButton2.top - cyThumb;
+							m_rcThumb.bottom = m_rcButton2.top;
+						}
 					}
 				}
 				else {
@@ -663,6 +695,15 @@ namespace FYUI
 				m_uThumbState |= UISTATE_CAPTURED | UISTATE_PUSHED;
 				m_ptLastMouse = event.ptMouse;
 				m_nLastScrollPos = ClampInt64ToInt(m_nScrollPos);
+				// 记录 thumb 在轨道内的初始像素偏移，作为后续 MOUSEMOVE 像素跟手的锚点。
+				// 横向：相对 m_rcButton1.right；纵向：相对 m_rcButton1.bottom。
+				m_nThumbAnchorOffset = m_bHorizontal
+					? (m_rcThumb.left - m_rcButton1.right)
+					: (m_rcThumb.top - m_rcButton1.bottom);
+				// 初始化 owner 通知节流：标记上次通知时间为当前 tick，避免第一次 MOUSEMOVE 立即超阈值。
+				m_dwLastOwnerNotifyTick = ::GetTickCount();
+				m_nPendingOwnerScrollPos = m_nLastScrollPos;
+				m_bOwnerNotifyPending = false;
 				m_pManager->SetTimer(this, DEFAULT_TIMERID, 8U);
 			}
 			else {
@@ -694,10 +735,22 @@ namespace FYUI
 		{
 			m_bMouseDown = false;
 			m_nScrollRepeatDelay = 0;
-			m_nLastScrollOffset = 0;
 			m_pManager->KillTimer(this, DEFAULT_TIMERID);
 
 			if ((m_uThumbState & UISTATE_CAPTURED) != 0) {
+				// 拖动结束：若节流期间有未发出的 owner 通知，补发一次最终位置，
+				// 否则内容会停留在节流过滤掉的中间帧，与 thumb 视觉位置不一致。
+				if (m_bOwnerNotifyPending) {
+					if (!m_bHorizontal) {
+						if (m_pOwner != NULL) m_pOwner->SetScrollPos(CDuiSize(m_pOwner->GetScrollPos().cx, m_nPendingOwnerScrollPos));
+						else SetScrollPos(m_nPendingOwnerScrollPos);
+					}
+					else {
+						if (m_pOwner != NULL) m_pOwner->SetScrollPos(CDuiSize(m_nPendingOwnerScrollPos, m_pOwner->GetScrollPos().cy));
+						else SetScrollPos(m_nPendingOwnerScrollPos);
+					}
+					m_bOwnerNotifyPending = false;
+				}
 				m_uThumbState &= ~(UISTATE_CAPTURED | UISTATE_PUSHED);
 				Invalidate();
 			}
@@ -709,6 +762,7 @@ namespace FYUI
 				m_uButton2State &= ~UISTATE_PUSHED;
 				Invalidate();
 			}
+			m_nLastScrollOffset = 0;
 			return;
 		}
 		if (event.Type == UIEVENT_MOUSEMOVE)
@@ -735,21 +789,70 @@ namespace FYUI
 					if (hRange != 0) m_nLastScrollOffset = ClampInt64ToInt(fMouseRange / abs(hRange));
 				}
 
-				if (!m_bHorizontal) {
-					if (m_pOwner != NULL) {
-						m_pOwner->SetScrollPos(CDuiSize(m_pOwner->GetScrollPos().cx, m_nLastScrollPos + m_nLastScrollOffset));
+				// 计算本次目标 scrollPos（与 owner 语义保持一致）。
+				const int nTargetScrollPos = ClampInt64ToInt(static_cast<__int64>(m_nLastScrollPos) + m_nLastScrollOffset);
+
+				// owner 通知节流：长文本 RichEdit 每次 SetScrollPos 都会触发整窗口重绘，
+				// 鼠标 100Hz 通知会让窗口 paint 帧率被拖到 < 30fps，
+				// 表现为 thumb 与内容"同步停顿后一起跳跃"。
+				// 这里把 owner 通知节流到约 60Hz（>=16ms 才允许通过），
+				// 节流间隔内只更新 thumb 视觉位置（小区域 invalidate，paint 飞快），
+				// 真正的 owner SetScrollPos 由本块或下方 BUTTONUP / TIMER 兜底发出。
+				const DWORD dwNow = ::GetTickCount();
+				const DWORD kOwnerNotifyMinIntervalMs = 16; // ~60Hz
+				const bool bAllowOwnerNotify =
+					(dwNow - m_dwLastOwnerNotifyTick) >= kOwnerNotifyMinIntervalMs;
+
+				if (bAllowOwnerNotify) {
+					if (!m_bHorizontal) {
+						if (m_pOwner != NULL) {
+							m_pOwner->SetScrollPos(CDuiSize(m_pOwner->GetScrollPos().cx, nTargetScrollPos));
+						}
+						else {
+							SetScrollPos(nTargetScrollPos);
+						}
 					}
 					else {
-						SetScrollPos(ClampInt64ToInt(static_cast<__int64>(m_nLastScrollPos) + m_nLastScrollOffset));
+						if (m_pOwner != NULL) {
+							m_pOwner->SetScrollPos(CDuiSize(nTargetScrollPos, m_pOwner->GetScrollPos().cy));
+						}
+						else {
+							SetScrollPos(nTargetScrollPos);
+						}
 					}
+					m_dwLastOwnerNotifyTick = dwNow;
+					m_bOwnerNotifyPending = false;
 				}
 				else {
-					if (m_pOwner != NULL) {
-						m_pOwner->SetScrollPos(CDuiSize(m_nLastScrollPos + m_nLastScrollOffset, m_pOwner->GetScrollPos().cy));
-					}
-					else {
-						SetScrollPos(ClampInt64ToInt(static_cast<__int64>(m_nLastScrollPos) + m_nLastScrollOffset));
-					}
+					// 节流间隔内：仅缓存待发送 scrollPos，由后续 MOUSEMOVE 或 TIMER 兜底发出。
+					// 自身 m_nScrollPos 暂不更新（owner 也未更新，避免两边状态不同步）。
+					m_nPendingOwnerScrollPos = nTargetScrollPos;
+					m_bOwnerNotifyPending = true;
+				}
+
+				// 不论是否通知 owner，都要更新 thumb 视觉位置——让 thumb 严格按鼠标 1:1 跟手。
+				// 用"鼠标像素位移 + thumb 锚点"直接驱动 thumb，规避双重整数取整误差。
+				// 当 bAllowOwnerNotify==true 时，上面 SetScrollPos -> SetPos 在 CAPTURED 状态下
+				// 已跳过 thumb 标准重算，这里覆写不会被立刻覆盖。
+				if (m_bHorizontal) {
+					const LONG thumbWidth = m_rcThumb.right - m_rcThumb.left;
+					LONG newLeft = m_rcButton1.right + m_nThumbAnchorOffset
+						+ (event.ptMouse.x - m_ptLastMouse.x);
+					const LONG maxLeft = m_rcButton2.left - thumbWidth;
+					if (newLeft > maxLeft) newLeft = maxLeft;
+					if (newLeft < m_rcButton1.right) newLeft = m_rcButton1.right;
+					m_rcThumb.left = newLeft;
+					m_rcThumb.right = newLeft + thumbWidth;
+				}
+				else {
+					const LONG thumbHeight = m_rcThumb.bottom - m_rcThumb.top;
+					LONG newTop = m_rcButton1.bottom + m_nThumbAnchorOffset
+						+ (event.ptMouse.y - m_ptLastMouse.y);
+					const LONG maxTop = m_rcButton2.top - thumbHeight;
+					if (newTop > maxTop) newTop = maxTop;
+					if (newTop < m_rcButton1.bottom) newTop = m_rcButton1.bottom;
+					m_rcThumb.top = newTop;
+					m_rcThumb.bottom = newTop + thumbHeight;
 				}
 				Invalidate();
 			}
@@ -778,17 +881,25 @@ namespace FYUI
 		{
 			++m_nScrollRepeatDelay;
 			if ((m_uThumbState & UISTATE_CAPTURED) != 0) {
-				if (!m_bHorizontal) {
-					if (m_pOwner != NULL) m_pOwner->SetScrollPos(CDuiSize(m_pOwner->GetScrollPos().cx, \
-						m_nLastScrollPos + m_nLastScrollOffset));
-					else SetScrollPos(ClampInt64ToInt(static_cast<__int64>(m_nLastScrollPos) + m_nLastScrollOffset));
+				// 拖动期间 8ms timer 兜底：仅当 mouse_move 节流间隔内积压了 pending owner 通知，
+				// 且距上次 owner 通知 >= 16ms 时才发出，避免用户停住鼠标但仍按住时内容滞留。
+				// 不再每 8ms 无条件通知（旧逻辑会和 mouse_move 通知形成高频叠加，
+				// 让 owner 重绘频率反而被拉满，与 thumb 节流目标冲突）。
+				if (m_bOwnerNotifyPending) {
+					const DWORD dwNow2 = ::GetTickCount();
+					if ((dwNow2 - m_dwLastOwnerNotifyTick) >= 16) {
+						if (!m_bHorizontal) {
+							if (m_pOwner != NULL) m_pOwner->SetScrollPos(CDuiSize(m_pOwner->GetScrollPos().cx, m_nPendingOwnerScrollPos));
+							else SetScrollPos(m_nPendingOwnerScrollPos);
+						}
+						else {
+							if (m_pOwner != NULL) m_pOwner->SetScrollPos(CDuiSize(m_nPendingOwnerScrollPos, m_pOwner->GetScrollPos().cy));
+							else SetScrollPos(m_nPendingOwnerScrollPos);
+						}
+						m_dwLastOwnerNotifyTick = dwNow2;
+						m_bOwnerNotifyPending = false;
+					}
 				}
-				else {
-					if (m_pOwner != NULL) m_pOwner->SetScrollPos(CDuiSize(m_nLastScrollPos + m_nLastScrollOffset, \
-						m_pOwner->GetScrollPos().cy));
-					else SetScrollPos(ClampInt64ToInt(static_cast<__int64>(m_nLastScrollPos) + m_nLastScrollOffset));
-				}
-				Invalidate();
 			}
 			else if ((m_uButton1State & UISTATE_PUSHED) != 0) {
 				if (m_nScrollRepeatDelay <= 5) return;

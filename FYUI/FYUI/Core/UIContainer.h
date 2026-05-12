@@ -393,9 +393,10 @@ namespace FYUI
 		/**
 		 * @brief Float 滚动条当前是否应显示
 		 * @details 仅 ScrollFloat=true 时生效：鼠标悬浮在容器内显示；鼠标离开时隐藏；但若正在拖拽滚动条（IsCaptured）则即使鼠标离开也保持显示。
+		 *          virtual：子类可扩展显示条件（例如 CRichEditUI 在拖拽文本选择期间保持显示）。
 		 * @return bool 应显示时返回 true
 		 */
-		bool IsScrollFloatShown() const;
+		virtual bool IsScrollFloatShown() const;
 
 		/**
 		 * @brief 设置QuickScrolling

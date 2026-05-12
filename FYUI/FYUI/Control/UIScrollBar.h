@@ -528,6 +528,16 @@ namespace FYUI
 		POINT m_ptLastMouse;
 		int m_nLastScrollPos;
 		int m_nLastScrollOffset;
+		// BUTTONDOWN 命中 thumb 时记录的"thumb 在轨道内的初始像素偏移"，
+		// 用于 MOUSEMOVE 直接以鼠标像素位移驱动 thumb 视觉位置，避免 scrollPos 双重整数取整造成的拖动卡顿。
+		LONG m_nThumbAnchorOffset;
+		// 拖动期间 owner（如 RichEdit）整体重绘节流：上次实际通知 owner 的 GetTickCount 与对应 scrollPos。
+		// 鼠标 100Hz 但每次都通知 owner 会触发整窗口重绘（D2D 长文本在 Debug 下尤其慢），
+		// 表现为 thumb 与内容同步停顿后一起跳跃。这里把 owner 通知节流到约 60Hz，
+		// thumb 视觉自身仍按鼠标频率小区域 invalidate，BUTTONUP 时再补发一次最终位置。
+		DWORD m_dwLastOwnerNotifyTick;
+		int m_nPendingOwnerScrollPos;
+		bool m_bOwnerNotifyPending;
 		int m_nScrollRepeatDelay;
 		int m_nSpaceX;
 		int m_nSpaceY;

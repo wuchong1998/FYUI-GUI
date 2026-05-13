@@ -71,6 +71,20 @@ namespace FYUI
 		 */
 		void SetHorSpacing(int nSpacing);
 		/**
+		 * @brief 获取VerSpacing
+		 * @details 子项行与行之间纵向固定间距（逻辑值，未做 DPI 缩放）。返回 < 0 表示未设置，
+		 *          此时布局会回退到 GetChildPadding 作为行间距，兼容旧配置。
+		 * @return int 返回对应的数值结果
+		 */
+		int GetVerSpacing() const;
+		/**
+		 * @brief 设置VerSpacing
+		 * @details 子项行与行之间纵向固定间距（逻辑值，布局时按 DPI 缩放）。
+		 *          传入负值视为"未设置"，布局回退到 childpadding。
+		 * @param nSpacing [in] Spacing数值（逻辑像素）
+		 */
+		void SetVerSpacing(int nSpacing);
+		/**
 		 * @brief 设置属性
 		 * @details 用于设置属性。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param pstrName [in] 属性名称
@@ -107,6 +121,8 @@ namespace FYUI
 		SIZE m_szItem;
 		int m_nColumns;
 		int m_nHorSpacing = 20;
+		// 行间纵向固定间距（逻辑值，未 DPI 缩放）。<0 表示未设置，布局回退到 GetChildPadding。
+		int m_nVerSpacing = -1;
 	};
 }
 

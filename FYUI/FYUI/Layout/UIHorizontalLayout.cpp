@@ -302,6 +302,9 @@ namespace FYUI
 	{
 
 		if( m_iSepWidth != 0 ) {
+			// DPI 兼容：m_iSepWidth 存的是逻辑像素，命中/边界比较前先换算为设备像素（ScaleValue 保留负号）
+			const int nSepPixels = m_pManager != NULL ? m_pManager->ScaleValue(m_iSepWidth) : m_iSepWidth;
+
 			if( event.Type == UIEVENT_BUTTONDOWN && IsEnabled() )
 			{
 				RECT rcSeparator = GetThumbRect(false);
@@ -345,8 +348,8 @@ namespace FYUI
 					LONG cx = event.ptMouse.x - ptLastMouse.x;
 					ptLastMouse = event.ptMouse;
 					RECT rc = m_rcNewPos;
-					if( m_iSepWidth >= 0 ) {
-						if( cx > 0 && event.ptMouse.x < m_rcNewPos.right - m_iSepWidth ) return;
+					if( nSepPixels >= 0 ) {
+						if( cx > 0 && event.ptMouse.x < m_rcNewPos.right - nSepPixels ) return;
 						if( cx < 0 && event.ptMouse.x > m_rcNewPos.right ) return;
 						rc.right += cx;
 						if( rc.right - rc.left <= GetMinWidth() ) {
@@ -360,7 +363,7 @@ namespace FYUI
 					}
 					else {
 						if( cx > 0 && event.ptMouse.x < m_rcNewPos.left ) return;
-						if( cx < 0 && event.ptMouse.x > m_rcNewPos.left - m_iSepWidth ) return;
+						if( cx < 0 && event.ptMouse.x > m_rcNewPos.left - nSepPixels ) return;
 						rc.left += cx;
 						if( rc.right - rc.left <= GetMinWidth() ) {
 							if( m_rcNewPos.right - m_rcNewPos.left <= GetMinWidth() ) return;
@@ -416,15 +419,17 @@ namespace FYUI
 
 	RECT CHorizontalLayoutUI::GetThumbRect(bool bUseNew) const
 	{
+		// DPI 兼容：m_iSepWidth 为逻辑像素，命中矩形需以设备像素构造
+		const int nSepPixels = m_pManager != NULL ? m_pManager->ScaleValue(m_iSepWidth) : m_iSepWidth;
 		if( (m_uButtonState & UISTATE_CAPTURED) != 0 && bUseNew) {
-			if( m_iSepWidth >= 0 ) return CDuiRect(m_rcNewPos.right - m_iSepWidth, m_rcNewPos.top, m_rcNewPos.right, m_rcNewPos.bottom);
-			else return CDuiRect(m_rcNewPos.left, m_rcNewPos.top, m_rcNewPos.left - m_iSepWidth, m_rcNewPos.bottom);
+			if( nSepPixels >= 0 ) return CDuiRect(m_rcNewPos.right - nSepPixels, m_rcNewPos.top, m_rcNewPos.right, m_rcNewPos.bottom);
+			else return CDuiRect(m_rcNewPos.left, m_rcNewPos.top, m_rcNewPos.left - nSepPixels, m_rcNewPos.bottom);
 		}
 		else {
-			if( m_iSepWidth >= 0 ) 
-				return CDuiRect(m_rcItem.right - m_iSepWidth, m_rcItem.top, m_rcItem.right, m_rcItem.bottom);
+			if( nSepPixels >= 0 ) 
+				return CDuiRect(m_rcItem.right - nSepPixels, m_rcItem.top, m_rcItem.right, m_rcItem.bottom);
 			else 
-				return CDuiRect(m_rcItem.left, m_rcItem.top, m_rcItem.left - m_iSepWidth, m_rcItem.bottom);
+				return CDuiRect(m_rcItem.left, m_rcItem.top, m_rcItem.left - nSepPixels, m_rcItem.bottom);
 		}
 	}
 

@@ -299,12 +299,30 @@ namespace FYUI
 		const wchar_t* value = valueText.c_str();
 		if( StringUtil::CompareNoCase(pstrName, _T("sepheight")) == 0 ) SetSepHeight(_ttoi(value));
 		else if( StringUtil::CompareNoCase(pstrName, _T("sepimm")) == 0 ) SetSepImmMode(StringUtil::CompareNoCase(pstrValue, _T("true")) == 0);
+		else if( StringUtil::CompareNoCase(pstrName, _T("sepimmbordercolor")) == 0 )
+		{
+			DWORD clrColor = 0;
+			if (StringUtil::TryParseColor(pstrValue, clrColor)) {
+				SetSepImmBorderColor(clrColor);
+			}
+		}
+		else if( StringUtil::CompareNoCase(pstrName, _T("sepimmleavebordercolor")) == 0 )
+		{
+			DWORD clrColor = 0;
+			if (StringUtil::TryParseColor(pstrValue, clrColor)) {
+				SetSepImmLeaveBorderColor(clrColor);
+			}
+		}
 		else CContainerUI::SetAttribute(pstrName, pstrValue);
 	}
 
 	void CVerticalLayoutUI::DoEvent(TEventUI& event)
 	{
 		if( m_iSepHeight != 0 ) {
+			// DPI 兼容：m_iSepHeight 存的是逻辑像素，参与窗口像素级比较前统一换算。
+			// ScaleValue 对负数线性并保留符号（见 DPI.cpp 实现）。
+			const int nSepPixels = m_pManager != NULL ? m_pManager->ScaleValue(m_iSepHeight) : m_iSepHeight;
+
 			if( event.Type == UIEVENT_BUTTONDOWN && IsEnabled() )
 			{
 				RECT rcSeparator = GetThumbRect(false);
@@ -322,18 +340,35 @@ namespace FYUI
 					m_uButtonState &= ~UISTATE_CAPTURED;
 					m_rcItem = m_rcNewPos;
 					if( !m_bImmMode && m_pManager ) m_pManager->RemovePostPaint(this);
+					if (m_bImmMode && m_pManager) {
+						m_pManager->SendNotify(this, DUI_MSGTYPE_SPLITMOVE_UP);
+					}
 					NeedParentUpdate();
 					return;
 				}
 			}
 			if( event.Type == UIEVENT_MOUSEMOVE )
 			{
+				// 即时模式下：即便未按下拖拽，进入分隔条时也给光标 + border 反馈
+				if( m_bImmMode && (m_uButtonState & UISTATE_CAPTURED) == 0 )
+				{
+					RECT rcSeparator = GetThumbRect(false);
+					if( ::PtInRect(&rcSeparator, event.ptMouse) )
+					{
+						::SetCursor(::LoadCursor(NULL, IDC_SIZENS));
+						if( GetSepImmBorderColor() != 0 )
+						{
+							SetBorderColor(GetSepImmBorderColor());
+						}
+					}
+				}
+
 				if( (m_uButtonState & UISTATE_CAPTURED) != 0 ) {
 					LONG cy = event.ptMouse.y - ptLastMouse.y;
 					ptLastMouse = event.ptMouse;
 					RECT rc = m_rcNewPos;
-					if( m_iSepHeight >= 0 ) {
-						if( cy > 0 && event.ptMouse.y < m_rcNewPos.bottom + m_iSepHeight ) return;
+					if( nSepPixels >= 0 ) {
+						if( cy > 0 && event.ptMouse.y < m_rcNewPos.bottom + nSepPixels ) return;
 						if( cy < 0 && event.ptMouse.y > m_rcNewPos.bottom ) return;
 						rc.bottom += cy;
 						if( rc.bottom - rc.top <= GetMinHeight() ) {
@@ -347,7 +382,7 @@ namespace FYUI
 					}
 					else {
 						if( cy > 0 && event.ptMouse.y < m_rcNewPos.top ) return;
-						if( cy < 0 && event.ptMouse.y > m_rcNewPos.top + m_iSepHeight ) return;
+						if( cy < 0 && event.ptMouse.y > m_rcNewPos.top + nSepPixels ) return;
 						rc.top += cy;
 						if( rc.bottom - rc.top <= GetMinHeight() ) {
 							if( m_rcNewPos.bottom - m_rcNewPos.top <= GetMinHeight() ) return;
@@ -366,6 +401,7 @@ namespace FYUI
 					if( m_bImmMode ) {
 						m_rcItem = m_rcNewPos;
 						NeedParentUpdate();
+						if( m_pManager ) m_pManager->SendNotify(this, DUI_MSGTYPE_SPLITMOVE);
 					}
 					else {
 						rcInvalidate.Join(GetThumbRect(true));
@@ -373,6 +409,16 @@ namespace FYUI
 						if( m_pManager ) m_pManager->Invalidate(rcInvalidate);
 					}
 					return;
+				}
+			}
+			if( event.Type == UIEVENT_MOUSELEAVE )
+			{
+				if( m_bImmMode )
+				{
+					if( GetSepImmLeaveBorderColor() != 0 )
+					{
+						SetBorderColor(GetSepImmLeaveBorderColor());
+					}
 				}
 			}
 			if( event.Type == UIEVENT_SETCURSOR )
@@ -395,21 +441,23 @@ namespace FYUI
 
 	RECT CVerticalLayoutUI::GetThumbRect(bool bUseNew) const
 	{
+		// DPI 兼容：m_iSepHeight 为逻辑像素，命中矩形需以设备像素构造
+		const int nSepPixels = m_pManager != NULL ? m_pManager->ScaleValue(m_iSepHeight) : m_iSepHeight;
 		if( (m_uButtonState & UISTATE_CAPTURED) != 0 && bUseNew) {
-			if( m_iSepHeight >= 0 ) 
-				return CDuiRect(m_rcNewPos.left, MAX(m_rcNewPos.bottom - m_iSepHeight, m_rcNewPos.top), 
+			if( nSepPixels >= 0 ) 
+				return CDuiRect(m_rcNewPos.left, MAX(m_rcNewPos.bottom - nSepPixels, m_rcNewPos.top), 
 					m_rcNewPos.right, m_rcNewPos.bottom);
 			else 
 				return CDuiRect(m_rcNewPos.left, m_rcNewPos.top, m_rcNewPos.right, 
-					MIN(m_rcNewPos.top - m_iSepHeight, m_rcNewPos.bottom));
+					MIN(m_rcNewPos.top - nSepPixels, m_rcNewPos.bottom));
 		}
 		else {
-			if( m_iSepHeight >= 0 ) 
-				return CDuiRect(m_rcItem.left, MAX(m_rcItem.bottom - m_iSepHeight, m_rcItem.top), m_rcItem.right, 
+			if( nSepPixels >= 0 ) 
+				return CDuiRect(m_rcItem.left, MAX(m_rcItem.bottom - nSepPixels, m_rcItem.top), m_rcItem.right, 
 					m_rcItem.bottom);
 			else 
 				return CDuiRect(m_rcItem.left, m_rcItem.top, m_rcItem.right, 
-					MIN(m_rcItem.top - m_iSepHeight, m_rcItem.bottom));
+					MIN(m_rcItem.top - nSepPixels, m_rcItem.bottom));
 
 		}
 	}

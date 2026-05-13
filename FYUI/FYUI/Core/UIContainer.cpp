@@ -476,15 +476,44 @@ namespace FYUI
             return;
         }
 
+        // 动画方向与请求一致 → 保持动画继续执行
         if (m_bAnimating && m_bAnimShowing == bVisible)
             return;
 
+        // 动画进行中且方向反转 → 原地反转，保留当前进度/原始尺寸，不做 Stop
+        // 旧实现调用 StopShowHideAnim 只停 timer 不恢复尺寸，随后若 m_bVisible==bVisible
+        // 直接 return，导致 m_cxyFixed 被冻结在动画中途的小值，并在下一次 hide 中
+        // 被错误地当成"原始尺寸"保存，造成宽度逐次衰减。
         if (m_bAnimating) {
-            StopShowHideAnim();
+            m_bAnimShowing = bVisible;
+            if (bVisible && m_nAnimOrigFixedSize > 0 && m_pManager) {
+                // Show 方向：把目标重新锚定到原始尺寸
+                m_nAnimTargetPx = m_pManager->ScaleValue(m_nAnimOrigFixedSize);
+            }
+            // Hide 方向：m_nAnimTargetPx 继续当作"收缩基准长度"沿用，current 不变
+            return;
         }
 
-        if (m_bVisible == bVisible)
+        if (m_bVisible == bVisible) {
+            // 非动画态但可见状态已一致：若尺寸残留在上一次反转打断的小值，
+            // 启动一段补齐动画把控件拉回原始尺寸。
+            if (bVisible && m_nAnimOrigFixedSize > 0 && m_pManager) {
+                const int curPx = (m_animDir == AnimHor) ? GetWidth() : GetHeight();
+                const int targetPx = m_pManager->ScaleValue(m_nAnimOrigFixedSize);
+                if (curPx > 0 && curPx < targetPx) {
+                    m_bAnimShowing = true;
+                    m_nAnimCurrentPx = curPx;
+                    m_nAnimTargetPx = targetPx;
+                    m_bAnimating = true;
+                    if (!m_pManager->SetTimer(this, SHOWHIDE_ANIM_TIMERID, SHOWHIDE_ANIM_INTERVAL_MS)) {
+                        m_bAnimating = false;
+                        if (m_animDir == AnimHor) SetFixedWidth(m_nAnimOrigFixedSize, true);
+                        else SetFixedHeight(m_nAnimOrigFixedSize, true);
+                    }
+                }
+            }
             return;
+        }
 
         StartShowHideAnim(bVisible);
     }
@@ -1576,121 +1605,6 @@ namespace FYUI
         return nullptr;
     }
 
-    //CControlUI* CContainerUI::FindControl(FINDCONTROLPROC Proc, LPVOID pData, UINT uFlags)
-    //{
-
-    //    if ((uFlags & UIFIND_VISIBLE) && !IsVisible()) return NULL;
-    //    if ((uFlags & UIFIND_ENABLED) && !IsEnabled()) return NULL;
-
-    //    POINT* pPt = NULL;
-    //    const bool bHitTest = (uFlags & UIFIND_HITTEST) != 0;
-    //    if (bHitTest)
-    //    {
-    //        pPt = static_cast<LPPOINT>(pData);
-    //        if (!::PtInRect(&m_rcItem, *pPt)) return NULL;
-    //    }
-
-    //    if ((uFlags & UIFIND_UPDATETEST) && Proc(this, pData))
-    //        return NULL;
-
-    //    if ((uFlags & UIFIND_ME_FIRST))
-    //    {
-    //        if (!bHitTest || IsMouseEnabled())
-    //        {
-    //            CControlUI* pResult = Proc(this, pData);
-    //            if (pResult) return pResult;
-    //        }
-    //    }
-
-
-    //    auto CheckScrollBar = [&](CControlUI* pBar) -> CControlUI*
-    //        {
-    //            if (pBar && (!bHitTest || IsMouseEnabled()))
-    //            {
-    //                return pBar->FindControl(Proc, pData, uFlags);
-    //            }
-    //            return NULL;
-    //        };
-
-    //    if (CControlUI* pRet = CheckScrollBar(m_pVerticalScrollBar)) return pRet;
-    //    if (CControlUI* pRet = CheckScrollBar(m_pHorizontalScrollBar)) return pRet;
-
-
-    //    if (!bHitTest || IsMouseChildEnabled())
-    //    {
-
-    //        RECT rc = m_rcItem;
-    //        const RECT rcInset = GetInset();
-    //        rc.left += rcInset.left;
-    //        rc.top += rcInset.top;
-    //        rc.right -= rcInset.right;
-    //        rc.bottom -= rcInset.bottom;
-
-    //        if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible())
-    //            rc.right -= m_pVerticalScrollBar->GetFixedWidth();
-    //        if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible())
-    //            rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
-
-    //        const int nCount = m_items.GetSize();
-    //        void** ppItems = m_items.c_str();
-
-
-    //        const bool bCheckVisible = (uFlags & UIFIND_VISIBLE) != 0;
-    //        const bool bTopFirst = (uFlags & UIFIND_TOP_FIRST) != 0;
-
-    //        // 瀵邦亞骞嗘担鎾烩偓鏄忕帆鐏忎浇顥?
-    //        auto FindInChild = [&](int index) -> CControlUI*
-    //            {
-    //                CControlUI* pItem = static_cast<CControlUI*>(ppItems[index]);
-
-    //                if (bHitTest)
-    //                {
-    //                    // 婵″倹鐏夌憰浣圭湴閸欘垵顫嗛幀褝绱濇稉鏃€甯舵禒鏈电瑝閸欘垵顫嗛敍宀冪儲鏉?
-    //                    if (bCheckVisible && !pItem->IsVisible())
-    //                        return NULL;
-    //                    if (!::PtInRect(&pItem->GetPos(), *pPt))
-    //                        return NULL;
-    //                }
-
-    //                CControlUI* pResult = pItem->FindControl(Proc, pData, uFlags);
-    //                if (pResult)
-    //                {
-    //                    if (bHitTest && !pResult->IsFloat() && !::PtInRect(&rc, *pPt)) {
-    //                        return NULL;
-    //                    }
-    //                    return pResult;
-    //                }
-    //                return NULL;
-    //            };
-
-    //        // 閺嶈宓侀柆宥呭坊妞ゅ搫绨幍褑顢戝顏嗗箚
-    //        if (bTopFirst)
-    //        {
-    //            for (int i = nCount - 1; i >= 0; --i)
-    //            {
-    //                if (CControlUI* pRet = FindInChild(i)) return pRet;
-    //            }
-    //        }
-    //        else
-    //        {
-    //            for (int i = 0; i < nCount; ++i)
-    //            {
-    //                if (CControlUI* pRet = FindInChild(i)) return pRet;
-    //            }
-    //        }
-    //    }
-
-
-    //    if (!(uFlags & UIFIND_ME_FIRST)) {
-    //        if (!bHitTest || IsMouseEnabled()) {
-    //            return Proc(this, pData);
-    //        }
-    //    }
-
-    //    return NULL;
-    //}
-
-
     CControlUI* CContainerUI::FindControl(FINDCONTROLPROC Proc,
         LPVOID pData,
         UINT uFlags) {
@@ -1942,8 +1856,9 @@ namespace FYUI
 
 
 
-    void CContainerUI::SetFloatPos(int iIndex) {
-        // 閸ョ姳璐烠ControlUI::SetPos鐎电loat閻ㄥ嫭鎼锋担婊冨閸濆稄绱濇潻娆撳櫡娑撳秷鍏樼€电loat缂佸嫪娆㈠ǎ璇插濠婃艾濮╅弶锛勬畱瑜板崬鎼?
+    void CContainerUI::SetFloatPos(int iIndex)
+    {
+       
         if (iIndex < 0 || iIndex >= m_items.GetSize()) {
             return;
         }
@@ -1956,8 +1871,7 @@ namespace FYUI
         if (!pControl->IsFloat()) {
             return;
         }
-        //std::wstring strName= pControl->GetName();
-
+       
         SIZE szXY = pControl->GetFixedXY();
         SIZE sz = { pControl->GetFixedWidth(), pControl->GetFixedHeight() };
 
@@ -1965,7 +1879,8 @@ namespace FYUI
         int nParentHeight = m_rcItem.bottom - m_rcItem.top;
 
         UINT uAlign = pControl->GetFloatAlign();
-        if (uAlign != 0) {
+        if (uAlign != 0) 
+        {
             RECT rcCtrl = { 0, 0, sz.cx, sz.cy };
             if ((uAlign & DT_CENTER) != 0) {
                 ::OffsetRect(&rcCtrl, (nParentWidth - sz.cx) / 2, 0);
@@ -2270,9 +2185,20 @@ namespace FYUI
         m_bAnimShowing = bShow;
 
         if (bShow) {
-            if (m_nAnimTargetPx <= 0) {
-                m_nAnimTargetPx = (m_nAnimOrigFixedSize > 0) ? m_pManager->ScaleValue(m_nAnimOrigFixedSize) : 200;
+            // 若此前从未记录过原始尺寸（例如 XML 设置 visible=false 后首次 Show），
+            // 使用当前的 FixedWidth/Height 作为原始值；一旦有值就保持稳定。
+            if (m_nAnimOrigFixedSize <= 0) {
+                const int currentFixed = (m_animDir == AnimHor) ? m_cxyFixed.cx : m_cxyFixed.cy;
+                if (currentFixed > 0) {
+                    m_nAnimOrigFixedSize = currentFixed;
+                }
             }
+
+            // 强制以 m_nAnimOrigFixedSize 为目标（原实现仅在 <=0 时赋值，
+            // 会错误地沿用上一轮 hide 路径残留的 m_nAnimTargetPx）。
+            const int defaultLogical = 200;
+            const int targetLogical = (m_nAnimOrigFixedSize > 0) ? m_nAnimOrigFixedSize : defaultLogical;
+            m_nAnimTargetPx = m_pManager->ScaleValue(targetLogical);
 
             m_nAnimCurrentPx = 1;
             if (m_animDir == AnimHor) SetFixedWidth(1, false);
@@ -2284,7 +2210,11 @@ namespace FYUI
             NeedParentUpdate();
         }
         else {
-            m_nAnimOrigFixedSize = (m_animDir == AnimHor) ? m_cxyFixed.cx : m_cxyFixed.cy;
+            // 原始固定尺寸仅 Lazy-init 一次；否则反复 Hide 会把已经被动画
+            // 改小的 m_cxyFixed 当作"原始尺寸"保存，导致尺寸逐次衰减。
+            if (m_nAnimOrigFixedSize <= 0) {
+                m_nAnimOrigFixedSize = (m_animDir == AnimHor) ? m_cxyFixed.cx : m_cxyFixed.cy;
+            }
             m_nAnimCurrentPx = (m_animDir == AnimHor) ? GetWidth() : GetHeight();
             m_nAnimTargetPx = m_nAnimCurrentPx;
 
@@ -2345,10 +2275,13 @@ namespace FYUI
         }
 
         int logicalSize = m_pManager ? m_pManager->UnscaleValue(m_nAnimCurrentPx) : m_nAnimCurrentPx;
-        if (logicalSize <= 0 && m_nAnimCurrentPx > 0) logicalSize = 1;
+        if (logicalSize <= 0 && m_nAnimCurrentPx > 0) 
+            logicalSize = 1;
 
-        if (m_animDir == AnimHor) SetFixedWidth(logicalSize, true);
-        else SetFixedHeight(logicalSize, true);
+        if (m_animDir == AnimHor) 
+            SetFixedWidth(logicalSize, true);
+        else 
+            SetFixedHeight(logicalSize, true);
     }
 
     void CContainerUI::StopShowHideAnim()

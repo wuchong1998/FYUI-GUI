@@ -4,93 +4,6 @@
 
 namespace FYUI
 {
-	namespace
-	{
-		SIZE ClampTileMeasuredSize(CControlUI* pControl, SIZE szTile)
-		{
-			if( szTile.cx < pControl->GetMinWidth() ) szTile.cx = pControl->GetMinWidth();
-			if( szTile.cx > pControl->GetMaxWidth() ) szTile.cx = pControl->GetMaxWidth();
-			if( szTile.cy < pControl->GetMinHeight() ) szTile.cy = pControl->GetMinHeight();
-			if( szTile.cy > pControl->GetMaxHeight() ) szTile.cy = pControl->GetMaxHeight();
-			return szTile;
-		}
-
-		int CalculateTileColumnWidth(const RECT& rc, int nColumns, int nHorSpacing, bool bHasHorizontalScroll, int iHorizontalScrollRange)
-		{
-			const int cxVisibleWidth = rc.right - rc.left;
-			const int iSpacingWidth = (nColumns > 1) ? (nColumns - 1) * nHorSpacing : 0;
-			int cxAvailableWidth = cxVisibleWidth - iSpacingWidth;
-			if( bHasHorizontalScroll ) {
-				cxAvailableWidth = cxVisibleWidth + iHorizontalScrollRange - iSpacingWidth;
-			}
-			if( cxAvailableWidth < 0 ) cxAvailableWidth = 0;
-			return nColumns > 0 ? cxAvailableWidth / nColumns : 0;
-		}
-
-		int ResolveTileColumnCount(const RECT& rc, int nConfiguredColumns, bool bFixedColumns, const SIZE& szItem, int nHorSpacing)
-		{
-			if( bFixedColumns ) return max(nConfiguredColumns, 1);
-
-			if( szItem.cx <= 0 ) return max(nConfiguredColumns, 1);
-
-			const int cxStep = szItem.cx + nHorSpacing;
-			if( cxStep <= 0 ) return max(nConfiguredColumns, 1);
-
-			const int cxLayout = rc.right - rc.left;
-			const int nResolvedColumns = cxLayout / cxStep;
-			return max(nResolvedColumns, 1);
-		}
-
-		int MeasureTileRowHeight(const CStdPtrArray& items, int iStartIndex, int iVisibleIndex, int nColumns, const RECT& rcTile, int iChildPadding, CControlUI* pReferenceControl)
-		{
-			int cyHeight = 0;
-			int iIndex = iVisibleIndex;
-			for( int it = iStartIndex; it < items.GetSize(); ++it ) {
-				CControlUI* pLineControl = static_cast<CControlUI*>(items[it]);
-				if( !pLineControl->IsVisible() ) continue;
-				if( pLineControl->IsFloat() ) continue;
-
-				RECT rcPadding = pLineControl->GetPadding();
-				SIZE szAvailable = { rcTile.right - rcTile.left - rcPadding.left - rcPadding.right, 9999999 };
-				if( iIndex == iVisibleIndex || ((iIndex + 1) % nColumns) == 0 ) {
-					szAvailable.cx -= iChildPadding / 2;
-				}
-				else {
-					szAvailable.cx -= iChildPadding;
-				}
-
-				if( szAvailable.cx < pReferenceControl->GetMinWidth() ) szAvailable.cx = pReferenceControl->GetMinWidth();
-				if( szAvailable.cx > pReferenceControl->GetMaxWidth() ) szAvailable.cx = pReferenceControl->GetMaxWidth();
-
-				SIZE szTile = pLineControl->EstimateSize(szAvailable);
-				if( szTile.cx < pReferenceControl->GetMinWidth() ) szTile.cx = pReferenceControl->GetMinWidth();
-				if( szTile.cx > pReferenceControl->GetMaxWidth() ) szTile.cx = pReferenceControl->GetMaxWidth();
-				if( szTile.cy < pReferenceControl->GetMinHeight() ) szTile.cy = pReferenceControl->GetMinHeight();
-				if( szTile.cy > pReferenceControl->GetMaxHeight() ) szTile.cy = pReferenceControl->GetMaxHeight();
-
-				cyHeight = MAX(cyHeight, szTile.cy + rcPadding.top + rcPadding.bottom);
-				if( (++iIndex % nColumns) == 0 ) break;
-			}
-			return cyHeight;
-		}
-
-		RECT BuildTileItemRect(const RECT& rcTile, const RECT& rcPadding, int iChildPadding, int iVisibleIndex, int nColumns, int cyHeight)
-		{
-			RECT rcContent = rcTile;
-			rcContent.left += rcPadding.left + iChildPadding / 2;
-			rcContent.right -= rcPadding.right + iChildPadding / 2;
-			if( (iVisibleIndex % nColumns) == 0 ) {
-				rcContent.left -= iChildPadding / 2;
-			}
-			if( ((iVisibleIndex + 1) % nColumns) == 0 ) {
-				rcContent.right += iChildPadding / 2;
-			}
-			rcContent.top += rcPadding.top;
-			rcContent.bottom = rcTile.top + cyHeight;
-			return rcContent;
-		}
-	}
-
 	IMPLEMENT_DUICONTROL(CTileLayoutUI)
 	CTileLayoutUI::CTileLayoutUI() : m_nColumns(1)
 	{
@@ -156,6 +69,20 @@ namespace FYUI
 		NeedUpdate();
 	}
 
+	int CTileLayoutUI::GetVerSpacing() const
+	{
+		return m_nVerSpacing;
+	}
+
+	void CTileLayoutUI::SetVerSpacing(int nSpacing)
+	{
+		if( nSpacing < 0 ) nSpacing = -1;
+		if( m_nVerSpacing != nSpacing ) {
+			m_nVerSpacing = nSpacing;
+			NeedUpdate();
+		}
+	}
+
 	void CTileLayoutUI::SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue)
 	{
 		if( StringUtil::CompareNoCase(pstrName, _T("itemsize")) == 0 ) {
@@ -171,6 +98,10 @@ namespace FYUI
 		else if( StringUtil::CompareNoCase(pstrName, _T("hor_spacing")) == 0 ) {
 			int value = 0;
 			if (StringUtil::TryParseInt(pstrValue, value)) SetHorSpacing(value);
+		}
+		else if( StringUtil::CompareNoCase(pstrName, _T("ver_spacing")) == 0 ) {
+			int value = 0;
+			if (StringUtil::TryParseInt(pstrValue, value)) SetVerSpacing(value);
 		}
 		else CContainerUI::SetAttribute(pstrName, pstrValue);
 	}
@@ -189,12 +120,20 @@ namespace FYUI
 		m_szItem = pControl->m_szItem;
 		m_nColumns = pControl->m_nColumns;
 		m_nHorSpacing = pControl->m_nHorSpacing;
+		m_nVerSpacing = pControl->m_nVerSpacing;
 		__super::CopyData(pControl);
 	}
 
 	void CTileLayoutUI::SetPos(RECT rc, bool bNeedInvalidate)
 	{
-		
+		// 布局规则（重写后）：
+		//  1. 子控件占位严格等于 itemsize（DPI 缩放后），不再读取子控件 FixedWidth/Height。
+		//  2. hor_spacing 为水平间距的"最小值"（DPI 缩放后）；剩余可显示宽度均分到所有间隙，
+		//     实际间距 >= hor_spacing。
+		//  3. 容器宽度变化时子控件尺寸不变、间距动态扩大，且 N 列总占位永远 <= 可显示宽度。
+		//  4. 行间距：ver_spacing 显式设置时使用其 DPI 缩放后值；未设置时回退到 GetChildPadding。
+		//  5. 极窄场景：N=1 且 itemW 仍超过可显示宽度时，将子项宽压到可显示宽度，保证不裁切。
+
 		CControlUI::SetPos(rc, bNeedInvalidate);
 		rc = ApplyLayoutInsetRect(m_rcItem, GetInset());
 
@@ -205,27 +144,69 @@ namespace FYUI
 
 		rc = AdjustLayoutRectForVisibleScrollBars(rc, m_pVerticalScrollBar, m_pHorizontalScrollBar, m_bScrollFloat);
 
-		const SIZE szItem = GetItemSize();
-		const int nHorSpacing = m_pManager != NULL ? m_pManager->ScaleValue(m_nHorSpacing) : m_nHorSpacing;
-		const int nColumns = ResolveTileColumnCount(rc, m_nColumns, m_bFixedColumns, szItem, nHorSpacing);
+		// 子项占位尺寸：itemsize 优先（已 DPI 适配），否则取首个可见非浮动子项的 EstimateSize 兜底
+		SIZE szItem = GetItemSize();
+		int itemW = szItem.cx;
+		int itemH = szItem.cy;
+		if( itemW <= 0 || itemH <= 0 ) {
+			SIZE szFallbackAvailable = { rc.right - rc.left, rc.bottom - rc.top };
+			for( int it = 0; it < m_items.GetSize(); ++it ) {
+				CControlUI* p = static_cast<CControlUI*>(m_items[it]);
+				if( !p->IsVisible() || p->IsFloat() ) continue;
+				SIZE szEst = p->EstimateSize(szFallbackAvailable);
+				if( itemW <= 0 && szEst.cx > 0 ) itemW = szEst.cx;
+				if( itemH <= 0 && szEst.cy > 0 ) itemH = szEst.cy;
+				break;
+			}
+		}
+		if( itemW <= 0 ) itemW = 1;
+		if( itemH <= 0 ) itemH = 1;
 
-		const int cxWidth = CalculateTileColumnWidth(rc, nColumns, nHorSpacing,
-			m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible(),
-			m_pHorizontalScrollBar ? m_pHorizontalScrollBar->GetScrollRange() : 0);
+		const int minSpacing = m_pManager != NULL ? m_pManager->ScaleValue(m_nHorSpacing) : m_nHorSpacing;
+		// 行间距：ver_spacing 显式设置时优先使用（DPI 缩放后），否则回退到 childpadding 兼容旧配置
+		const int rowSpacing = (m_nVerSpacing >= 0)
+			? (m_pManager != NULL ? m_pManager->ScaleValue(m_nVerSpacing) : m_nVerSpacing)
+			: GetChildPadding();
+		const int cxAvailable = MAX(rc.right - rc.left, 0);
 
-		int cyNeeded = 0;
-		int cyHeight = 0;
-		int iCount = 0;
+		// 计算列数 N：N * itemW + (N-1) * minSpacing <= cxAvailable
+		int nColumns = 1;
+		if( m_bFixedColumns ) {
+			nColumns = MAX(m_nColumns, 1);
+		}
+		else {
+			const int denom = itemW + minSpacing;
+			if( denom > 0 ) {
+				nColumns = (cxAvailable + minSpacing) / denom;
+			}
+			if( nColumns < 1 ) nColumns = 1;
+		}
+
+		// 极窄兜底：单列且 itemW 仍超过可显示宽 → 压缩子项宽到 cxAvailable
+		int effectiveItemW = itemW;
+		if( nColumns == 1 && effectiveItemW > cxAvailable && cxAvailable > 0 ) {
+			effectiveItemW = cxAvailable;
+		}
+
+		// 实际水平间距：均分剩余空间，但不小于 minSpacing
+		int actualSpacing = minSpacing;
+		if( nColumns >= 2 ) {
+			const int totalItemW = nColumns * effectiveItemW;
+			const int remaining = cxAvailable - totalItemW;
+			if( remaining > 0 ) {
+				actualSpacing = remaining / (nColumns - 1);
+				if( actualSpacing < minSpacing ) actualSpacing = minSpacing;
+			}
+		}
+
 		POINT ptTile = { rc.left, rc.top };
 		if( m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible() ) {
 			ptTile.y -= m_pVerticalScrollBar->GetScrollPos();
 		}
-		int iPosX = rc.left;
-		if( m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible() ) {
-			iPosX -= m_pHorizontalScrollBar->GetScrollPos();
-			ptTile.x = iPosX;
-		}
+		const int xStart = ptTile.x;
 
+		int visibleCount = 0;
+		int iCount = 0;
 		for( int it = 0; it < m_items.GetSize(); ++it ) {
 			CControlUI* pControl = static_cast<CControlUI*>(m_items[it]);
 			if( !pControl->IsVisible() ) continue;
@@ -234,41 +215,29 @@ namespace FYUI
 				continue;
 			}
 
-			RECT rcTile = { ptTile.x, ptTile.y, ptTile.x + cxWidth, ptTile.y };
-			if( (iCount % nColumns) == 0 ) {
-				cyHeight = MeasureTileRowHeight(m_items, it, iCount, nColumns, rcTile, m_iChildPadding, pControl);
-				if( szItem.cy > 0 ) cyHeight = MAX(cyHeight, szItem.cy);
-			}
-
-			const RECT rcPadding = pControl->GetPadding();
-			const RECT rcContent = BuildTileItemRect(rcTile, rcPadding, m_iChildPadding, iCount, nColumns, cyHeight);
-			SIZE szAvailable = { rcContent.right - rcContent.left, rcContent.bottom - rcContent.top };
-			SIZE szMeasured = pControl->EstimateSize(szAvailable);
-			if( szMeasured.cx == 0 ) szMeasured.cx = szAvailable.cx;
-			if( szMeasured.cy == 0 ) szMeasured.cy = szAvailable.cy;
-			szMeasured = ClampTileMeasuredSize(pControl, szMeasured);
-
 			RECT rcPos = {
-				(rcContent.left + rcContent.right - szMeasured.cx) / 2,
-				(rcContent.top + rcContent.bottom - szMeasured.cy) / 2,
-				(rcContent.left + rcContent.right - szMeasured.cx) / 2 + szMeasured.cx,
-				(rcContent.top + rcContent.bottom - szMeasured.cy) / 2 + szMeasured.cy
+				ptTile.x,
+				ptTile.y,
+				ptTile.x + effectiveItemW,
+				ptTile.y + itemH
 			};
 			pControl->SetPos(rcPos);
 
+			++visibleCount;
 			if( (++iCount % nColumns) == 0 ) {
-				ptTile.x = iPosX;
-				ptTile.y += cyHeight + m_iChildPadding;
-				cyHeight = 0;
+				ptTile.x = xStart;
+				ptTile.y += itemH + rowSpacing;
 			}
 			else {
-				ptTile.x += cxWidth + nHorSpacing;
+				ptTile.x += effectiveItemW + actualSpacing;
 			}
+		}
 
-			cyNeeded = rcContent.bottom - rc.top;
-			if( m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible() ) {
-				cyNeeded += m_pVerticalScrollBar->GetScrollPos();
-			}
+		// 总内容高度（供 vscrollbar range 使用）
+		int cyNeeded = 0;
+		if( visibleCount > 0 ) {
+			const int nRows = (visibleCount + nColumns - 1) / nColumns;
+			cyNeeded = nRows * itemH + (nRows > 1 ? (nRows - 1) * rowSpacing : 0);
 		}
 
 		ProcessScrollBar(rc, 0, cyNeeded);

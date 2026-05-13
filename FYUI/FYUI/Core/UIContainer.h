@@ -201,6 +201,25 @@ namespace FYUI
 		* @param bVisible [in] 是否可见状态
 		*/
 		void SetInternVisible(bool bVisible = true);
+
+		// ============================================================
+		// 显隐动画
+		// ============================================================
+		enum ShowHideAnimDir {
+			AnimNone = 0,   // 无动画
+			AnimHor,        // 横向伸缩动画 (hor)
+			AnimVer,        // 纵向伸缩动画 (ver)
+		};
+
+		/**
+		 * @brief 设置显隐动画方向
+		 * @param dir [in] 动画方向
+		 */
+		void SetShowHideAnimDir(ShowHideAnimDir dir);
+		ShowHideAnimDir GetShowHideAnimDir() const;
+
+		/** @brief 显隐动画是否正在进行 */
+		bool IsShowHideAnimating() const;
 		/**
 		* @brief 设置启用状态
 		* @details 用于设置启用状态。具体行为由当前对象状态以及传入参数共同决定。
@@ -874,6 +893,25 @@ namespace FYUI
 			SMOOTH_SCROLL_TIMERID = 0x5F10,
 			SMOOTH_SCROLL_INTERVAL_MS = 4,
 		};
+
+		// ============================================================
+		// 显隐动画
+		// ============================================================
+		ShowHideAnimDir m_animDir = AnimNone;
+		bool   m_bAnimating = false;         // 动画进行中
+		bool   m_bAnimShowing = false;       // true=展开, false=收起
+		int    m_nAnimTargetPx = 0;          // 目标像素宽度/高度
+		int    m_nAnimCurrentPx = 0;         // 当前像素宽度/高度
+		int    m_nAnimOrigFixedSize = 0;     // 原始 FixedWidth 或 FixedHeight（逻辑值，0=自适应）
+
+		enum : UINT {
+			SHOWHIDE_ANIM_TIMERID = 0x5F30,
+			SHOWHIDE_ANIM_INTERVAL_MS = 16,  // ~60fps
+		};
+
+		void StartShowHideAnim(bool bShow);
+		void AdvanceShowHideAnim();
+		void StopShowHideAnim();
 
 	};
 

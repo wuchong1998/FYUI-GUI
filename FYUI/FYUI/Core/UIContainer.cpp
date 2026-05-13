@@ -48,6 +48,12 @@ namespace FYUI
         m_bCursorMouse(true),
         m_bShowScrollbar(true) {
         ::ZeroMemory(&m_rcInset, sizeof(m_rcInset));
+        m_animDir = AnimNone;
+        m_bAnimating = false;
+        m_bAnimShowing = false;
+        m_nAnimTargetPx = 0;
+        m_nAnimCurrentPx = 0;
+        m_nAnimOrigFixedSize = 0;
         m_bScrollFloat = true;
         m_smoothScrollLastTick = std::chrono::steady_clock::now();
     }
@@ -57,6 +63,7 @@ namespace FYUI
 
     CContainerUI::~CContainerUI() {
         StopSmoothScroll(false);
+        StopShowHideAnim();
         m_bDelayedDestroy = false;
         RemoveAll();
         if (m_pVerticalScrollBar) {
@@ -460,13 +467,26 @@ namespace FYUI
     }
 
     void CContainerUI::SetVisible(bool bVisible, bool bSendFocus) {
-        if (m_bVisible == bVisible) {
+        if (m_animDir == AnimNone) {
+            if (m_bVisible == bVisible) return;
+            CControlUI::SetVisible(bVisible, bSendFocus);
+            for (int it = 0; it < m_items.GetSize(); it++) {
+                static_cast<CControlUI*>(m_items[it])->SetInternVisible(IsVisible());
+            }
             return;
         }
-        CControlUI::SetVisible(bVisible, bSendFocus);
-        for (int it = 0; it < m_items.GetSize(); it++) {
-            static_cast<CControlUI*>(m_items[it])->SetInternVisible(IsVisible());
+
+        if (m_bAnimating && m_bAnimShowing == bVisible)
+            return;
+
+        if (m_bAnimating) {
+            StopShowHideAnim();
         }
+
+        if (m_bVisible == bVisible)
+            return;
+
+        StartShowHideAnim(bVisible);
     }
 
     // 闁槒绶稉濠忕礉鐎甸€涚艾Container閹貉傛娑撳秴鍙曞鈧銈嗘煙濞?
@@ -523,6 +543,11 @@ namespace FYUI
             return;
         }
 
+
+        if (event.Type == UIEVENT_TIMER && event.wParam == SHOWHIDE_ANIM_TIMERID) {
+            AdvanceShowHideAnim();
+            return;
+        }
 
         if (event.Type == UIEVENT_SETFOCUS) {
             m_bFocused = true;
@@ -1322,6 +1347,11 @@ namespace FYUI
         }
         else if (StringUtil::EqualsNoCase(name, L"mousechild")) {
             SetMouseChildEnabled(StringUtil::ParseBool(pstrValueView));
+        }
+        else if (StringUtil::EqualsNoCase(name, L"animation_show_hide")) {
+            if (StringUtil::EqualsNoCase(pstrValueView, L"hor")) SetShowHideAnimDir(AnimHor);
+            else if (StringUtil::EqualsNoCase(pstrValueView, L"ver")) SetShowHideAnimDir(AnimVer);
+            else SetShowHideAnimDir(AnimNone);
         }
         else if (StringUtil::EqualsNoCase(name, L"vscrollbar"))
         {
@@ -2211,6 +2241,123 @@ namespace FYUI
             pSubControl = FindSubControl(this, pstrSubControlName, strEliminateControlName);
         return pSubControl;
     }
-}  // namespace DuiLib
+
+    // ============================================================
+    // 显隐动画实现
+    // ============================================================
+
+    void CContainerUI::SetShowHideAnimDir(ShowHideAnimDir dir)
+    {
+        if (m_animDir == dir) return;
+        if (m_bAnimating) StopShowHideAnim();
+        m_animDir = dir;
+    }
+
+    CContainerUI::ShowHideAnimDir CContainerUI::GetShowHideAnimDir() const
+    {
+        return m_animDir;
+    }
+
+    bool CContainerUI::IsShowHideAnimating() const
+    {
+        return m_bAnimating;
+    }
+
+    void CContainerUI::StartShowHideAnim(bool bShow)
+    {
+        if (m_pManager == nullptr) return;
+
+        m_bAnimShowing = bShow;
+
+        if (bShow) {
+            if (m_nAnimTargetPx <= 0) {
+                m_nAnimTargetPx = (m_nAnimOrigFixedSize > 0) ? m_pManager->ScaleValue(m_nAnimOrigFixedSize) : 200;
+            }
+
+            m_nAnimCurrentPx = 1;
+            if (m_animDir == AnimHor) SetFixedWidth(1, false);
+            else SetFixedHeight(1, false);
+
+            CControlUI::SetVisible(true, false);
+            for (int it = 0; it < m_items.GetSize(); it++)
+                static_cast<CControlUI*>(m_items[it])->SetInternVisible(true);
+            NeedParentUpdate();
+        }
+        else {
+            m_nAnimOrigFixedSize = (m_animDir == AnimHor) ? m_cxyFixed.cx : m_cxyFixed.cy;
+            m_nAnimCurrentPx = (m_animDir == AnimHor) ? GetWidth() : GetHeight();
+            m_nAnimTargetPx = m_nAnimCurrentPx;
+
+            if (m_nAnimCurrentPx <= 1) {
+                CControlUI::SetVisible(false, true);
+                for (int it = 0; it < m_items.GetSize(); it++)
+                    static_cast<CControlUI*>(m_items[it])->SetInternVisible(false);
+                NeedParentUpdate();
+                return;
+            }
+        }
+
+        m_bAnimating = true;
+        if (!m_pManager->SetTimer(this, SHOWHIDE_ANIM_TIMERID, SHOWHIDE_ANIM_INTERVAL_MS)) {
+            StopShowHideAnim();
+            if (!bShow) {
+                CControlUI::SetVisible(false, true);
+                for (int it = 0; it < m_items.GetSize(); it++)
+                    static_cast<CControlUI*>(m_items[it])->SetInternVisible(false);
+                NeedParentUpdate();
+            }
+        }
+    }
+
+    void CContainerUI::AdvanceShowHideAnim()
+    {
+        if (!m_bAnimating || m_nAnimTargetPx <= 0) return;
+
+        const int totalFrames = 100 / SHOWHIDE_ANIM_INTERVAL_MS;
+        int step = m_nAnimTargetPx / (totalFrames > 0 ? totalFrames : 1);
+        if (step < 1) step = 1;
+        const int snapThreshold = step * 2;
+
+        if (m_bAnimShowing) {
+            const int remaining = m_nAnimTargetPx - m_nAnimCurrentPx;
+            if (remaining <= snapThreshold) {
+                StopShowHideAnim();
+                if (m_animDir == AnimHor) SetFixedWidth(m_nAnimOrigFixedSize, true);
+                else SetFixedHeight(m_nAnimOrigFixedSize, true);
+                return;
+            }
+            m_nAnimCurrentPx += step;
+        }
+        else {
+            if (m_nAnimCurrentPx <= snapThreshold) {
+                StopShowHideAnim();
+                if (m_animDir == AnimHor) SetFixedWidth(m_nAnimOrigFixedSize, false);
+                else SetFixedHeight(m_nAnimOrigFixedSize, false);
+
+                CControlUI::SetVisible(false, true);
+                for (int it = 0; it < m_items.GetSize(); it++)
+                    static_cast<CControlUI*>(m_items[it])->SetInternVisible(false);
+                NeedParentUpdate();
+                return;
+            }
+            m_nAnimCurrentPx -= step;
+            if (m_nAnimCurrentPx < 1) m_nAnimCurrentPx = 1;
+        }
+
+        int logicalSize = m_pManager ? m_pManager->UnscaleValue(m_nAnimCurrentPx) : m_nAnimCurrentPx;
+        if (logicalSize <= 0 && m_nAnimCurrentPx > 0) logicalSize = 1;
+
+        if (m_animDir == AnimHor) SetFixedWidth(logicalSize, true);
+        else SetFixedHeight(logicalSize, true);
+    }
+
+    void CContainerUI::StopShowHideAnim()
+    {
+        if (!m_bAnimating) return;
+        m_bAnimating = false;
+        if (m_pManager)
+            m_pManager->KillTimer(this, SHOWHIDE_ANIM_TIMERID);
+    }
+}  // namespace FYUI
 
 

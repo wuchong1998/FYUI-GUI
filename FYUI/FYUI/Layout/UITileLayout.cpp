@@ -194,6 +194,7 @@ namespace FYUI
 
 	void CTileLayoutUI::SetPos(RECT rc, bool bNeedInvalidate)
 	{
+		
 		CControlUI::SetPos(rc, bNeedInvalidate);
 		rc = ApplyLayoutInsetRect(m_rcItem, GetInset());
 

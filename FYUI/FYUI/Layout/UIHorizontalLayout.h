@@ -64,34 +64,35 @@ namespace FYUI
 		 * @param pstrValue [in] 属性值
 		 */
 		void SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue);
-		/**
-		 * @brief 处理事件
-		 * @details 用于处理事件。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param event [in,out] 事件对象
-		 */
 		void DoEvent(TEventUI& event);
-
-		/**
-		 * @brief 设置位置
-		 * @details 用于设置位置。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param rc [in] 矩形区域
-		 * @param bNeedInvalidate [in] 是否需要触发重绘
-		 */
 		void SetPos(RECT rc, bool bNeedInvalidate = true);
-		/**
-		 * @brief 执行后置绘制
-		 * @details 用于执行后置绘制。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param renderContext [in,out] 绘制上下文
-		 */
 		void DoPostPaint(CPaintRenderContext& renderContext) override;
+		RECT GetThumbRect(bool bUseNew = false) const;
+
+		// ============================================================
+		// 显隐动画
+		// ============================================================
+		enum ShowHideAnimDir {
+			AnimNone = 0,   // 无动画
+			AnimLeft,       // 从左侧收起/展开
+			AnimRight,      // 从右侧收起/展开
+		};
 
 		/**
-		 * @brief 获取滑块矩形
-		 * @details 用于获取滑块矩形。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param bUseNew [in] 是否Use新的
-		 * @return 返回对应的几何结果
+		 * @brief 设置显隐动画方向
+		 * @param dir [in] 动画方向
 		 */
-		RECT GetThumbRect(bool bUseNew = false) const;
+		void SetShowHideAnimDir(ShowHideAnimDir dir);
+		ShowHideAnimDir GetShowHideAnimDir() const;
+
+		/**
+		 * @brief 设置可见状态（支持动画过渡）
+		 * @details 当 animation_show_hide 属性不为空时，SetVisible 会启动匀速动画过渡。
+		 */
+		void SetVisible(bool bVisible = true, bool bSendFocus = true);
+
+		/** @brief 显隐动画是否正在进行 */
+		bool IsShowHideAnimating() const;
 
 		/**
 		 * @brief 克隆当前对象
@@ -122,6 +123,23 @@ namespace FYUI
 		POINT ptLastMouse;
 		RECT m_rcNewPos;
 		bool m_bImmMode;
+
+		// 显隐动画
+		ShowHideAnimDir m_animDir = AnimNone;
+		bool   m_bAnimating = false;         // 动画进行中
+		bool   m_bAnimShowing = false;       // true=展开, false=收起
+		int    m_nAnimTargetPx = 0;          // 目标像素宽度
+		int    m_nAnimCurrentPx = 0;         // 当前像素宽度
+		int    m_nAnimOrigFixedW = 0;        // 原始 FixedWidth（逻辑值，0=自适应）
+
+		enum : UINT {
+			SHOWHIDE_ANIM_TIMERID = 0x5F30,
+			SHOWHIDE_ANIM_INTERVAL_MS = 16,  // ~60fps
+		};
+
+		void StartShowHideAnim(bool bShow);
+		void AdvanceShowHideAnim();
+		void StopShowHideAnim();
 	};
 }
 

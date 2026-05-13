@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "UIContainer.h"
 #include "Render/UIRenderContext.h"
 #include <cmath>
@@ -52,8 +52,8 @@ namespace FYUI
         m_smoothScrollLastTick = std::chrono::steady_clock::now();
     }
 
-      
-    
+
+
 
     CContainerUI::~CContainerUI() {
         StopSmoothScroll(false);
@@ -68,7 +68,7 @@ namespace FYUI
             m_pHorizontalScrollBar = NULL;
         }
 
-       
+
     }
 
     std::wstring_view CContainerUI::GetClass() const {
@@ -103,13 +103,13 @@ namespace FYUI
             }
         }
 
-      /*  if (nCount == 0) return -1;
+        /*  if (nCount == 0) return -1;
         void** ppData = const_cast<CStdPtrArray&>(m_items).c_str();
         int i = 0;
 
         auto it = std::find(std::execution::par_unseq, ppData, ppData + nCount, pControl);
         if (it != ppData + nCount) {
-            return std::distance(ppData, it);
+        return std::distance(ppData, it);
         }*/
         return -1;
     }
@@ -338,7 +338,7 @@ namespace FYUI
         m_sHorizontalScrollBarStyle = pControl->m_sHorizontalScrollBarStyle;
         m_dwSepImmBorderColor = pControl->m_dwSepImmBorderColor;
         m_dwLeaveSepImmBorderColor = pControl->m_dwLeaveSepImmBorderColor;
- 
+
         //SetManager(pControl->m_pManager, nullptr, false);
         for (int it = 0; it < pControl->m_items.GetSize(); it++)
         {
@@ -523,7 +523,7 @@ namespace FYUI
             return;
         }
 
-       
+
         if (event.Type == UIEVENT_SETFOCUS) {
             m_bFocused = true;
             return;
@@ -923,7 +923,7 @@ namespace FYUI
                 current = static_cast<double>(ClampScrollDeltaToPixelStep(distance, currentInt));
             }
             return current;
-        };
+            };
 
         m_fSmoothScrollPosX = advanceAxis(m_fSmoothScrollPosX, currentPos.cx, clampedTarget.cx);
         m_fSmoothScrollPosY = advanceAxis(m_fSmoothScrollPosY, currentPos.cy, clampedTarget.cy);
@@ -1662,132 +1662,132 @@ namespace FYUI
 
 
     CControlUI* CContainerUI::FindControl(FINDCONTROLPROC Proc,
-                                          LPVOID pData,
-                                          UINT uFlags) {
-      if ((uFlags & UIFIND_VISIBLE) != 0 && !IsVisible()) {
-        return NULL;
-      }
-      if ((uFlags & UIFIND_ENABLED) != 0 && !IsEnabled()) {
-        return NULL;
-      }
-      if ((uFlags & UIFIND_HITTEST) != 0) {
-        const bool bInside = ::PtInRect(&m_rcItem, *(static_cast<LPPOINT>(pData)));
-        if (m_bScrollFloat && m_bScrollFloatHover != bInside) {
-          m_bScrollFloatHover = bInside;
-          if (m_pManager != NULL) {
-            if (m_pVerticalScrollBar != NULL && m_pVerticalScrollBar->IsVisible()) {
-              RECT rcSB = m_pVerticalScrollBar->GetPos();
-              m_pManager->Invalidate(rcSB);
-            }
-            if (m_pHorizontalScrollBar != NULL && m_pHorizontalScrollBar->IsVisible()) {
-              RECT rcSB = m_pHorizontalScrollBar->GetPos();
-              m_pManager->Invalidate(rcSB);
-            }
-          }
+        LPVOID pData,
+        UINT uFlags) {
+        if ((uFlags & UIFIND_VISIBLE) != 0 && !IsVisible()) {
+            return NULL;
         }
-        if (!bInside) {
-          // Recurse once into children so nested containers also clear their ScrollFloat hover.
-          for (int it = 0; it < m_items.GetSize(); ++it) {
-            CControlUI* pChild = static_cast<CControlUI*>(m_items[it]);
-            if (pChild != NULL) pChild->FindControl(Proc, pData, uFlags);
-          }
-          return NULL;
+        if ((uFlags & UIFIND_ENABLED) != 0 && !IsEnabled()) {
+            return NULL;
         }
-      }
-      if ((uFlags & UIFIND_UPDATETEST) != 0 && Proc(this, pData) != NULL) {
-        return NULL;
-      }
+        if ((uFlags & UIFIND_HITTEST) != 0) {
+            const bool bInside = ::PtInRect(&m_rcItem, *(static_cast<LPPOINT>(pData)));
+            if (m_bScrollFloat && m_bScrollFloatHover != bInside) {
+                m_bScrollFloatHover = bInside;
+                if (m_pManager != NULL) {
+                    if (m_pVerticalScrollBar != NULL && m_pVerticalScrollBar->IsVisible()) {
+                        RECT rcSB = m_pVerticalScrollBar->GetPos();
+                        m_pManager->Invalidate(rcSB);
+                    }
+                    if (m_pHorizontalScrollBar != NULL && m_pHorizontalScrollBar->IsVisible()) {
+                        RECT rcSB = m_pHorizontalScrollBar->GetPos();
+                        m_pManager->Invalidate(rcSB);
+                    }
+                }
+            }
+            if (!bInside) {
+                // Recurse once into children so nested containers also clear their ScrollFloat hover.
+                for (int it = 0; it < m_items.GetSize(); ++it) {
+                    CControlUI* pChild = static_cast<CControlUI*>(m_items[it]);
+                    if (pChild != NULL) pChild->FindControl(Proc, pData, uFlags);
+                }
+                return NULL;
+            }
+        }
+        if ((uFlags & UIFIND_UPDATETEST) != 0 && Proc(this, pData) != NULL) {
+            return NULL;
+        }
 
-      CControlUI* pResult = NULL;
-      if ((uFlags & UIFIND_ME_FIRST) != 0) {
-        if ((uFlags & UIFIND_HITTEST) == 0 || IsMouseEnabled()) {
-          pResult = Proc(this, pData);
+        CControlUI* pResult = NULL;
+        if ((uFlags & UIFIND_ME_FIRST) != 0) {
+            if ((uFlags & UIFIND_HITTEST) == 0 || IsMouseEnabled()) {
+                pResult = Proc(this, pData);
+            }
         }
-      }
-      if (pResult == NULL && m_pVerticalScrollBar != NULL) {
-        if ((uFlags & UIFIND_HITTEST) == 0 || (IsMouseEnabled() && IsScrollFloatShown())) {
-          pResult = m_pVerticalScrollBar->FindControl(Proc, pData, uFlags);
+        if (pResult == NULL && m_pVerticalScrollBar != NULL) {
+            if ((uFlags & UIFIND_HITTEST) == 0 || (IsMouseEnabled() && IsScrollFloatShown())) {
+                pResult = m_pVerticalScrollBar->FindControl(Proc, pData, uFlags);
+            }
         }
-      }
-      if (pResult == NULL && m_pHorizontalScrollBar != NULL) {
-        if ((uFlags & UIFIND_HITTEST) == 0 || (IsMouseEnabled() && IsScrollFloatShown())) {
-          pResult = m_pHorizontalScrollBar->FindControl(Proc, pData, uFlags);
+        if (pResult == NULL && m_pHorizontalScrollBar != NULL) {
+            if ((uFlags & UIFIND_HITTEST) == 0 || (IsMouseEnabled() && IsScrollFloatShown())) {
+                pResult = m_pHorizontalScrollBar->FindControl(Proc, pData, uFlags);
+            }
         }
-      }
-      if (pResult != NULL) {
+        if (pResult != NULL) {
+            return pResult;
+        }
+
+        if ((uFlags & UIFIND_HITTEST) == 0 || IsMouseChildEnabled()) 
+        {
+            RECT rc = m_rcItem;
+
+            RECT rcInset = GetInset();
+
+            rc.left += rcInset.left;
+            rc.top += rcInset.top;
+            rc.right -= rcInset.right;
+            rc.bottom -= rcInset.bottom;
+
+            if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
+                if (!m_bScrollFloat) {
+                    rc.right -= m_pVerticalScrollBar->GetFixedWidth();
+                }
+            }
+            if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
+                if (!m_bScrollFloat) {
+                    rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
+                }
+            }
+            if ((uFlags & UIFIND_TOP_FIRST) != 0)
+            {
+
+                for (int it = m_items.GetSize() - 1; it >= 0; it--) 
+                {
+                    pResult = static_cast<CControlUI*>(m_items[it])->FindControl(Proc, pData, uFlags);
+                    if (pResult != NULL)
+                    {
+                        if ((uFlags & UIFIND_HITTEST) != 0 && !pResult->IsFloat() &&
+                            !::PtInRect(&rc, *(static_cast<LPPOINT>(pData)))) 
+                        {
+                            continue;
+                        } 
+                        else
+                        {
+                            return pResult;
+                        }
+                    }
+                }
+            }
+            else 
+            {
+                for (int it = 0; it < m_items.GetSize(); it++) 
+                {
+                    pResult = static_cast<CControlUI*>(m_items[it])->FindControl(Proc, pData, uFlags);
+                    if (pResult != NULL) 
+                    {
+                        if ((uFlags & UIFIND_HITTEST) != 0 && !pResult->IsFloat() &&
+                            !::PtInRect(&rc, *(static_cast<LPPOINT>(pData)))) {
+                            continue;
+                        }
+                        else
+                        {
+                            return pResult;
+                        }
+                    }
+                }
+            }
+        }
+
+        pResult = NULL;
+        if (pResult == NULL && (uFlags & UIFIND_ME_FIRST) == 0)
+        {
+            if ((uFlags & UIFIND_HITTEST) == 0 || IsMouseEnabled()) 
+            {
+                pResult = Proc(this, pData);
+            }
+        }
         return pResult;
-      }
-    
-      if ((uFlags & UIFIND_HITTEST) == 0 || IsMouseChildEnabled()) 
-      {
-        RECT rc = m_rcItem;
-    
-        RECT rcInset = GetInset();
-    	
-        rc.left += rcInset.left;
-        rc.top += rcInset.top;
-        rc.right -= rcInset.right;
-        rc.bottom -= rcInset.bottom;
-    
-        if (m_pVerticalScrollBar && m_pVerticalScrollBar->IsVisible()) {
-          if (!m_bScrollFloat) {
-            rc.right -= m_pVerticalScrollBar->GetFixedWidth();
-          }
-        }
-        if (m_pHorizontalScrollBar && m_pHorizontalScrollBar->IsVisible()) {
-          if (!m_bScrollFloat) {
-            rc.bottom -= m_pHorizontalScrollBar->GetFixedHeight();
-          }
-        }
-        if ((uFlags & UIFIND_TOP_FIRST) != 0)
-        {
-    		
-          for (int it = m_items.GetSize() - 1; it >= 0; it--) 
-          {
-            pResult = static_cast<CControlUI*>(m_items[it])->FindControl(Proc, pData, uFlags);
-            if (pResult != NULL)
-            {
-              if ((uFlags & UIFIND_HITTEST) != 0 && !pResult->IsFloat() &&
-                  !::PtInRect(&rc, *(static_cast<LPPOINT>(pData)))) 
-              {
-                continue;
-              } 
-              else
-              {
-                return pResult;
-              }
-            }
-          }
-        }
-        else 
-        {
-          for (int it = 0; it < m_items.GetSize(); it++) 
-          {
-            pResult = static_cast<CControlUI*>(m_items[it])->FindControl(Proc, pData, uFlags);
-            if (pResult != NULL) 
-            {
-              if ((uFlags & UIFIND_HITTEST) != 0 && !pResult->IsFloat() &&
-                  !::PtInRect(&rc, *(static_cast<LPPOINT>(pData)))) {
-                continue;
-              }
-              else
-              {
-                return pResult;
-              }
-            }
-          }
-        }
-      }
-    
-      pResult = NULL;
-      if (pResult == NULL && (uFlags & UIFIND_ME_FIRST) == 0)
-      {
-        if ((uFlags & UIFIND_HITTEST) == 0 || IsMouseEnabled()) 
-        {
-          pResult = Proc(this, pData);
-        }
-      }
-      return pResult;
     }
 
     bool CContainerUI::DoPaint(CPaintRenderContext& renderContext,
@@ -1911,7 +1911,7 @@ namespace FYUI
     }
 
 
- 
+
     void CContainerUI::SetFloatPos(int iIndex) {
         // 閸ョ姳璐烠ControlUI::SetPos鐎电loat閻ㄥ嫭鎼锋担婊冨閸濆稄绱濇潻娆撳櫡娑撳秷鍏樼€电loat缂佸嫪娆㈠ǎ璇插濠婃艾濮╅弶锛勬畱瑜板崬鎼?
         if (iIndex < 0 || iIndex >= m_items.GetSize()) {
@@ -2073,8 +2073,8 @@ namespace FYUI
             }
             else {
                 rcScrollBarPos = { (rc.right - nVSpace), rc.top,
-                                   (rc.right + m_pVerticalScrollBar->GetFixedWidth() - nVSpace),
-                                   rc.bottom };
+                    (rc.right + m_pVerticalScrollBar->GetFixedWidth() - nVSpace),
+                    rc.bottom };
             }
 
 
@@ -2201,12 +2201,7 @@ namespace FYUI
         }
     }
 
-    /*
-    ** 閺嶈宓侀崥宥呯摟閺屻儲澹樼€涙劖甯舵禒璁圭礉鏉╂柨娲栭幍鎯у煂閻ㄥ嫮顑囨稉鈧稉顏呭付娴犺埖瀵氶柦?
-    *  param pstrSubControlName: 鐎涙劖甯舵禒璺烘倳鐎?
-    *  param strEliminateControlName: 閹烘帡娅庨弻鎰嚋閸氬秴鐡ч惃鍕付娴?娑撳秳绱伴崷銊嚉閸氬秶袨閹貉傛鏉╂稖顢戠€涙劖甯舵禒鑸电叀閹?
-    *  return CControlUI*: 閹垫儳鍩岄惃鍕摍閹貉傛閹稿洭鎷￠敍灞炬弓閹垫儳鍩屾潻鏂挎礀nullptr
-    */
+    
     CControlUI* CContainerUI::FindSubControl(std::wstring_view pstrSubControlName, std::wstring_view strEliminateControlName)
     {
         CControlUI* pSubControl = nullptr;
@@ -2217,6 +2212,5 @@ namespace FYUI
         return pSubControl;
     }
 }  // namespace DuiLib
-
 
 

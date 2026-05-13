@@ -35,7 +35,11 @@ namespace FYTestApp
         void OpenModalPopup();
         void OpenModelessPopup();
         void OpenPopupMenu(CControlUI* anchor);
-       
+
+        // 根据按钮名查找对应的演示 VBox，并切换其 hide_animation 显示/隐藏。
+        // 若是首次点击，会把对应 VBox 的 hide_animation 方向设为按钮所代表的方向。
+        bool ToggleHideAnimationDemo(const std::wstring& buttonName);
+
         void StepProgress();
         void RefreshDiagnostics();
         void UpdateFpsMeter(bool resetSample = false);

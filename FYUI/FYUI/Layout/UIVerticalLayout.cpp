@@ -34,6 +34,7 @@ namespace FYUI
 
 	void CVerticalLayoutUI::SetPos(RECT rc, bool bNeedInvalidate)
 	{
+		
 
 		CControlUI::SetPos(rc, bNeedInvalidate);
 		/*std::wstring strName = GetName ();

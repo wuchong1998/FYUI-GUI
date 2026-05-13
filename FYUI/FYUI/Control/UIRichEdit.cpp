@@ -611,8 +611,11 @@ namespace FYUI
 
 	void CRichEditUI::DoEvent(TEventUI& event)
 	{
-		// 禁用态拒绝所有交互式输入：避免点击选中文字、键盘移动 caret、滚轮滚动、右键菜单等操作。
+		// 禁用态拒绝所有交互式输入：避免点击选中文字、键盘移动 caret、右键菜单等操作。
 		// enter/leave/focus/timer 仍交由基类，以保持 hover 视觉、disabledimage 切换等被动行为正常。
+		// 注意：SCROLLWHEEL 不能在此吞掉，否则鼠标位于禁用 RichEdit 上时父容器（如可滚动列表/页面）
+		// 也无法响应滚轮。让它继续走下方正常 SCROLLWHEEL 分支：禁用态下自身滚动条 IsEnabled=false，
+		// 基类不会匹配，会一路冒泡到 CControlUI::DoEvent → m_pParent，由父控件滚动。
 		if (!IsEnabled()) {
 			switch (event.Type) {
 			case UIEVENT_BUTTONDOWN:
@@ -621,7 +624,6 @@ namespace FYUI
 			case UIEVENT_RBUTTONDOWN:
 			case UIEVENT_MOUSEMOVE:
 			case UIEVENT_CONTEXTMENU:
-			case UIEVENT_SCROLLWHEEL:
 			case UIEVENT_KEYDOWN:
 			case UIEVENT_KEYUP:
 			case UIEVENT_CHAR:

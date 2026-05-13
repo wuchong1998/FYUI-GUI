@@ -105,6 +105,7 @@ namespace FYTestApp
     void MainDemoWindow::OnClick(TNotifyUI& msg)
     {
         const std::wstring& name = msg.pSender->GetName();
+        ToggleHideAnimationDemo(name);
         if (name == L"open_modal")
             OpenModalPopup();
         else if (name == L"open_modeless")
@@ -134,6 +135,31 @@ namespace FYTestApp
             return;
         }
         WindowImplBase::OnClick(msg);
+    }
+
+    bool MainDemoWindow::ToggleHideAnimationDemo(const std::wstring& buttonName)
+    {
+        if (buttonName == L"hor_left_to_right")
+        {
+            auto* box = FindControlAs<CContainerUI>(m_pm, L"left_to_right_test1");
+            box->SetVisible(!box->GetVisible());
+        }
+        else if (buttonName == L"hor_right_to_left")
+        {
+            auto* box = FindControlAs<CContainerUI>(m_pm, L"right_to_left1");
+            box->SetVisible(!box->GetVisible());
+        }
+        else if (buttonName == L"hor_top_to_bottom")
+        {
+            auto* box = FindControlAs<CContainerUI>(m_pm, L"top_to_bottom1");
+            box->SetVisible(!box->GetVisible());
+        }
+        else if (buttonName == L"hor_bottom_to_top")
+        {
+            auto* box = FindControlAs<CContainerUI>(m_pm, L"bottom_to_top1");
+            box->SetVisible(!box->GetVisible());
+        }
+        return true;
     }
 
     void MainDemoWindow::SetupVirtualListDemo()

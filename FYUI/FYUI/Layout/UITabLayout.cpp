@@ -199,11 +199,7 @@ namespace FYUI
 
 	void CTabLayoutUI::SetPos(RECT rc, bool bNeedInvalidate)
 	{
-		/*std::wstring strName = GetName();
-		if (strName == L"pdf_attribute_content_float")
-		{
-		int A = 0;
-		}*/
+		
 		CControlUI::SetPos(rc, bNeedInvalidate);
 		rc = ApplyLayoutInsetRect(m_rcItem, GetInset());
 

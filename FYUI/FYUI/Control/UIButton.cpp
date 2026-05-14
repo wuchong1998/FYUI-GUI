@@ -29,9 +29,6 @@ namespace FYUI
 		, m_dwHotBkColor(0)
 		, m_dwPushedBkColor(0)
 		, m_dwDisabledBkColor(0)
-		, m_dwHotBorderColor(0)
-		, m_dwPushedBorderColor(0)
-		, m_dwDisabledBorderColor(0)
 		, m_iBindTabIndex(-1)
 		, m_nStateCount(0)
 	{
@@ -209,39 +206,6 @@ namespace FYUI
 		return m_iFocusedFont;
 	}
 
-	void CButtonUI::SetHotBkColor( DWORD dwColor )
-	{
-		m_dwHotBkColor = dwColor;
-		Invalidate();
-	}
-
-	DWORD CButtonUI::GetHotBkColor() const
-	{
-		return m_dwHotBkColor;
-	}
-
-	void CButtonUI::SetPushedBkColor( DWORD dwColor )
-	{
-		m_dwPushedBkColor = dwColor;
-		Invalidate();
-	}
-
-	DWORD CButtonUI::GetPushedBkColor() const
-	{
-		return m_dwPushedBkColor;
-	}
-
-	void CButtonUI::SetDisabledBkColor( DWORD dwColor )
-	{
-		m_dwDisabledBkColor = dwColor;
-		Invalidate();
-	}
-
-	DWORD CButtonUI::GetDisabledBkColor() const
-	{
-		return m_dwDisabledBkColor;
-	}
-
 	void CButtonUI::SetHotTextColor(DWORD dwColor)
 	{
 		m_dwHotTextColor = dwColor;
@@ -272,43 +236,47 @@ namespace FYUI
 		return m_dwFocusedTextColor;
 	}
 
-	void CButtonUI::SetHotBorderColor(DWORD dwColor)
+	void CButtonUI::SetHotBkColor(DWORD dwColor)
 	{
-		if (m_dwHotBorderColor == dwColor) return;
-
-		m_dwHotBorderColor = dwColor;
+		m_dwHotBkColor = dwColor;
 		Invalidate();
 	}
 
-	DWORD CButtonUI::GetHotBorderColor() const
+	DWORD CButtonUI::GetHotBkColor() const
 	{
-		return m_dwHotBorderColor;
+		return m_dwHotBkColor;
 	}
 
-	void CButtonUI::SetPushedBorderColor(DWORD dwColor)
+	void CButtonUI::SetPushedBkColor(DWORD dwColor)
 	{
-		if (m_dwPushedBorderColor == dwColor) return;
-
-		m_dwPushedBorderColor = dwColor;
+		m_dwPushedBkColor = dwColor;
 		Invalidate();
 	}
 
-	DWORD CButtonUI::GetPushedBorderColor() const
+	DWORD CButtonUI::GetPushedBkColor() const
 	{
-		return m_dwPushedBorderColor;
+		return m_dwPushedBkColor;
 	}
 
-	void CButtonUI::SetDisabledBorderColor(DWORD dwColor)
+	void CButtonUI::SetDisabledBkColor(DWORD dwColor)
 	{
-		if (m_dwDisabledBorderColor == dwColor) return;
-
-		m_dwDisabledBorderColor = dwColor;
+		m_dwDisabledBkColor = dwColor;
 		Invalidate();
 	}
 
-	DWORD CButtonUI::GetDisabledBorderColor() const
+	DWORD CButtonUI::GetDisabledBkColor() const
 	{
-		return m_dwDisabledBorderColor;
+		return m_dwDisabledBkColor;
+	}
+
+	bool CButtonUI::IsHot() const
+	{
+		return (m_uButtonState & UISTATE_HOT) != 0;
+	}
+
+	bool CButtonUI::IsPushed() const
+	{
+		return (m_uButtonState & UISTATE_PUSHED) != 0;
 	}
 
 	std::wstring_view CButtonUI::GetNormalImage() const
@@ -520,18 +488,6 @@ namespace FYUI
 			DWORD color = 0;
 			if (StringUtil::TryParseColor(pstrValueView, color)) SetFocusedTextColor(color);
 		}
-		else if (StringUtil::EqualsNoCase(name, L"hotbordercolor")) {
-			DWORD color = 0;
-			if (StringUtil::TryParseColor(pstrValueView, color)) SetHotBorderColor(color);
-		}
-		else if (StringUtil::EqualsNoCase(name, L"pushedbordercolor")) {
-			DWORD color = 0;
-			if (StringUtil::TryParseColor(pstrValueView, color)) SetPushedBorderColor(color);
-		}
-		else if (StringUtil::EqualsNoCase(name, L"disabledbordercolor")) {
-			DWORD color = 0;
-			if (StringUtil::TryParseColor(pstrValueView, color)) SetDisabledBorderColor(color);
-		}
 		else if (StringUtil::EqualsNoCase(name, L"hotfont")) {
 			int value = 0;
 			if (StringUtil::TryParseInt(pstrValueView, value)) SetHotFont(value);
@@ -596,6 +552,7 @@ namespace FYUI
 
 	void CButtonUI::PaintBkColor(CPaintRenderContext& renderContext)
 	{
+		
 		const SIZE cxyBorderRound = GetBorderRound();
 		if( (m_uButtonState & UISTATE_DISABLED) != 0 ) {
 			if(m_dwDisabledBkColor != 0) {
@@ -610,6 +567,11 @@ namespace FYUI
 			}
 		}
 		else if( (m_uButtonState & UISTATE_HOT) != 0 ) {
+
+			if (GetName() == L"22")
+			{
+				int A = 0;
+			}
 			if(m_dwHotBkColor != 0) {
 				DrawButtonStateColor(renderContext, m_rcPaint, m_rcItem, cxyBorderRound, GetAdjustColor(m_dwHotBkColor));
 				return;
@@ -711,33 +673,6 @@ namespace FYUI
 		}
 	}
 
-	void CButtonUI::PaintBorder(CPaintRenderContext& renderContext)
-	{
-		int nBorderSize = GetBorderSize();
-		SIZE cxyBorderRound = GetBorderRound();
-		RECT rcBorderSize = GetBorderRectSize();
-
-		if ((m_uButtonState & UISTATE_DISABLED) != 0) {
-			if (m_dwDisabledBorderColor != 0) {
-				DrawBorder(renderContext, m_rcItem, GetAdjustColor(m_dwDisabledBorderColor), nBorderSize, rcBorderSize, cxyBorderRound, m_nBorderStyle);
-				return;
-			}
-		}
-		else if ((m_uButtonState & UISTATE_PUSHED) != 0) {
-			if (m_dwPushedBorderColor != 0) {
-				DrawBorder(renderContext, m_rcItem, GetAdjustColor(m_dwPushedBorderColor), nBorderSize, rcBorderSize, cxyBorderRound, m_nBorderStyle);
-				return;
-			}
-		}
-		else if ((m_uButtonState & UISTATE_HOT) != 0) {
-			if (m_dwHotBorderColor != 0) {
-				DrawBorder(renderContext, m_rcItem, GetAdjustColor(m_dwHotBorderColor), nBorderSize, rcBorderSize, cxyBorderRound, m_nBorderStyle);
-				return;
-			}
-		}
-		return CControlUI::PaintBorder(renderContext);
-	}
-
 	void CButtonUI::PaintForeImage(CPaintRenderContext& renderContext)
 	{
 		if( (m_uButtonState & UISTATE_PUSHED) != 0 ) {
@@ -754,51 +689,6 @@ namespace FYUI
 		}
 		if(!m_sForeImage.empty() ) {
 			if( !DrawImage(renderContext, m_sForeImage) ) {}
-		}
-	}
-
-	void CButtonUI::DrawBorder(CPaintRenderContext& renderContext, const RECT& rcItem, const DWORD& dwBorderColor, const int& nBorderSize, const RECT& rcBorderSize, const SIZE& cxyBorderRound, const int& nBorderStyle)
-	{
-		if (dwBorderColor != 0) 
-		{
-			if (nBorderSize > 0 && (cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0)) 
-			{
-				CRenderEngine::DrawRoundRect(renderContext, rcItem, nBorderSize, cxyBorderRound.cx, cxyBorderRound.cy, GetAdjustColor(dwBorderColor), nBorderStyle);
-			}
-			else
-			{
-				if (rcBorderSize.left > 0 || rcBorderSize.top > 0 || rcBorderSize.right > 0 || rcBorderSize.bottom > 0) 
-				{
-					RECT rcBorder;
-
-					if (rcBorderSize.left > 0) {
-						rcBorder = rcItem;
-						rcBorder.right = rcBorder.left;
-						CRenderEngine::DrawLine(renderContext, rcBorder, rcBorderSize.left, GetAdjustColor(dwBorderColor), nBorderStyle);
-					}
-					if (rcBorderSize.top > 0) {
-						rcBorder = rcItem;
-						rcBorder.bottom = rcBorder.top;
-						CRenderEngine::DrawLine(renderContext, rcBorder, rcBorderSize.top, GetAdjustColor(dwBorderColor), nBorderStyle);
-					}
-					if (rcBorderSize.right > 0) {
-						rcBorder = rcItem;
-						rcBorder.right -= 1;
-						rcBorder.left = rcBorder.right;
-						CRenderEngine::DrawLine(renderContext, rcBorder, rcBorderSize.right, GetAdjustColor(dwBorderColor), nBorderStyle);
-					}
-					if (rcBorderSize.bottom > 0) {
-						rcBorder = rcItem;
-						rcBorder.bottom -= 1;
-						rcBorder.top = rcBorder.bottom;
-						CRenderEngine::DrawLine(renderContext, rcBorder, rcBorderSize.bottom, GetAdjustColor(dwBorderColor), nBorderStyle);
-					}
-				}
-				else if (nBorderSize > 0)
-				{
-					CRenderEngine::DrawRect(renderContext, rcItem, nBorderSize, GetAdjustColor(dwBorderColor), nBorderStyle);
-				}
-			}
 		}
 	}
 
@@ -820,12 +710,10 @@ namespace FYUI
 		m_dwHotBkColor = pControl->m_dwHotBkColor;
 		m_dwPushedBkColor = pControl->m_dwPushedBkColor;
 		m_dwDisabledBkColor = pControl->m_dwDisabledBkColor;
+
 		m_dwHotTextColor = pControl->m_dwHotTextColor;
 		m_dwPushedTextColor = pControl->m_dwPushedTextColor;
 		m_dwFocusedTextColor = pControl->m_dwFocusedTextColor;
-		m_dwHotBorderColor = pControl->m_dwHotBorderColor;
-		m_dwPushedBorderColor = pControl->m_dwPushedBorderColor;
-		m_dwDisabledBorderColor = pControl->m_dwDisabledBorderColor;
 
 		m_sNormalImage= pControl->m_sNormalImage;
 		m_sHotImage= pControl->m_sHotImage;

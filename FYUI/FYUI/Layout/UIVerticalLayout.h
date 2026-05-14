@@ -56,6 +56,29 @@ namespace FYUI
 		 * @return bool 操作成功返回 true，否则返回 false
 		 */
 		bool IsSepImmMode() const;
+
+		/**
+		 * @brief 设置拖拽虚影颜色
+		 * @details 非即时模式（sepimm=false）下拖拽分隔条时在 DoPostPaint 中绘制的虚影填充颜色。
+		 * @param dwColor [in] ARGB 颜色数值
+		 */
+		void SetSepGhostColor(DWORD dwColor);
+		/**
+		 * @brief 获取拖拽虚影颜色
+		 * @return DWORD 返回对应的数值结果
+		 */
+		DWORD GetSepGhostColor() const;
+		/**
+		 * @brief 设置拖拽虚影厚度
+		 * @details 非即时模式下虚影矩形在分隔条法线方向的厚度（逻辑像素）；<=0 表示沿用 sepheight 的绝对值。
+		 * @param iSize [in] 厚度（逻辑像素）
+		 */
+		void SetSepGhostSize(int iSize);
+		/**
+		 * @brief 获取拖拽虚影厚度
+		 * @return int 返回对应的数值结果
+		 */
+		int GetSepGhostSize() const;
 		/**
 		 * @brief 设置属性
 		 * @details 用于设置属性。具体行为由当前对象状态以及传入参数共同决定。
@@ -93,6 +116,19 @@ namespace FYUI
 		RECT GetThumbRect(bool bUseNew = false) const;
 
 		/**
+		 * @brief 判断是否处于鼠标悬停（Hot）状态
+		 * @details 当鼠标悬停在分隔条上（即时模式下）时返回 true，供基类 PaintBorder 选用 HotBorderColor。
+		 * @return bool 处于悬停态返回 true
+		 */
+		bool IsHot() const override;
+		/**
+		 * @brief 判断是否处于按下（Pushed）状态
+		 * @details 当用户按住分隔条进行拖拽（CAPTURED）时返回 true，供基类 PaintBorder 选用 PushedBorderColor。
+		 * @return bool 处于拖拽态返回 true
+		 */
+		bool IsPushed() const override;
+
+		/**
 		 * @brief 克隆当前对象
 		 * @details 用于克隆当前对象。具体行为由当前对象状态以及传入参数共同决定。
 		 * @return CVerticalLayoutUI* 返回结果对象指针，失败时返回 nullptr
@@ -120,6 +156,12 @@ namespace FYUI
 		POINT ptLastMouse;
 		RECT m_rcNewPos;
 		bool m_bImmMode;
+		// 鼠标是否悬停在分隔条上，作为 IsHot() 的依据
+		bool m_bSepHover = false;
+		// 拖拽虚影颜色（sepimm=false 时生效），默认半透明黑
+		DWORD m_dwSepGhostColor = 0xAA000000;
+		// 拖拽虚影厚度（逻辑像素）；<=0 表示沿用 |m_iSepHeight|
+		int m_iSepGhostSize = 0;
 
 	};
 }

@@ -73,6 +73,54 @@ namespace FYUI
 		 */
 		virtual void CopyData(CRingUI* pControl) ;
 
+		// ---- 播放控制 API ----
+		/**
+		 * @brief 开始旋转
+		 * @details 若图像已加载则立即启动定时器；否则等下次绘制完成图像加载后自动启动。
+		 */
+		void Play();
+		/**
+		 * @brief 暂停旋转
+		 * @details 保留当前角度，停止定时器。
+		 */
+		void Pause();
+		/**
+		 * @brief 停止旋转
+		 * @details 停止定时器并将角度归零。
+		 */
+		void Stop();
+		/**
+		 * @brief 是否正在旋转
+		 */
+		bool IsPlaying() const;
+
+		/**
+		 * @brief 设置自动开始属性
+		 * @details true 时立即开始播放，false 时立即暂停。
+		 */
+		void SetAutoPlay(bool bAutoPlay);
+		bool IsAutoPlay() const;
+
+		/**
+		 * @brief 设置旋转速度
+		 * @param fSpeed 度/秒，负值反向旋转
+		 */
+		void SetRotateSpeed(float fSpeed);
+		float GetRotateSpeed() const;
+
+		/**
+		 * @brief 设置定时器刷新间隔（毫秒）
+		 * @details 越小越流畅，但 CPU 占用越高。最小 1ms。
+		 */
+		void SetRotateInterval(int nIntervalMs);
+		int GetRotateInterval() const;
+
+		/**
+		 * @brief 设置/获取当前角度（0~360）
+		 */
+		void SetAngle(float fAngle);
+		float GetAngle() const;
+
 	private:
 		/**
 		 * @brief 执行 InitImage 操作
@@ -84,9 +132,25 @@ namespace FYUI
 		 * @details 用于删除图像。具体行为由当前对象状态以及传入参数共同决定。
 		 */
 		void DeleteImage();
+		/**
+		 * @brief 按需启动 / 重启定时器
+		 * @details 仅当 m_bPlaying && 图像已加载 && m_pManager 已挂上时才会启动。
+		 */
+		void StartTimerIfNeeded();
+		/**
+		 * @brief 停止定时器（保留状态）
+		 */
+		void StopTimer();
 
 	public:
 		float m_fCurAngle;
 		TImageInfo* m_pBkimageInfo;
+
+	private:
+		bool  m_bAutoPlay;       // XML autoplay 属性
+		bool  m_bPlaying;        // 当前是否处于播放状态
+		bool  m_bTimerStarted;   // 是否已通过 m_pManager->SetTimer 启动
+		float m_fRotateSpeed;    // 度/秒
+		int   m_nIntervalMs;     // 定时器间隔毫秒
 	};
 }

@@ -245,7 +245,17 @@ namespace FYUI
 	{
 		if( (m_uButtonState & UISTATE_CAPTURED) != 0 && !m_bImmMode ) {
 			RECT rcSeparator = GetThumbRect(true);
-			CRenderEngine::DrawColor(renderContext, rcSeparator, 0xAA000000);
+			// 自定义虚影厚度：维持虚影跟随分隔条的方向对齐（正/负 sepwidth）
+			if (m_iSepGhostSize > 0 && m_pManager != NULL) {
+				const int nGhostPixels = m_pManager->ScaleValue(m_iSepGhostSize);
+				if (m_iSepWidth >= 0) {
+					rcSeparator.left = rcSeparator.right - nGhostPixels;
+				}
+				else {
+					rcSeparator.right = rcSeparator.left + nGhostPixels;
+				}
+			}
+			CRenderEngine::DrawColor(renderContext, rcSeparator, m_dwSepGhostColor);
 		}
 	}
 
@@ -281,21 +291,50 @@ namespace FYUI
 			if (StringUtil::TryParseInt(pstrValue, value)) SetSepWidth(value);
 		}
 		else if( StringUtil::CompareNoCase(pstrName, _T("sepimm")) == 0 ) SetSepImmMode(StringUtil::ParseBool(pstrValue));
-		else if( StringUtil::CompareNoCase(pstrName, _T("sepimmbordercolor")) == 0 ) 
-		{
-			DWORD clrColor = 0;
-			if (StringUtil::TryParseColor(pstrValue, clrColor)) {
-				SetSepImmBorderColor(clrColor);
-			}
+		else if( StringUtil::CompareNoCase(pstrName, _T("sepghostcolor")) == 0 ) {
+			DWORD color = 0;
+			if (StringUtil::TryParseColor(pstrValue, color)) SetSepGhostColor(color);
 		}
-		else if( StringUtil::CompareNoCase(pstrName, _T("sepimmleavebordercolor")) == 0 ) 
-		{
-			DWORD clrColor = 0;
-			if (StringUtil::TryParseColor(pstrValue, clrColor)) {
-				SetSepImmLeaveBorderColor(clrColor);
-			}
+		else if( StringUtil::CompareNoCase(pstrName, _T("sepghostsize")) == 0 ) {
+			int iValue = 0;
+			if (StringUtil::TryParseInt(pstrValue, iValue)) SetSepGhostSize(iValue);
 		}
 		else CContainerUI::SetAttribute(pstrName, pstrValue);
+	}
+
+	void CHorizontalLayoutUI::SetSepGhostColor(DWORD dwColor)
+	{
+		if (m_dwSepGhostColor == dwColor) return;
+		m_dwSepGhostColor = dwColor;
+		Invalidate();
+	}
+
+	DWORD CHorizontalLayoutUI::GetSepGhostColor() const
+	{
+		return m_dwSepGhostColor;
+	}
+
+	void CHorizontalLayoutUI::SetSepGhostSize(int iSize)
+	{
+		if (m_iSepGhostSize == iSize) return;
+		m_iSepGhostSize = iSize;
+		Invalidate();
+	}
+
+	int CHorizontalLayoutUI::GetSepGhostSize() const
+	{
+		return m_iSepGhostSize;
+	}
+
+	bool CHorizontalLayoutUI::IsHot() const
+	{
+		// 鼠标悬停于分隔条 → Hot；拖拽期间由 IsPushed 接管，避免同时为真
+		return m_bSepHover && (m_uButtonState & UISTATE_CAPTURED) == 0;
+	}
+
+	bool CHorizontalLayoutUI::IsPushed() const
+	{
+		return (m_uButtonState & UISTATE_CAPTURED) != 0;
 	}
 
 	void CHorizontalLayoutUI::DoEvent(TEventUI& event)
@@ -320,10 +359,12 @@ namespace FYUI
 			{
 				if( (m_uButtonState & UISTATE_CAPTURED) != 0 ) {
 					m_uButtonState &= ~UISTATE_CAPTURED;
-					m_rcItem = m_rcNewPos;
+					// 不再手动赋值 m_rcItem = m_rcNewPos；
+					// MOUSEMOVE 中已通过 SetFixedWidthFromPixels 更新了 m_cxyFixed，
+					// NeedParentUpdate 触发的下一帧父 SetPos 会用新尺寸重排 自身 + 兄弟控件。
+					// 提前覆盖 m_rcItem 会让本控件"抢先"突破父布局区，引起兄弟（如 Label）视觉上未跟随的脏区缺失问题。
 					if( !m_bImmMode && m_pManager ) m_pManager->RemovePostPaint(this);
-					if (m_bImmMode)
-					{
+					if (m_pManager) {
 						m_pManager->SendNotify(this, DUI_MSGTYPE_SPLITMOVE_UP);
 					}
 					NeedParentUpdate();
@@ -332,16 +373,17 @@ namespace FYUI
 			}
 			if( event.Type == UIEVENT_MOUSEMOVE )
 			{
-				if (m_bImmMode)
+				// 即时模式下：进入分隔条时给光标反馈，并通过 m_bSepHover 触发基类 PaintBorder 选用 HotBorderColor
+				if (m_bImmMode && (m_uButtonState & UISTATE_CAPTURED) == 0)
 				{
 					RECT rcSeparator = GetThumbRect(false);
-					if (::PtInRect(&rcSeparator, event.ptMouse))
-					{
+					const bool bOnSep = (::PtInRect(&rcSeparator, event.ptMouse) != FALSE);
+					if (bOnSep) {
 						::SetCursor(::LoadCursor(NULL, IDC_SIZEWE));
-						if (GetSepImmBorderColor() != 0)
-						{
-							SetBorderColor(GetSepImmBorderColor());
-						}
+					}
+					if (bOnSep != m_bSepHover) {
+						m_bSepHover = bOnSep;
+						Invalidate();
 					}
 				}
 				if( (m_uButtonState & UISTATE_CAPTURED) != 0 ) {
@@ -396,12 +438,10 @@ namespace FYUI
 			}
 			if( event.Type == UIEVENT_MOUSELEAVE )
 			{
-				if (m_bImmMode)
-				{
-					if (GetSepImmLeaveBorderColor() != 0)
-					{
-						SetBorderColor(GetSepImmLeaveBorderColor());
-					}
+				// 离开 layout：清除分隔条悬停态，让基类 PaintBorder 回退到普通 BorderColor
+				if (m_bSepHover) {
+					m_bSepHover = false;
+					Invalidate();
 				}
 			}
 			if( event.Type == UIEVENT_SETCURSOR )
@@ -450,6 +490,8 @@ namespace FYUI
 		ptLastMouse = pControl->ptLastMouse;
 		m_rcNewPos = pControl->m_rcNewPos;
 		m_bImmMode = pControl->m_bImmMode;
+		m_dwSepGhostColor = pControl->m_dwSepGhostColor;
+		m_iSepGhostSize = pControl->m_iSepGhostSize;
 		__super::CopyData(pControl);
 	}
 

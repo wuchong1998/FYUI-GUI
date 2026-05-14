@@ -208,6 +208,12 @@ namespace FYUI
 		 */
 		bool EnsurePaletteSurface();
 		/**
+		 * @brief 根据当前 m_nCurS / m_nCurB 与最新的 m_rcItem 重新对齐调色板光标位置
+		 * @details 控件位置或尺寸发生变化（窗口拉伸、DPI 切换等）时调用，
+		 *          避免光标绝对坐标停留在旧 m_rcItem 中、与色值脱节。
+		 */
+		void RefreshPalletCursorPosition();
+		/**
 		 * @brief 更新Pallet数据
 		 * @details 用于更新Pallet数据。具体行为由当前对象状态以及传入参数共同决定。
 		 */

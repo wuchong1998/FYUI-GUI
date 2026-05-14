@@ -313,41 +313,17 @@ namespace FYUI
 		DWORD GetFocusedTextColor() const;
 
 		/**
-		 * @brief 设置热状态边框颜色
-		 * @details 用于设置热状态边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param dwColor [in] 颜色值
+		 * @brief 判断是否处于鼠标悬停（Hot）状态
+		 * @details 基于按钮内部状态机 m_uButtonState 的 UISTATE_HOT 位返回，供基类 PaintBorder 选用 HotBorderColor。
+		 * @return bool 处于 Hot 状态返回 true
 		 */
-		void SetHotBorderColor(DWORD dwColor);
+		bool IsHot() const override;
 		/**
-		 * @brief 获取热状态边框颜色
-		 * @details 用于获取热状态边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		 * @return DWORD 返回对应的数值结果
+		 * @brief 判断是否处于按下（Pushed）状态
+		 * @details 基于按钮内部状态机 m_uButtonState 的 UISTATE_PUSHED 位返回，供基类 PaintBorder 选用 PushedBorderColor。
+		 * @return bool 处于 Pushed 状态返回 true
 		 */
-		DWORD GetHotBorderColor() const;
-		/**
-		 * @brief 设置Pushed边框颜色
-		 * @details 用于设置Pushed边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param dwColor [in] 颜色值
-		 */
-		void SetPushedBorderColor(DWORD dwColor);
-		/**
-		 * @brief 获取Pushed边框颜色
-		 * @details 用于获取Pushed边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		 * @return DWORD 返回对应的数值结果
-		 */
-		DWORD GetPushedBorderColor() const;
-		/**
-		 * @brief 设置Disabled边框颜色
-		 * @details 用于设置Disabled边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param dwColor [in] 颜色值
-		 */
-		void SetDisabledBorderColor(DWORD dwColor);
-		/**
-		 * @brief 获取Disabled边框颜色
-		 * @details 用于获取Disabled边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		 * @return DWORD 返回对应的数值结果
-		 */
-		DWORD GetDisabledBorderColor() const;
+		bool IsPushed() const override;
 
 		/**
 		 * @brief 设置属性
@@ -377,30 +353,11 @@ namespace FYUI
 		 */
 		void PaintStatusImage(CPaintRenderContext& renderContext) override;
 		/**
-		 * @brief 绘制边框
-		 * @details 用于绘制边框。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param renderContext [in,out] 绘制上下文
-		 */
-		void PaintBorder(CPaintRenderContext& renderContext) override;
-		/**
 		 * @brief 绘制前景图像
 		 * @details 用于绘制前景图像。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param renderContext [in,out] 绘制上下文
 		 */
 		void PaintForeImage(CPaintRenderContext& renderContext) override;
-
-		/**
-		 * @brief 绘制边框
-		 * @details 用于绘制边框。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param renderContext [in,out] 绘制上下文
-		 * @param rcItem [in] 子项矩形区域
-		 * @param dwBorderColor [in] 边框颜色数值
-		 * @param nBorderSize [in] 边框尺寸数值
-		 * @param rcBorderSize [in] 边框尺寸矩形区域
-		 * @param cxyBorderRound [in] cxy边框圆角参数
-		 * @param nBorderStyle [in] 边框样式数值
-		 */
-		void DrawBorder(CPaintRenderContext& renderContext, const RECT& rcItem, const DWORD& dwBorderColor, const int& nBorderSize, const RECT& rcBorderSize, const SIZE& cxyBorderRound, const int& nBorderStyle);
 
 		/**
 		 * @brief 克隆当前对象
@@ -436,9 +393,6 @@ namespace FYUI
 		DWORD m_dwHotTextColor;
 		DWORD m_dwPushedTextColor;
 		DWORD m_dwFocusedTextColor;
-		DWORD m_dwHotBorderColor;
-		DWORD m_dwPushedBorderColor;
-		DWORD m_dwDisabledBorderColor;
 
 		std::wstring m_sNormalImage;
 		std::wstring m_sHotImage;

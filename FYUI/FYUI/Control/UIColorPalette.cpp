@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "UIColorPalette.h"
+#include "../Core/Render/UIRenderImageRuntimeInternal.h"
 
 namespace FYUI {
 #define HSLMAX   255
@@ -100,7 +101,14 @@ namespace FYUI {
 		, m_nCurB(200)
 		, m_nPalletHeight(200)
 		, m_nBarHeight(20)
+		// Bug 修复：POD 类型需显式初始化，避免 XML 未设 palletsize/barsize 时获得垃圾值
+		, m_szPalletImage{ 0, 0 }
+		, m_szBarImage{ 0, 0 }
 	{
+		m_ptLastPalletMouse.x = 0;
+		m_ptLastPalletMouse.y = 0;
+		m_ptLastBarMouse.x = 0;
+		m_ptLastBarMouse.y = 0;
 	}
 
 	CColorPaletteUI::~CColorPaletteUI()
@@ -127,17 +135,27 @@ namespace FYUI {
 		m_nCurS = ClampColorComponent(static_cast<int>(S * 200.0f), 0, 200);
 		m_nCurB = ClampColorComponent(static_cast<int>(V * 200.0f), 0, 200);
 
-		if (m_pManager != NULL && m_rcItem.right > m_rcItem.left && GetPalletHeight() > 0) {
-			const int width = max(1, m_rcItem.right - m_rcItem.left);
-			m_ptLastPalletMouse.x = m_rcItem.left + m_nCurS * width / 200;
-			m_ptLastPalletMouse.y = m_rcItem.top + (200 - m_nCurB) * GetPalletHeight() / 200;
-			m_ptLastPalletMouse.x = ClampColorComponent(m_ptLastPalletMouse.x, m_rcItem.left, m_rcItem.right);
-			m_ptLastPalletMouse.y = ClampColorComponent(m_ptLastPalletMouse.y, m_rcItem.top, m_rcItem.top + GetPalletHeight());
-		}
+		RefreshPalletCursorPosition();
 
 		m_bPaletteDataDirty = true;
 		m_bBarDataDirty = true;
+		// Bug 修复：标记已被外部主动赋色，避免 SetPos 默认色再覆盖用户值
+		m_bSetColor = true;
 		NeedUpdate();
+	}
+
+	void CColorPaletteUI::RefreshPalletCursorPosition()
+	{
+		if (m_pManager == NULL) return;
+		if (m_rcItem.right <= m_rcItem.left) return;
+		const int palletHeight = GetPalletHeight();
+		if (palletHeight <= 0) return;
+
+		const int width = max(1, m_rcItem.right - m_rcItem.left);
+		m_ptLastPalletMouse.x = m_rcItem.left + m_nCurS * width / 200;
+		m_ptLastPalletMouse.y = m_rcItem.top + (200 - m_nCurB) * palletHeight / 200;
+		m_ptLastPalletMouse.x = ClampColorComponent(m_ptLastPalletMouse.x, m_rcItem.left, m_rcItem.right);
+		m_ptLastPalletMouse.y = ClampColorComponent(m_ptLastPalletMouse.y, m_rcItem.top, m_rcItem.top + palletHeight);
 	}
 
 	std::wstring_view CColorPaletteUI::GetClass() const
@@ -258,11 +276,7 @@ namespace FYUI {
 		if (s == m_nCurS) return;
 		m_nCurS = s;
 
-		const int width = max(1, m_rcItem.right - m_rcItem.left);
-		m_ptLastPalletMouse.x = m_rcItem.left + m_nCurS * width / 200;
-		m_ptLastPalletMouse.y = m_rcItem.top + (200 - m_nCurB) * GetPalletHeight() / 200;
-		m_ptLastPalletMouse.x = ClampColorComponent(m_ptLastPalletMouse.x, m_rcItem.left, m_rcItem.right);
-		m_ptLastPalletMouse.y = ClampColorComponent(m_ptLastPalletMouse.y, m_rcItem.top, m_rcItem.top + GetPalletHeight());
+		RefreshPalletCursorPosition();
 		NotifyColorChanged();
 		Invalidate();
 	}
@@ -275,11 +289,7 @@ namespace FYUI {
 		if (v == m_nCurB) return;
 		m_nCurB = v;
 
-		const int width = max(1, m_rcItem.right - m_rcItem.left);
-		m_ptLastPalletMouse.x = m_rcItem.left + m_nCurS * width / 200;
-		m_ptLastPalletMouse.y = m_rcItem.top + (200 - m_nCurB) * GetPalletHeight() / 200;
-		m_ptLastPalletMouse.x = ClampColorComponent(m_ptLastPalletMouse.x, m_rcItem.left, m_rcItem.right);
-		m_ptLastPalletMouse.y = ClampColorComponent(m_ptLastPalletMouse.y, m_rcItem.top, m_rcItem.top + GetPalletHeight());
+		RefreshPalletCursorPosition();
 		NotifyColorChanged();
 		Invalidate();
 	}
@@ -314,11 +324,19 @@ namespace FYUI {
 
 	void CColorPaletteUI::SetPos(RECT rc, bool bNeedInvalidate)
 	{
+		const RECT oldRc = m_rcItem;
 		CControlUI::SetPos(rc, bNeedInvalidate);
 		if (m_pManager == NULL) return;
+
 		if (!m_bSetColor) {
-			SetSelectColor(0xffe91313);
-			m_bSetColor = true;
+			SetSelectColor(0xffe91313); // SetSelectColor 内部会置 m_bSetColor=true 并调 RefreshPalletCursorPosition
+			return;
+		}
+
+		// Bug 修复 B：控件位置/尺寸变化后，重新对齐光标以匹配当前 HSB
+		if (oldRc.left != m_rcItem.left || oldRc.top != m_rcItem.top ||
+			oldRc.right != m_rcItem.right || oldRc.bottom != m_rcItem.bottom) {
+			RefreshPalletCursorPosition();
 		}
 	}
 
@@ -343,8 +361,8 @@ namespace FYUI {
 				m_bIsInBar = false;
 				m_activeHandleHueBar = false;
 			}
-
-			if (event.ptMouse.x >= m_rcItem.left && event.ptMouse.y >= m_rcItem.bottom - barHeight &&
+			// Bug 修复：使用 else if 避免理论上同点同时进入两个分支
+			else if (event.ptMouse.x >= m_rcItem.left && event.ptMouse.y >= m_rcItem.bottom - barHeight &&
 				event.ptMouse.x < m_rcItem.right && event.ptMouse.y < m_rcItem.bottom) {
 				m_nCurH = ClampColorComponent((event.ptMouse.x - m_rcItem.left) * 360 / width, 0, 359);
 				m_uButtonState |= UISTATE_PUSHED;
@@ -354,6 +372,10 @@ namespace FYUI {
 				m_bPaletteDataDirty = true;
 			}
 
+			// Bug 修复 C：点击（未拖动）就改了颜色，也应立即发 colorchanged 通知，以便预览同步
+			if ((m_bIsInPallet || m_bIsInBar) && IsEnabled() && m_pManager != NULL) {
+				m_pManager->SendNotify(this, DUI_MSGTYPE_COLORCHANGED, GetSelectColor(), 0);
+			}
 			Invalidate();
 			return;
 		}
@@ -395,7 +417,11 @@ namespace FYUI {
 				m_pManager->SendNotify(this, DUI_MSGTYPE_COLORCHANGED, GetSelectColor(), 0);
 			}
 
-			NeedParentUpdate();
+			// Bug 修复：拖动时只需重绘自身，不应触发父容器布局；NeedParentUpdate 会带来不必要的开销
+			if (m_bIsInPallet || m_bIsInBar) {
+				//Invalidate();
+				NeedParentUpdate();
+			}
 			return;
 		}
 	}
@@ -533,6 +559,8 @@ namespace FYUI {
 			}
 		}
 		m_bPaletteDataDirty = false;
+		// Bug 修复：HBITMAP 像素已被覆写，必须让 D2D 端以 HBITMAP 为 key 的 ID2D1Bitmap 缓存失效，否则拖动色相后调色板不会重绘
+		InvalidateD2DBitmapCacheInternal(m_paletteSurface.GetBitmap());
 	}
 
 	void CColorPaletteUI::UpdateBarData()
@@ -564,6 +592,8 @@ namespace FYUI {
 			}
 		}
 		m_bBarDataDirty = false;
+		// Bug 修复：同上，色相条像素变更后需使 D2D 缓存失效
+		InvalidateD2DBitmapCacheInternal(m_paletteSurface.GetBitmap());
 	}
 
 }

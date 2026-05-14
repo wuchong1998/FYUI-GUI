@@ -230,6 +230,9 @@ namespace FYUI
 		m_dwForeColor(0),
 		m_dwBorderColor(0),
 		m_dwFocusBorderColor(0),
+		m_dwHotBorderColor(0),
+		m_dwPushedBorderColor(0),
+		m_dwDisabledBorderColor(0),
 		m_dwFocusBkColor(0),
 		m_bColorHSL(false),
 		m_nBorderSize(0),
@@ -569,6 +572,52 @@ namespace FYUI
 
 		m_dwFocusBorderColor = dwBorderColor;
 		Invalidate();
+	}
+
+	DWORD CControlUI::GetHotBorderColor() const
+	{
+		return m_dwHotBorderColor;
+	}
+
+	void CControlUI::SetHotBorderColor(DWORD dwBorderColor)
+	{
+		if (m_dwHotBorderColor == dwBorderColor) return;
+		m_dwHotBorderColor = dwBorderColor;
+		Invalidate();
+	}
+
+	DWORD CControlUI::GetPushedBorderColor() const
+	{
+		return m_dwPushedBorderColor;
+	}
+
+	void CControlUI::SetPushedBorderColor(DWORD dwBorderColor)
+	{
+		if (m_dwPushedBorderColor == dwBorderColor) return;
+		m_dwPushedBorderColor = dwBorderColor;
+		Invalidate();
+	}
+
+	DWORD CControlUI::GetDisabledBorderColor() const
+	{
+		return m_dwDisabledBorderColor;
+	}
+
+	void CControlUI::SetDisabledBorderColor(DWORD dwBorderColor)
+	{
+		if (m_dwDisabledBorderColor == dwBorderColor) return;
+		m_dwDisabledBorderColor = dwBorderColor;
+		Invalidate();
+	}
+
+	bool CControlUI::IsHot() const
+	{
+		return false;
+	}
+
+	bool CControlUI::IsPushed() const
+	{
+		return false;
 	}
 
 	DWORD CControlUI::GetFocusBKColor() const
@@ -1027,6 +1076,121 @@ namespace FYUI
 		return m_uFloatAlign;
 	}
 
+	namespace
+	{
+		// 把单段字符串解析为 double。失败返回 false。允许首尾空白。
+		bool TryParseDoubleToken(std::wstring_view token, double& out)
+		{
+			const std::wstring_view trimmed = StringUtil::TrimView(token);
+			if (trimmed.empty()) return false;
+			const std::wstring text(trimmed);
+			wchar_t* end = nullptr;
+			errno = 0;
+			const double v = ::wcstod(text.c_str(), &end);
+			if (end == text.c_str()) return false;
+			out = v;
+			return true;
+		}
+
+		// 把 "x,y" 拆成两个 double。失败返回 false。
+		bool TryParseDoublePair(std::wstring_view value, double& outX, double& outY)
+		{
+			const auto parts = StringUtil::SplitView(value, L',', true);
+			if (parts.size() != 2) return false;
+			double x = 0.0, y = 0.0;
+			if (!TryParseDoubleToken(parts[0], x)) return false;
+			if (!TryParseDoubleToken(parts[1], y)) return false;
+			outX = x;
+			outY = y;
+			return true;
+		}
+	}
+
+	void CControlUI::SetFloatingRatio(std::wstring_view pstrValue)
+	{
+		double x = 0.0, y = 0.0;
+		if (!TryParseDoublePair(pstrValue, x, y)) return;
+
+		// 兼容两种写法：>1 视为百分比（如 "50,50"），<=1 视为比例（如 "0.5,0.5"）
+		if (x > 1.0) x /= 100.0;
+		if (y > 1.0) y /= 100.0;
+		if (x < 0.0) x = 0.0;
+		if (x > 1.0) x = 1.0;
+		if (y < 0.0) y = 0.0;
+		if (y > 1.0) y = 1.0;
+
+		const bool bSame = m_bHasFloatingRatio && m_dFloatingRatioX == x && m_dFloatingRatioY == y;
+		m_bHasFloatingRatio = true;
+		m_dFloatingRatioX = x;
+		m_dFloatingRatioY = y;
+		// 启用 float（若已是 float 这一步是 no-op）
+		SetFloat(true);
+		if (!bSame) NeedParentUpdate();
+	}
+
+	bool CControlUI::HasFloatingRatio() const
+	{
+		return m_bHasFloatingRatio;
+	}
+
+	double CControlUI::GetFloatingRatioX() const
+	{
+		return m_dFloatingRatioX;
+	}
+
+	double CControlUI::GetFloatingRatioY() const
+	{
+		return m_dFloatingRatioY;
+	}
+
+	void CControlUI::ClearFloatingRatio()
+	{
+		if (!m_bHasFloatingRatio) return;
+		m_bHasFloatingRatio = false;
+		m_dFloatingRatioX = 0.0;
+		m_dFloatingRatioY = 0.0;
+		NeedParentUpdate();
+	}
+
+	void CControlUI::SetFloatRBPadding(std::wstring_view pstrValue)
+	{
+		double x = 0.0, y = 0.0;
+		if (!TryParseDoublePair(pstrValue, x, y)) return;
+
+		const int ix = static_cast<int>(x);
+		const int iy = static_cast<int>(y);
+		const bool bSame = m_bHasFloatRBPadding && m_iFloatRBPaddingX == ix && m_iFloatRBPaddingY == iy;
+		m_bHasFloatRBPadding = true;
+		m_iFloatRBPaddingX = ix;
+		m_iFloatRBPaddingY = iy;
+		SetFloat(true);
+		if (!bSame) NeedParentUpdate();
+	}
+
+	bool CControlUI::HasFloatRBPadding() const
+	{
+		return m_bHasFloatRBPadding;
+	}
+
+	int CControlUI::GetFloatRBPaddingX() const
+	{
+		return m_iFloatRBPaddingX;
+	}
+
+	int CControlUI::GetFloatRBPaddingY() const
+	{
+		return m_iFloatRBPaddingY;
+	}
+
+	void CControlUI::ClearFloatRBPadding()
+	{
+		if (!m_bHasFloatRBPadding) return;
+		m_bHasFloatRBPadding = false;
+		m_iFloatRBPaddingX = 0;
+		m_iFloatRBPaddingY = 0;
+		NeedParentUpdate();
+	}
+
 	std::wstring CControlUI::GetToolTip() const
 	{
 		if (!IsResourceText()) return m_sToolTip;
@@ -1336,6 +1500,9 @@ namespace FYUI
 		// 澶嶅埗杈规灞炴€?
 		SetBorderColor(pControl->m_dwBorderColor);
 		SetFocusBorderColor(pControl->m_dwFocusBorderColor);
+		SetHotBorderColor(pControl->m_dwHotBorderColor);
+		SetPushedBorderColor(pControl->m_dwPushedBorderColor);
+		SetDisabledBorderColor(pControl->m_dwDisabledBorderColor);
 		SetFocusBKColor(pControl->m_dwFocusBkColor);
 		SetBorderSize(pControl->m_rcBorderSize);
 		SetBorderSize(pControl->m_nBorderSize);
@@ -1352,6 +1519,13 @@ namespace FYUI
 		SetFloat(pControl->m_bFloat);
 		SetFloatPercent(pControl->m_piFloatPercent);
 		SetFloatAlign(pControl->m_uFloatAlign);
+		// 复制 floating_ratio / float_right_bottom_padding 状态
+		m_bHasFloatingRatio = pControl->m_bHasFloatingRatio;
+		m_dFloatingRatioX = pControl->m_dFloatingRatioX;
+		m_dFloatingRatioY = pControl->m_dFloatingRatioY;
+		m_bHasFloatRBPadding = pControl->m_bHasFloatRBPadding;
+		m_iFloatRBPaddingX = pControl->m_iFloatRBPaddingX;
+		m_iFloatRBPaddingY = pControl->m_iFloatRBPaddingY;
 
 		// 澶嶅埗鍏朵粬灞炴€?
 		SetResourceText(pControl->m_bResourceText);
@@ -1601,6 +1775,12 @@ namespace FYUI
 		else if (IsAttributeName(name, L"floatalign")) {
 			SetFloatAlign(ParseFloatAlign(pstrValueView, GetFloatAlign()));
 		}
+		else if (IsAttributeName(name, L"floating_ratio")) {
+			SetFloatingRatio(pstrValueView);
+		}
+		else if (IsAttributeName(name, L"float_right_bottom_padding")) {
+			SetFloatRBPadding(pstrValueView);
+		}
 		else if (IsAttributeName(name, L"padding")) {
 			RECT padding = { 0 };
 			if (StringUtil::TryParseRect(pstrValueView, padding)) {
@@ -1654,6 +1834,18 @@ namespace FYUI
 		else if (IsAttributeName(name, L"focusbordercolor")) {
 			DWORD color = 0;
 			if (StringUtil::TryParseColor(pstrValueView, color)) SetFocusBorderColor(color);
+		}
+		else if (IsAttributeName(name, L"hotbordercolor")) {
+			DWORD color = 0;
+			if (StringUtil::TryParseColor(pstrValueView, color)) SetHotBorderColor(color);
+		}
+		else if (IsAttributeName(name, L"pushedbordercolor")) {
+			DWORD color = 0;
+			if (StringUtil::TryParseColor(pstrValueView, color)) SetPushedBorderColor(color);
+		}
+		else if (IsAttributeName(name, L"disabledbordercolor")) {
+			DWORD color = 0;
+			if (StringUtil::TryParseColor(pstrValueView, color)) SetDisabledBorderColor(color);
 		}
 		else if (IsAttributeName(name, L"colorhsl")) SetColorHSL(StringUtil::ParseBool(pstrValueView));
 		else if (IsAttributeName(name, L"bordersize")) {
@@ -1976,11 +2168,78 @@ namespace FYUI
 		if (rcBorderSize.right > nBorderBand) nBorderBand = rcBorderSize.right;
 		if (rcBorderSize.bottom > nBorderBand) nBorderBand = rcBorderSize.bottom;
 
+		// 状态色优先：disabled > pushed > hot > focus > normal。
+		// 子类可重写 IsHot()/IsPushed() 决定状态触发条件。
+		auto draw_border_with_color = [&](DWORD dwColor) {
+			if (dwColor == 0) return;
+			if (!PaintRectTouchesBorderBand(m_rcPaint, m_rcItem, nBorderBand + 1)) {
+				return;
+			}
+			const DWORD adj = GetAdjustColor(dwColor);
+			const bool hasPerSideBorder = rcBorderSize.left > 0 || rcBorderSize.top > 0 || rcBorderSize.right > 0 || rcBorderSize.bottom > 0;
+			const bool hasRoundCorner = cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0;
+			if (hasPerSideBorder && hasRoundCorner) {
+				CRenderEngine::DrawPartialRoundBorder(renderContext, m_rcItem, rcBorderSize, cxyBorderRound.cx, cxyBorderRound.cy, adj, m_nBorderStyle);
+			}
+			else if (nBorderSize > 0 && hasRoundCorner) {
+				CRenderEngine::DrawRoundRect(renderContext, m_rcItem, nBorderSize, cxyBorderRound.cx, cxyBorderRound.cy, adj, m_nBorderStyle);
+			}
+			else if (hasPerSideBorder) {
+				RECT rcBorder;
+				if (rcBorderSize.left > 0) {
+					rcBorder = m_rcItem;
+					rcBorder.right = rcBorder.left;
+					CRenderEngine::DrawLine(renderContext, rcBorder, rcBorderSize.left, adj, m_nBorderStyle);
+				}
+				if (rcBorderSize.top > 0) {
+					rcBorder = m_rcItem;
+					rcBorder.bottom = rcBorder.top;
+					CRenderEngine::DrawLine(renderContext, rcBorder, rcBorderSize.top, adj, m_nBorderStyle);
+				}
+				if (rcBorderSize.right > 0) {
+					rcBorder = m_rcItem;
+					rcBorder.right -= 1;
+					rcBorder.left = rcBorder.right;
+					CRenderEngine::DrawLine(renderContext, rcBorder, rcBorderSize.right, adj, m_nBorderStyle);
+				}
+				if (rcBorderSize.bottom > 0) {
+					rcBorder = m_rcItem;
+					rcBorder.bottom -= 1;
+					rcBorder.top = rcBorder.bottom;
+					CRenderEngine::DrawLine(renderContext, rcBorder, rcBorderSize.bottom, adj, m_nBorderStyle);
+				}
+			}
+			else if (nBorderSize > 0) {
+				CRenderEngine::DrawRect(renderContext, m_rcItem, nBorderSize, adj, m_nBorderStyle);
+			}
+		};
+
+		if (!IsEnabled() && m_dwDisabledBorderColor != 0) {
+			draw_border_with_color(m_dwDisabledBorderColor);
+			return;
+		}
+		if (IsPushed() && m_dwPushedBorderColor != 0) {
+			draw_border_with_color(m_dwPushedBorderColor);
+			return;
+		}
+		if (IsHot() && m_dwHotBorderColor != 0) {
+			draw_border_with_color(m_dwHotBorderColor);
+			return;
+		}
+
 		if(m_dwBorderColor != 0 || m_dwFocusBorderColor != 0) {
 			if (!PaintRectTouchesBorderBand(m_rcPaint, m_rcItem, nBorderBand + 1)) {
 				return;
 			}
-			if(nBorderSize > 0 && ( cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0 )) {
+			const bool hasPerSideBorder = rcBorderSize.left > 0 || rcBorderSize.top > 0 || rcBorderSize.right > 0 || rcBorderSize.bottom > 0;
+			const bool hasRoundCorner = cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0;
+			if (hasPerSideBorder && hasRoundCorner) {
+				const DWORD borderColor = (IsFocused() && m_dwFocusBorderColor != 0)
+					? GetAdjustColor(m_dwFocusBorderColor)
+					: GetAdjustColor(m_dwBorderColor);
+				CRenderEngine::DrawPartialRoundBorder(renderContext, m_rcItem, rcBorderSize, cxyBorderRound.cx, cxyBorderRound.cy, borderColor, m_nBorderStyle);
+			}
+			else if(nBorderSize > 0 && hasRoundCorner) {
 				if (IsFocused() && m_dwFocusBorderColor != 0)
 					CRenderEngine::DrawRoundRect(renderContext, m_rcItem, nBorderSize, cxyBorderRound.cx, cxyBorderRound.cy, GetAdjustColor(m_dwFocusBorderColor), m_nBorderStyle);
 				else
@@ -1990,7 +2249,7 @@ namespace FYUI
 				if (IsFocused() && m_dwFocusBorderColor != 0 && nBorderSize > 0) {
 					CRenderEngine::DrawRect(renderContext, m_rcItem, nBorderSize, GetAdjustColor(m_dwFocusBorderColor), m_nBorderStyle);
 				}
-				else if(rcBorderSize.left > 0 || rcBorderSize.top > 0 || rcBorderSize.right > 0 || rcBorderSize.bottom > 0) {
+				else if(hasPerSideBorder) {
 					RECT rcBorder;
 
 					if(rcBorderSize.left > 0){

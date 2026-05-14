@@ -315,6 +315,58 @@ namespace FYUI
 		 * @param dwBorderColor [in] 边框颜色数值
 		 */
 		void SetFocusBorderColor(DWORD dwBorderColor);
+
+		/**
+		 * @brief 获取热状态边框颜色
+		 * @details 控件处于鼠标悬停（Hot）状态时绘制的边框颜色，由 IsHot() 决定是否触发。
+		 * @return DWORD 返回对应的数值结果
+		 */
+		DWORD GetHotBorderColor() const;
+		/**
+		 * @brief 设置热状态边框颜色
+		 * @details 设置控件处于鼠标悬停（Hot）状态时绘制的边框颜色，配合 IsHot() 生效。
+		 * @param dwBorderColor [in] 边框颜色数值
+		 */
+		void SetHotBorderColor(DWORD dwBorderColor);
+		/**
+		 * @brief 获取按下状态边框颜色
+		 * @details 控件处于按下（Pushed/Captured）状态时绘制的边框颜色，由 IsPushed() 决定是否触发。
+		 * @return DWORD 返回对应的数值结果
+		 */
+		DWORD GetPushedBorderColor() const;
+		/**
+		 * @brief 设置按下状态边框颜色
+		 * @details 设置控件处于按下状态时绘制的边框颜色，配合 IsPushed() 生效。
+		 * @param dwBorderColor [in] 边框颜色数值
+		 */
+		void SetPushedBorderColor(DWORD dwBorderColor);
+		/**
+		 * @brief 获取禁用状态边框颜色
+		 * @details 控件处于禁用状态时绘制的边框颜色，由 IsEnabled() == false 触发。
+		 * @return DWORD 返回对应的数值结果
+		 */
+		DWORD GetDisabledBorderColor() const;
+		/**
+		 * @brief 设置禁用状态边框颜色
+		 * @details 设置控件禁用时绘制的边框颜色。
+		 * @param dwBorderColor [in] 边框颜色数值
+		 */
+		void SetDisabledBorderColor(DWORD dwBorderColor);
+
+		/**
+		 * @brief 判断控件是否处于鼠标悬停（Hot）状态
+		 * @details 基类默认始终返回 false，派生类如 CButtonUI、Layout 分隔条等可重写返回真实状态。
+		 *          PaintBorder 会据此决定是否使用 HotBorderColor。
+		 * @return bool 处于 Hot 状态返回 true
+		 */
+		virtual bool IsHot() const;
+		/**
+		 * @brief 判断控件是否处于按下（Pushed）状态
+		 * @details 基类默认始终返回 false，派生类如 CButtonUI、Layout 分隔条捕获等可重写返回真实状态。
+		 *          PaintBorder 会据此决定是否使用 PushedBorderColor。
+		 * @return bool 处于 Pushed 状态返回 true
+		 */
+		virtual bool IsPushed() const;
 		/**
 		 * @brief 获取焦点背景颜色
 		 * @details 用于获取焦点背景颜色。具体行为由当前对象状态以及传入参数共同决定。
@@ -656,6 +708,54 @@ namespace FYUI
 		 * @return UINT 返回对应的数值结果
 		 */
 		virtual UINT GetFloatAlign() const;
+
+		/**
+		 * @brief 设置中心比例浮动
+		 * @details 形如 "x,y"：控件中心定位于父控件 (x%, y%) 处。值 <=1.0 视为 0~1 比例，
+		 *          >1 视为 0~100 百分比，自动归一化到 [0,1]。设置后自动启用 float。
+		 * @param pstrValue [in] 形如 "0.5,0.5" 或 "50,50"
+		 */
+		void SetFloatingRatio(std::wstring_view pstrValue);
+		/**
+		 * @brief 是否启用了 floating_ratio
+		 */
+		bool HasFloatingRatio() const;
+		/**
+		 * @brief 获取 floating_ratio 横向比例（0~1）
+		 */
+		double GetFloatingRatioX() const;
+		/**
+		 * @brief 获取 floating_ratio 纵向比例（0~1）
+		 */
+		double GetFloatingRatioY() const;
+		/**
+		 * @brief 清除 floating_ratio 设置（不影响 float 标志本身）
+		 */
+		void ClearFloatingRatio();
+
+		/**
+		 * @brief 设置相对父右下角的像素偏移
+		 * @details 形如 "x,y"：控件右下角距父右下角 (x, y) 逻辑像素，绘制时会按 DPI 缩放。
+		 *          设置后自动启用 float。
+		 * @param pstrValue [in] 形如 "50,50"
+		 */
+		void SetFloatRBPadding(std::wstring_view pstrValue);
+		/**
+		 * @brief 是否启用了 float_right_bottom_padding
+		 */
+		bool HasFloatRBPadding() const;
+		/**
+		 * @brief 获取 float_right_bottom_padding 的横向逻辑像素
+		 */
+		int GetFloatRBPaddingX() const;
+		/**
+		 * @brief 获取 float_right_bottom_padding 的纵向逻辑像素
+		 */
+		int GetFloatRBPaddingY() const;
+		/**
+		 * @brief 清除 float_right_bottom_padding 设置（不影响 float 标志本身）
+		 */
+		void ClearFloatRBPadding();
 
 		/**
 		 * @brief 获取工具提示
@@ -1230,6 +1330,16 @@ namespace FYUI
 		UINT m_uFloatAlign;
 		bool m_bSetPos;
 
+		// floating_ratio：控件中心定位于父 (x%, y%) 处；m_bHasFloatingRatio 为 true 时生效
+		bool m_bHasFloatingRatio = false;
+		double m_dFloatingRatioX = 0.0;
+		double m_dFloatingRatioY = 0.0;
+
+		// float_right_bottom_padding：控件右下角距父右下角的逻辑像素；m_bHasFloatRBPadding 为 true 时生效
+		bool m_bHasFloatRBPadding = false;
+		int m_iFloatRBPaddingX = 0;
+		int m_iFloatRBPaddingY = 0;
+
 		bool m_bRichEvent;
 		bool m_bDragEnabled;
 		bool m_bDropEnabled;
@@ -1255,6 +1365,9 @@ namespace FYUI
 
 		DWORD m_dwBorderColor;
 		DWORD m_dwFocusBorderColor;
+		DWORD m_dwHotBorderColor;
+		DWORD m_dwPushedBorderColor;
+		DWORD m_dwDisabledBorderColor;
 		DWORD m_dwFocusBkColor;
 		bool m_bColorHSL;
 		int m_nBorderSize;

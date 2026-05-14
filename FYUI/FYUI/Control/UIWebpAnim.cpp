@@ -414,12 +414,25 @@ namespace FYUI
 
 	bool CWebpAnimUI::CanRunWebpPlayback() const
 	{
-		return m_pManager != nullptr && HasPlayableWebpFrames() && IsWebpPlaybackVisible();
+		if (m_pManager == nullptr || !HasPlayableWebpFrames()) {
+			return false;
+		}
+		// Continue 策略：隐藏时也继续推进时间轴；其它策略需要控件实际可见
+		if (m_hideAction == WebpHideAction_Continue) {
+			return true;
+		}
+		return IsWebpPlaybackVisible();
 	}
 
 	bool CWebpAnimUI::ShouldAutoPlayWebp()
 	{
-		return m_bIsAutoPlay && IsWebpPlaybackVisible();
+		if (!m_bIsAutoPlay) {
+			return false;
+		}
+		if (m_hideAction == WebpHideAction_Continue) {
+			return true;
+		}
+		return IsWebpPlaybackVisible();
 	}
 
 	bool CWebpAnimUI::EnsureWebpLoaded()
@@ -575,12 +588,24 @@ namespace FYUI
 	void CWebpAnimUI::SyncWebpPlaybackState()
 	{
 		if (!IsWebpPlaybackVisible()) {
-			if (m_bIsPlaying) {
-				m_bResumePendingOnVisible = true;
-				StopWebpPlayback(false, true);
-				m_playbackState = WebpPlaybackState_Paused;
+			switch (m_hideAction) {
+			case WebpHideAction_Continue:
+				// 不可见时仍允许动画继续推进，无需做任何状态切换
+				return;
+			case WebpHideAction_Stop:
+				m_bResumePendingOnVisible = false;
+				StopWebpPlayback(true, false);
+				m_playbackState = WebpPlaybackState_Stopped;
+				return;
+			case WebpHideAction_Pause:
+			default:
+				if (m_bIsPlaying) {
+					m_bResumePendingOnVisible = true;
+					StopWebpPlayback(false, true);
+					m_playbackState = WebpPlaybackState_Paused;
+				}
+				return;
 			}
-			return;
 		}
 
 		if (m_bResumePendingOnVisible) {
@@ -641,13 +666,14 @@ namespace FYUI
 			return;
 		}
 
-		Invalidate();
+		// 必须先推进到下一帧，再 Invalidate，否则绘制的仍是已经显示完的旧帧
 		if (!AdvanceWebpFrame()) {
 			StopWebpPlayback(false, true);
 			m_playbackState = WebpPlaybackState_Completed;
 			NotifyWebpPlaybackComplete();
 			return;
 		}
+		Invalidate();
 		ScheduleFrameTimer(m_nFramePosition);
 	}
 

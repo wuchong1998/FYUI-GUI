@@ -467,6 +467,21 @@ namespace FYUI {
 		static void DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int radiusX,
 									int radiusY, DWORD dwPenColor,int nStyle = PS_SOLID);
 		/**
+		 * @brief 绘制部分边的圆角矩形边框
+		 * @details 用于支持 `bordersize="L,T,R,B"` 中存在 0 值的部分边场景，并保持指定 `borderround` 的圆角效果。
+		 *          仅当某条边的宽度大于 0 时才会绘制该边；当某个角点对应的两条相邻边都启用时，绘制对应的圆弧；
+		 *          否则该角处的直线段直接延伸至矩形顶点（直角终止）。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param rc [in] 控件矩形（描边外缘与该矩形对齐）
+		 * @param rcBorderSize [in] 各边宽度，依次为 `left/top/right/bottom`，0 表示该边不绘制
+		 * @param radiusX [in] 圆角 X 半径（像素）
+		 * @param radiusY [in] 圆角 Y 半径（像素）
+		 * @param dwPenColor [in] 边框颜色
+		 * @param nStyle [in] 边框样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
+		 */
+		static void DrawPartialRoundBorder(CPaintRenderContext& renderContext, const RECT& rc, const RECT& rcBorderSize,
+			int radiusX, int radiusY, DWORD dwPenColor, int nStyle = PS_SOLID);
+		/**
 		 * @brief 绘制椭圆边框
 		 * @details 按目标矩形外接椭圆绘制边框，适合绘制圆点、头像边框、状态灯、胶囊按钮装饰等元素。
 		 * @param renderContext [in,out] 绘制上下文

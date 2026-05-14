@@ -11,6 +11,13 @@ namespace FYUI
 			EVENT_TIEM_ID = 100,
 		};
 		DECLARE_DUICONTROL(CGifAnimUI)
+	private:
+		struct GifFrame
+		{
+			HBITMAP hBitmap = nullptr;
+			UINT delayMs = 100;
+			bool hasAlpha = false;
+		};
 	public:
 		/**
 		 * @brief 执行 CGifAnimUI 操作
@@ -137,11 +144,6 @@ namespace FYUI
 
 	private:
 		/**
-		 * @brief 执行 ReleaseGifMetadata 操作
-		 * @details 用于执行 ReleaseGifMetadata 操作。具体行为由当前对象状态以及传入参数共同决定。
-		 */
-		void	ReleaseGifMetadata();
-		/**
 		 * @brief 确保GIF 动画图像Loaded
 		 * @details 用于确保GIF 动画图像Loaded。具体行为由当前对象状态以及传入参数共同决定。
 		 * @return bool 操作成功返回 true，否则返回 false
@@ -212,18 +214,7 @@ namespace FYUI
 		 * @param pImageInfo [in] 图像信息对象
 		 * @return bool 操作成功返回 true，否则返回 false
 		 */
-		bool	AttachGifImageInfo(TImageInfo* pImageInfo);
-		/**
-		 * @brief 执行 ReleaseGifImageInfo 操作
-		 * @details 用于执行 ReleaseGifImageInfo 操作。具体行为由当前对象状态以及传入参数共同决定。
-		 */
-		void	ReleaseGifImageInfo();
-		/**
-		 * @brief 应用GIF 动画重新加载Result
-		 * @details 用于应用GIF 动画重新加载Result。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param pImageInfo [in] 图像信息对象
-		 */
-		void	ApplyGifReloadResult(TImageInfo* pImageInfo);
+		void	ReleaseGifFrames();
 		/**
 		 * @brief 更新GIF 动画来源
 		 * @details 用于更新GIF 动画来源。具体行为由当前对象状态以及传入参数共同决定。
@@ -240,7 +231,6 @@ namespace FYUI
 		 * @return bool 操作成功返回 true，否则返回 false
 		 */
 		bool	UpdateGifSource(const std::wstring& pStrImage, bool bInvalidate) { return UpdateGifSource(std::wstring_view(pStrImage), bInvalidate); }
-		bool	SelectActiveGifFrame() const;
 		/**
 		 * @brief 执行 ScheduleFrameTimer 操作
 		 * @details 用于执行 ScheduleFrameTimer 操作。具体行为由当前对象状态以及传入参数共同决定。
@@ -272,44 +262,21 @@ namespace FYUI
 		 * @details 用于执行 OnTimer 操作。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param idEvent [in] id事件参数
 		 */
-		void    OnTimer( UINT_PTR idEvent );
+		void    OnTimer(UINT_PTR idEvent);
 		/**
-		 * @brief 执行 InvalidateFrameCache 操作
-		 * @details 用于执行 InvalidateFrameCache 操作。具体行为由当前对象状态以及传入参数共同决定。
-		 */
-		void	InvalidateFrameCache();
-		/**
-		 * @brief 确保帧缓存
-		 * @details 用于确保帧缓存。具体行为由当前对象状态以及传入参数共同决定。
-		 * @param renderContext [in,out] 绘制上下文
-		 * @param cx [in] cx参数
-		 * @param cy [in] cy参数
-		 * @return bool 操作成功返回 true，否则返回 false
-		 */
-		bool	EnsureFrameCache(CPaintRenderContext& renderContext, LONG cx, LONG cy);
-		/**
-		 * @brief 绘制帧
-		 * @details 用于绘制帧。具体行为由当前对象状态以及传入参数共同决定。
+		 * @brief 绘制当前帧
+		 * @details 把 m_frames[m_nFramePosition].hBitmap 作为 D2D 渲染管线的位图源贴到控件矩形。
 		 * @param renderContext [in,out] 绘制上下文
 		 */
 		void	DrawFrame(CPaintRenderContext& renderContext);
 
 	private:
-		TImageInfo*		m_pGifImageInfo;
-		UINT			m_nFrameCount;				// gif鍥剧墖鎬诲抚鏁?
-		UINT			m_nFramePosition;			// 褰撳墠鏀惧埌绗嚑甯?
-		Gdiplus::PropertyItem*	m_pPropertyItem;	// 甯т笌甯т箣闂撮棿闅旀椂闂?
-
-		SIZE			m_szFrameBitmap;
-		UINT			m_nCachedFramePosition;
-		bool			m_bFrameCacheValid;
-		CPaintRenderSurface m_frameSurface;
-		std::wstring		m_sBkImage;
-		bool			m_bIsAutoPlay;				// 鏄惁鑷姩鎾斁gif
-		bool			m_bIsAutoSize;				// 鏄惁鑷姩鏍规嵁鍥剧墖璁剧疆澶у皬
-		bool			m_bIsPlaying;
+		std::wstring				m_sBkImage;
+		std::vector<GifFrame>		m_frames;
+		SIZE						m_szCanvas;
+		UINT						m_nFramePosition;
+		bool						m_bIsAutoPlay;
+		bool						m_bIsAutoSize;
+		bool						m_bIsPlaying;
 	};
 }
-
-
-

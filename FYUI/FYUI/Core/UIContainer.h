@@ -477,31 +477,6 @@ namespace FYUI
 		void SetAttribute(std::wstring_view pstrName, std::wstring_view pstrValue);
 
 		/**
-		* @brief 设置分隔立即边框颜色
-		* @details 用于设置分隔立即边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		* @param dwSepImmBorderColor [in] 分隔立即边框颜色数值
-		*/
-		void SetSepImmBorderColor(DWORD dwSepImmBorderColor);
-		/**
-		* @brief 获取分隔立即边框颜色
-		* @details 用于获取分隔立即边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		* @return DWORD 返回对应的数值结果
-		*/
-		DWORD GetSepImmBorderColor() const;
-		/**
-		* @brief 设置分隔立即Leave边框颜色
-		* @details 用于设置分隔立即Leave边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		* @param dwSepImmBorderColor [in] 分隔立即边框颜色数值
-		*/
-		void SetSepImmLeaveBorderColor(DWORD dwSepImmBorderColor);
-		/**
-		* @brief 获取分隔立即Leave边框颜色
-		* @details 用于获取分隔立即Leave边框颜色。具体行为由当前对象状态以及传入参数共同决定。
-		* @return DWORD 返回对应的数值结果
-		*/
-		DWORD GetSepImmLeaveBorderColor() const;
-
-		/**
 		* @brief 设置管理器和父级关系
 		* @details 用于设置管理器和父级关系。具体行为由当前对象状态以及传入参数共同决定。
 		* @param pManager [in] 管理器对象
@@ -870,10 +845,6 @@ namespace FYUI
 		std::wstring m_sHorizontalScrollBarStyle;
 
 	protected:
-
-		DWORD m_dwSepImmBorderColor = 0;
-		DWORD m_dwLeaveSepImmBorderColor = 0;
-
 
 		bool   m_bInertiaActive;
 		bool m_bSmoothScrollAnimating = false;

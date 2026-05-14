@@ -78,6 +78,11 @@ namespace FYTestApp
         diag_status->SetText(L"Direct2D 诊断已启用。请与选项卡、列表、编辑框、滑块及弹出窗口进行交互。");
         auto* progress = FindControlAs<CProgressUI>(m_pm, L"progress_runtime");
         progress->SetValue(60);
+
+        // WebP 测试控件：初始化状态显示
+        UpdateWebpStatus();
+        // Ring 测试控件：初始化状态显示
+        UpdateRingStatus();
     }
 
     void MainDemoWindow::Notify(TNotifyUI& msg)
@@ -95,6 +100,9 @@ namespace FYTestApp
             msg.sType == DUI_MSGTYPE_ITEMCLICK || msg.sType == DUI_MSGTYPE_COLORCHANGED) {
             if (msg.pSender == FindControlAs<CVirtualListUI>(m_pm, L"virtual_list_demo")) {
                 UpdateVirtualListStatus(L"VirtualList notify: " + msg.sType);
+            }
+            if (msg.sType == DUI_MSGTYPE_COLORCHANGED) {
+                UpdatePaletteColorPreview(msg);
             }
             UpdateStatusFromNotify(msg);
         }
@@ -134,7 +142,133 @@ namespace FYTestApp
             }
             return;
         }
+
+        // Ring 测试控件按钮处理
+        if (auto* ring = FindControlAs<CRingUI>(m_pm, L"ring_demo")) {
+            bool handled = true;
+            if (name == L"ring_play")        ring->Play();
+            else if (name == L"ring_pause")  ring->Pause();
+            else if (name == L"ring_stop")   ring->Stop();
+            else if (name == L"ring_slow")    ring->SetRotateSpeed(90.0f);    // 4 秒一圈
+            else if (name == L"ring_normal")  ring->SetRotateSpeed(360.0f);   // 1 秒一圈
+            else if (name == L"ring_fast")    ring->SetRotateSpeed(1080.0f);  // 3 圈/秒
+            else if (name == L"ring_reverse") ring->SetRotateSpeed(-ring->GetRotateSpeed());
+            else if (name == L"ring_autoplay") {
+                if (auto* opt = static_cast<COptionUI*>(msg.pSender->GetInterface(DUI_CTR_CHECKBOX))) {
+                    ring->SetAutoPlay(opt->IsSelected());
+                }
+            }
+            else handled = false;
+            if (handled) UpdateRingStatus();
+        }
+
+        // WebP 测试控件按钮处理
+        if (auto* webp = FindControlAs<CWebpAnimUI>(m_pm, L"webp_demo")) {
+            if (name == L"webp_play") {
+                webp->PlayWebp();
+                UpdateWebpStatus();
+            }
+            else if (name == L"webp_pause") {
+                webp->PauseWebp();
+                UpdateWebpStatus();
+            }
+            else if (name == L"webp_stop") {
+                webp->StopWebp();
+                UpdateWebpStatus();
+            }
+            else if (name == L"webp_restart") {
+                webp->RestartWebp();
+                UpdateWebpStatus();
+            }
+            else if (name == L"webp_step") {
+                const UINT total = webp->GetWebpFrameCount();
+                if (total > 0) {
+                    const UINT next = (webp->GetCurrentWebpFrameIndex() + 1) % total;
+                    webp->SeekToWebpFrame(next, true);
+                }
+                UpdateWebpStatus();
+            }
+            else if (name == L"webp_autoplay") {
+                if (auto* opt = static_cast<COptionUI*>(msg.pSender->GetInterface(DUI_CTR_CHECKBOX))) {
+                    webp->SetAutoPlay(opt->IsSelected());
+                }
+                UpdateWebpStatus();
+            }
+            else if (name == L"webp_loop") {
+                if (auto* opt = static_cast<COptionUI*>(msg.pSender->GetInterface(DUI_CTR_CHECKBOX))) {
+                    webp->SetLoop(opt->IsSelected());
+                }
+                UpdateWebpStatus();
+            }
+            else if (name == L"webp_hide_pause" || name == L"webp_hide_continue" || name == L"webp_hide_stop") {
+                ApplyWebpHideActionFromOptions();
+                UpdateWebpStatus();
+            }
+        }
+
         WindowImplBase::OnClick(msg);
+    }
+
+    void MainDemoWindow::UpdateRingStatus()
+    {
+        auto* ring = FindControlAs<CRingUI>(m_pm, L"ring_demo");
+        auto* status = FindControlAs<CLabelUI>(m_pm, L"ring_status");
+        if (ring == nullptr || status == nullptr) return;
+
+        wchar_t buf[160] = {};
+        swprintf_s(buf, L"状态: %s  速度: %.0f°/s  间隔: %dms  角度: %.0f°  AutoPlay: %s",
+            ring->IsPlaying() ? L"播放中" : L"已停止",
+            ring->GetRotateSpeed(),
+            ring->GetRotateInterval(),
+            ring->GetAngle(),
+            ring->IsAutoPlay() ? L"on" : L"off");
+        status->SetText(buf);
+    }
+
+    void MainDemoWindow::UpdateWebpStatus()
+    {
+        auto* webp = FindControlAs<CWebpAnimUI>(m_pm, L"webp_demo");
+        auto* status = FindControlAs<CLabelUI>(m_pm, L"webp_status");
+        if (webp == nullptr || status == nullptr) {
+            return;
+        }
+        const UINT total = webp->GetWebpFrameCount();
+        const UINT index = webp->GetCurrentWebpFrameIndex();
+        std::wstring stateText;
+        switch (webp->GetWebpPlaybackState()) {
+        case CWebpAnimUI::WebpPlaybackState_Playing:   stateText = L"播放中"; break;
+        case CWebpAnimUI::WebpPlaybackState_Paused:    stateText = L"已暂停"; break;
+        case CWebpAnimUI::WebpPlaybackState_Completed: stateText = L"已完成"; break;
+        case CWebpAnimUI::WebpPlaybackState_Stopped:
+        default:                                       stateText = L"已停止"; break;
+        }
+        std::wstring text = L"状态：" + stateText
+            + L"   帧 " + std::to_wstring(index + (total == 0 ? 0 : 1))
+            + L"/" + std::to_wstring(total)
+            + L"   AutoPlay=" + (webp->IsAutoPlay() ? L"on" : L"off")
+            + L"   Loop=" + (webp->IsLoop() ? L"on" : L"off");
+        status->SetText(text);
+    }
+
+    void MainDemoWindow::ApplyWebpHideActionFromOptions()
+    {
+        auto* webp = FindControlAs<CWebpAnimUI>(m_pm, L"webp_demo");
+        if (webp == nullptr) {
+            return;
+        }
+        auto isSelected = [this](const wchar_t* name) -> bool {
+            auto* opt = FindControlAs<COptionUI>(m_pm, name);
+            return opt != nullptr && opt->IsSelected();
+        };
+        if (isSelected(L"webp_hide_continue")) {
+            webp->SetHideAction(CWebpAnimUI::WebpHideAction_Continue);
+        }
+        else if (isSelected(L"webp_hide_stop")) {
+            webp->SetHideAction(CWebpAnimUI::WebpHideAction_Stop);
+        }
+        else {
+            webp->SetHideAction(CWebpAnimUI::WebpHideAction_Pause);
+        }
     }
 
     bool MainDemoWindow::ToggleHideAnimationDemo(const std::wstring& buttonName)
@@ -409,6 +543,32 @@ namespace FYTestApp
         popup->CenterWindow();
         popup->ShowWindow(true);
         SetStatusText(L"Modeless popup opened. Main window remains interactive.");
+    }
+
+    void MainDemoWindow::UpdatePaletteColorPreview(const TNotifyUI& msg)
+    {
+        if (msg.pSender == nullptr) return;
+        auto* palette = static_cast<CColorPaletteUI*>(msg.pSender->GetInterface(DUI_CTR_COLORPALETTE));
+        if (palette == nullptr) return;
+
+        const DWORD color = palette->GetSelectColor(); // 0xFFRRGGBB
+        auto* preview = FindControlAs<CButtonUI>(m_pm, L"palette_color_preview");
+        if (preview == nullptr) return;
+
+        preview->SetBkColor(color);
+        preview->SetHotBkColor(color);
+        preview->SetPushedBkColor(color);
+
+        // 根据亮度自动选择前景色，保证文本可读
+        const int r = (color >> 16) & 0xFF;
+        const int g = (color >> 8) & 0xFF;
+        const int b = color & 0xFF;
+        const int luma = (r * 299 + g * 587 + b * 114) / 1000;
+        preview->SetTextColor(luma > 140 ? 0xFF243042 : 0xFFFFFFFF);
+
+        wchar_t buf[32] = {};
+        swprintf_s(buf, L"#%02X%02X%02X", r, g, b);
+        preview->SetText(buf);
     }
 
     void MainDemoWindow::OpenPopupMenu(CControlUI* anchor)

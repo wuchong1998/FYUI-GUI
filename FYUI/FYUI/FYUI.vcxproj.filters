@@ -201,9 +201,6 @@
     <ClInclude Include="Control\UIList.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
-    <ClInclude Include="Control\UIListEx.h">
-      <Filter>头文件\Control</Filter>
-    </ClInclude>
     <ClInclude Include="Control\UIMenu.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
@@ -449,9 +446,6 @@
     <ClCompile Include="Control\UICountdown.cpp">
       <Filter>源文件\Control</Filter>
     </ClCompile>
-    <ClCompile Include="Control\UIListEx.cpp">
-      <Filter>源文件\Control</Filter>
-    </ClCompile>
     <ClCompile Include="Control\UIMenu.cpp">
       <Filter>源文件\Control</Filter>
     </ClCompile>
@@ -498,6 +492,9 @@
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>
     <ClCompile Include="Core\Render\UIRenderImageCodec.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageGif.cpp">
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>
     <ClCompile Include="Core\Render\UIRenderImageD2DInternal.cpp">

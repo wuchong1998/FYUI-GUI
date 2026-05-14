@@ -343,8 +343,6 @@ namespace FYUI
         m_bCursorMouse = pControl->m_bCursorMouse;
         m_sVerticalScrollBarStyle = pControl->m_sVerticalScrollBarStyle;
         m_sHorizontalScrollBarStyle = pControl->m_sHorizontalScrollBarStyle;
-        m_dwSepImmBorderColor = pControl->m_dwSepImmBorderColor;
-        m_dwLeaveSepImmBorderColor = pControl->m_dwLeaveSepImmBorderColor;
 
         //SetManager(pControl->m_pManager, nullptr, false);
         for (int it = 0; it < pControl->m_items.GetSize(); it++)
@@ -1492,26 +1490,6 @@ namespace FYUI
         }
     }
 
-    void CContainerUI::SetSepImmBorderColor(DWORD dwSepImmBorderColor)
-    {
-        m_dwSepImmBorderColor = dwSepImmBorderColor;
-    }
-
-    DWORD CContainerUI::GetSepImmBorderColor() const
-    {
-        return m_dwSepImmBorderColor;
-    }
-
-    void CContainerUI::SetSepImmLeaveBorderColor(DWORD dwSepImmBorderColor)
-    {
-        m_dwLeaveSepImmBorderColor = dwSepImmBorderColor;
-    }
-
-    DWORD CContainerUI::GetSepImmLeaveBorderColor() const
-    {
-        return m_dwLeaveSepImmBorderColor;
-    }
-
     void CContainerUI::SetManager(CPaintManagerUI* pManager,
         CControlUI* pParent,
         bool bInit) {
@@ -1904,6 +1882,47 @@ namespace FYUI
 
             ::OffsetRect(&rcCtrl, m_rcItem.left, m_rcItem.top);
             pControl->SetPos(rcCtrl, false);
+        }
+        else if (pControl->HasFloatingRatio())
+        {
+            // floating_ratio：控件中心定位于父 (rx*W, ry*H) 处
+            sz = pControl->EstimateSize(sz);
+            if (sz.cx < pControl->GetMinWidth()) sz.cx = pControl->GetMinWidth();
+            if (sz.cx > pControl->GetMaxWidth()) sz.cx = pControl->GetMaxWidth();
+            if (sz.cy < pControl->GetMinHeight()) sz.cy = pControl->GetMinHeight();
+            if (sz.cy > pControl->GetMaxHeight()) sz.cy = pControl->GetMaxHeight();
+
+            const double rx = pControl->GetFloatingRatioX();
+            const double ry = pControl->GetFloatingRatioY();
+            const LONG cxCenter = m_rcItem.left + static_cast<LONG>(nParentWidth * rx);
+            const LONG cyCenter = m_rcItem.top + static_cast<LONG>(nParentHeight * ry);
+
+            RECT rcCtrl = { 0 };
+            rcCtrl.left = cxCenter - sz.cx / 2;
+            rcCtrl.top = cyCenter - sz.cy / 2;
+            rcCtrl.right = rcCtrl.left + sz.cx;
+            rcCtrl.bottom = rcCtrl.top + sz.cy;
+            pControl->SetPos(rcCtrl, true);
+        }
+        else if (pControl->HasFloatRBPadding())
+        {
+            // float_right_bottom_padding：控件右下角距父右下角 (px, py) 逻辑像素
+            sz = pControl->EstimateSize(sz);
+            if (sz.cx < pControl->GetMinWidth()) sz.cx = pControl->GetMinWidth();
+            if (sz.cx > pControl->GetMaxWidth()) sz.cx = pControl->GetMaxWidth();
+            if (sz.cy < pControl->GetMinHeight()) sz.cy = pControl->GetMinHeight();
+            if (sz.cy > pControl->GetMaxHeight()) sz.cy = pControl->GetMaxHeight();
+
+            // 逻辑像素 → 设备像素（考虑 DPI 缩放）
+            const int padX = (m_pManager != NULL) ? m_pManager->ScaleValue(pControl->GetFloatRBPaddingX()) : pControl->GetFloatRBPaddingX();
+            const int padY = (m_pManager != NULL) ? m_pManager->ScaleValue(pControl->GetFloatRBPaddingY()) : pControl->GetFloatRBPaddingY();
+
+            RECT rcCtrl = { 0 };
+            rcCtrl.right = m_rcItem.right - padX;
+            rcCtrl.bottom = m_rcItem.bottom - padY;
+            rcCtrl.left = rcCtrl.right - sz.cx;
+            rcCtrl.top = rcCtrl.bottom - sz.cy;
+            pControl->SetPos(rcCtrl, true);
         }
         else
         {

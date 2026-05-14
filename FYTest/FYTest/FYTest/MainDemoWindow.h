@@ -35,10 +35,19 @@ namespace FYTestApp
         void OpenModalPopup();
         void OpenModelessPopup();
         void OpenPopupMenu(CControlUI* anchor);
+        // 监听 ColorPalette 的 colorchanged 通知，把当前颜色实时反映到预览按钮
+        void UpdatePaletteColorPreview(const TNotifyUI& msg);
 
         // 根据按钮名查找对应的演示 VBox，并切换其 hide_animation 显示/隐藏。
         // 若是首次点击，会把对应 VBox 的 hide_animation 方向设为按钮所代表的方向。
         bool ToggleHideAnimationDemo(const std::wstring& buttonName);
+
+        // Ring 测试控件：刷新状态 Label
+        void UpdateRingStatus();
+        // WebP 测试控件：刷新状态 Label
+        void UpdateWebpStatus();
+        // WebP 测试控件：根据当前 Option 组选择应用 HideAction
+        void ApplyWebpHideActionFromOptions();
 
         void StepProgress();
         void RefreshDiagnostics();

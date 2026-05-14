@@ -3428,6 +3428,176 @@ namespace FYUI
 		drawScope.Get()->DrawGeometry(geometry.Get(), brush.Get(), static_cast<float>(nSize), strokeStyle.Get());
 	}
 
+	void CRenderEngine::DrawPartialRoundBorder(CPaintRenderContext& renderContext, const RECT& rc, const RECT& rcBorderSize,
+		int radiusX, int radiusY, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectValid(rc)) {
+			return;
+		}
+
+		const int leftSize = rcBorderSize.left > 0 ? rcBorderSize.left : 0;
+		const int topSize = rcBorderSize.top > 0 ? rcBorderSize.top : 0;
+		const int rightSize = rcBorderSize.right > 0 ? rcBorderSize.right : 0;
+		const int bottomSize = rcBorderSize.bottom > 0 ? rcBorderSize.bottom : 0;
+
+		const bool hasL = leftSize > 0;
+		const bool hasT = topSize > 0;
+		const bool hasR = rightSize > 0;
+		const bool hasB = bottomSize > 0;
+		if (!(hasL || hasT || hasR || hasB)) {
+			return;
+		}
+
+		const bool arcTL = hasT && hasL;
+		const bool arcTR = hasT && hasR;
+		const bool arcBR = hasB && hasR;
+		const bool arcBL = hasB && hasL;
+
+		// 限制圆角不超过半短边
+		const int rectW = rc.right - rc.left;
+		const int rectH = rc.bottom - rc.top;
+		int rx = radiusX;
+		int ry = radiusY;
+		if (rx < 0) rx = 0;
+		if (ry < 0) ry = 0;
+		if (rx > rectW / 2) rx = rectW / 2;
+		if (ry > rectH / 2) ry = rectH / 2;
+
+		D2DDrawScope drawScope(renderContext, rc);
+		if (!drawScope) {
+			return;
+		}
+
+		ComPtr<ID2D1SolidColorBrush> brush;
+		ComPtr<ID2D1StrokeStyle> strokeStyle;
+		if (!CreateStrokeBrushInternal(drawScope.Get(), dwPenColor, nStyle, brush, strokeStyle)) {
+			return;
+		}
+
+		// 描边外缘对齐 rc，每条边的中心线从 rc 内移半个 stroke
+		auto edgeCenterY = [&](int sz, bool top) -> float {
+			const float halfStroke = static_cast<float>(sz) * 0.5f;
+			return top
+				? static_cast<float>(rc.top) + halfStroke
+				: static_cast<float>(rc.bottom) - halfStroke;
+		};
+		auto edgeCenterX = [&](int sz, bool left) -> float {
+			const float halfStroke = static_cast<float>(sz) * 0.5f;
+			return left
+				? static_cast<float>(rc.left) + halfStroke
+				: static_cast<float>(rc.right) - halfStroke;
+		};
+
+		// 绘制每条直线段（用各自宽度，端点根据角是否画弧而进退 r）
+		if (hasT) {
+			const float y = edgeCenterY(topSize, true);
+			const float x1 = arcTL ? static_cast<float>(rc.left + rx) : static_cast<float>(rc.left);
+			const float x2 = arcTR ? static_cast<float>(rc.right - rx) : static_cast<float>(rc.right);
+			if (x2 > x1) {
+				drawScope.Get()->DrawLine(D2D1::Point2F(x1, y), D2D1::Point2F(x2, y),
+					brush.Get(), static_cast<float>(topSize), strokeStyle.Get());
+			}
+		}
+		if (hasR) {
+			const float x = edgeCenterX(rightSize, false);
+			const float y1 = arcTR ? static_cast<float>(rc.top + ry) : static_cast<float>(rc.top);
+			const float y2 = arcBR ? static_cast<float>(rc.bottom - ry) : static_cast<float>(rc.bottom);
+			if (y2 > y1) {
+				drawScope.Get()->DrawLine(D2D1::Point2F(x, y1), D2D1::Point2F(x, y2),
+					brush.Get(), static_cast<float>(rightSize), strokeStyle.Get());
+			}
+		}
+		if (hasB) {
+			const float y = edgeCenterY(bottomSize, false);
+			const float x1 = arcBL ? static_cast<float>(rc.left + rx) : static_cast<float>(rc.left);
+			const float x2 = arcBR ? static_cast<float>(rc.right - rx) : static_cast<float>(rc.right);
+			if (x2 > x1) {
+				drawScope.Get()->DrawLine(D2D1::Point2F(x1, y), D2D1::Point2F(x2, y),
+					brush.Get(), static_cast<float>(bottomSize), strokeStyle.Get());
+			}
+		}
+		if (hasL) {
+			const float x = edgeCenterX(leftSize, true);
+			const float y1 = arcTL ? static_cast<float>(rc.top + ry) : static_cast<float>(rc.top);
+			const float y2 = arcBL ? static_cast<float>(rc.bottom - ry) : static_cast<float>(rc.bottom);
+			if (y2 > y1) {
+				drawScope.Get()->DrawLine(D2D1::Point2F(x, y1), D2D1::Point2F(x, y2),
+					brush.Get(), static_cast<float>(leftSize), strokeStyle.Get());
+			}
+		}
+
+		// 角弧：仅当对应两条相邻边都启用时绘制
+		// 弧 stroke 取相邻两边宽度的较大值；弧的端点对齐相邻边的内描边位置
+		if (rx > 0 && ry > 0) {
+			auto drawCornerArc = [&](D2D1_POINT_2F start, D2D1_POINT_2F end, float fxRadius, float fyRadius, int strokeWidth) {
+				if (strokeWidth <= 0) return;
+				ComPtr<ID2D1PathGeometry> geometry;
+				ComPtr<ID2D1GeometrySink> sink;
+				if (!CreatePathGeometryInternal(geometry, sink)) return;
+				sink->BeginFigure(start, D2D1_FIGURE_BEGIN_HOLLOW);
+				sink->AddArc(D2D1::ArcSegment(end, D2D1::SizeF(fxRadius, fyRadius),
+					0.0f, D2D1_SWEEP_DIRECTION_CLOCKWISE, D2D1_ARC_SIZE_SMALL));
+				sink->EndFigure(D2D1_FIGURE_END_OPEN);
+				if (FAILED(sink->Close())) return;
+				drawScope.Get()->DrawGeometry(geometry.Get(), brush.Get(),
+					static_cast<float>(strokeWidth), strokeStyle.Get());
+			};
+
+			if (arcTL) {
+				const int strokeW = (topSize > leftSize) ? topSize : leftSize;
+				const float halfStroke = static_cast<float>(strokeW) * 0.5f;
+				const float fRx = static_cast<float>(rx) - halfStroke;
+				const float fRy = static_cast<float>(ry) - halfStroke;
+				if (fRx > 0.0f && fRy > 0.0f) {
+					// 从 left+rx, top+halfStroke 弧到 left+halfStroke, top+ry
+					drawCornerArc(
+						D2D1::Point2F(static_cast<float>(rc.left + rx), static_cast<float>(rc.top) + halfStroke),
+						D2D1::Point2F(static_cast<float>(rc.left) + halfStroke, static_cast<float>(rc.top + ry)),
+						fRx, fRy, strokeW);
+				}
+			}
+			if (arcTR) {
+				const int strokeW = (topSize > rightSize) ? topSize : rightSize;
+				const float halfStroke = static_cast<float>(strokeW) * 0.5f;
+				const float fRx = static_cast<float>(rx) - halfStroke;
+				const float fRy = static_cast<float>(ry) - halfStroke;
+				if (fRx > 0.0f && fRy > 0.0f) {
+					// 从 right-rx, top+halfStroke 弧到 right-halfStroke, top+ry
+					drawCornerArc(
+						D2D1::Point2F(static_cast<float>(rc.right - rx), static_cast<float>(rc.top) + halfStroke),
+						D2D1::Point2F(static_cast<float>(rc.right) - halfStroke, static_cast<float>(rc.top + ry)),
+						fRx, fRy, strokeW);
+				}
+			}
+			if (arcBR) {
+				const int strokeW = (bottomSize > rightSize) ? bottomSize : rightSize;
+				const float halfStroke = static_cast<float>(strokeW) * 0.5f;
+				const float fRx = static_cast<float>(rx) - halfStroke;
+				const float fRy = static_cast<float>(ry) - halfStroke;
+				if (fRx > 0.0f && fRy > 0.0f) {
+					// 从 right-halfStroke, bottom-ry 弧到 right-rx, bottom-halfStroke
+					drawCornerArc(
+						D2D1::Point2F(static_cast<float>(rc.right) - halfStroke, static_cast<float>(rc.bottom - ry)),
+						D2D1::Point2F(static_cast<float>(rc.right - rx), static_cast<float>(rc.bottom) - halfStroke),
+						fRx, fRy, strokeW);
+				}
+			}
+			if (arcBL) {
+				const int strokeW = (bottomSize > leftSize) ? bottomSize : leftSize;
+				const float halfStroke = static_cast<float>(strokeW) * 0.5f;
+				const float fRx = static_cast<float>(rx) - halfStroke;
+				const float fRy = static_cast<float>(ry) - halfStroke;
+				if (fRx > 0.0f && fRy > 0.0f) {
+					// 从 left+rx, bottom-halfStroke 弧到 left+halfStroke, bottom-ry
+					drawCornerArc(
+						D2D1::Point2F(static_cast<float>(rc.left + rx), static_cast<float>(rc.bottom) - halfStroke),
+						D2D1::Point2F(static_cast<float>(rc.left) + halfStroke, static_cast<float>(rc.bottom - ry)),
+						fRx, fRy, strokeW);
+				}
+			}
+		}
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	//
 	//

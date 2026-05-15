@@ -23,7 +23,6 @@ bool SDK::LoadSdkDll(const char* cur_module_dir, const char* sdk_dll_file_name) 
     instance_nim_ = ::LoadLibraryA(dir.c_str());
     if (instance_nim_ == NULL) {
         auto error = ::GetLastError();
-		//MessageBox(NULL, L"¼ÓÔØSVG¶¯Ì¬¿âÊ§°Ü£¡", L"´íÎó", MB_OK);
         return false;
     }
     get_proc_address_wrapper_ = [&](const std::string& function_name) -> void* {

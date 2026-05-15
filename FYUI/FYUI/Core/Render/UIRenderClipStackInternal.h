@@ -14,7 +14,7 @@ namespace FYUI
 
 	void PushD2DRectClipInternal(const RECT& rc);
 
-	// radiusX / radiusY are corner radii (not diameters) — see the 2026-05-09
+	// radiusX / radiusY are corner radii (not diameters) â€” see the 2026-05-09
 	// semantic flip in UIRender.cpp.
 	void PushD2DRoundClipInternal(const RECT& rc, int radiusX, int radiusY);
 

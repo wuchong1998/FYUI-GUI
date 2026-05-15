@@ -7,13 +7,6 @@
 #include <string>
 #include "assert.h"
 #include "wtypes.h"
-// 1. 增加导出/导入宏定义
-#ifdef FYUI_EXPORTS
-#define FYUI_API __declspec(dllexport)
-#else
-#define FYUI_API __declspec(dllimport)
-#endif
-
 class SDK {
 public:
    

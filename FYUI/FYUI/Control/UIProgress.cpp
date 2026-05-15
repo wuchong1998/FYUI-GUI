@@ -147,7 +147,7 @@ namespace FYUI
 		RECT rc = {0};
 		bool bHasCustomDest = false;
 
-		// 鐏忔繆鐦憴锝嗙€?XML 娑擃厾鏁ら幋鐤殰鐎规矮绠熼惃鍕閺咁垰娴?dest
+	
 		int nDestPos = StringUtil::Find(m_sForeImage, L"dest='");
 		if (nDestPos >= 0) {
 			int nDestEnd = StringUtil::Find(m_sForeImage, L"'", nDestPos + 6);
@@ -157,9 +157,9 @@ namespace FYUI
 			}
 		}
 
-		// 鏉╂稑瀹崇拋锛勭暬閿涙碍鐗撮幑顔芥Ц閸氾箒鍤滅€规矮绠熸禍?dest 鐠ч绗夐崥灞藉瀻閺€?
+		
 		if (bHasCustomDest) {
-			// 婵″倹鐏夐悽銊﹀煕閸愭瑤绨?dest閿涘奔浜?dest 娑撳搫鐔€閸戝棗灏崺鐔活吀缁犳绻樻惔锔芥蒋闂€璺ㄧ叚
+			
 			if (m_bHorizontal) {
 				int nWidth = (m_nValue - m_nMin) * (rc.right - rc.left) / (m_nMax - m_nMin);
 				rc.right = rc.left + nWidth;
@@ -169,7 +169,7 @@ namespace FYUI
 			}
 		}
 		else {
-			// 婵″倹鐏夊▽鈩冩箒閸?dest閿涘矁铔嬮崢鐔告降閻?DPI 閸?Padding 閼奉亜濮╃拋锛勭暬闁槒绶?
+			
 			SIZE szForePadding = GetManager()->ScaleSize(m_szForeImage);
 			int sw ;
 			int sh ;
@@ -199,7 +199,7 @@ namespace FYUI
 			}
 		}
 
-		// 閺堚偓缂佸牏绮嶉崥鍫㈢帛閸?
+		
 		if( !m_sForeImage.empty() ) {
 			m_sForeImageModify.clear();
 
@@ -207,7 +207,7 @@ namespace FYUI
 				m_sForeImageModify = StringUtil::Format(L"dest='{},{},{},{}'", rc.left, rc.top, rc.right, rc.bottom);
 			}
 			else {
-				// 瑜?isstretchfore="false" 閺冭绱漵ource 娑旂喕顩︾捄鐔烘絻鐟佷礁澹€閿涘奔浜掗梼鍙夊娴?
+			
 				m_sForeImageModify = StringUtil::Format(
 					L"dest='{},{},{},{}' source='{},{},{},{}'",
 					rc.left, rc.top, rc.right, rc.bottom,

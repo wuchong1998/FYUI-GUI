@@ -5,7 +5,6 @@ namespace FYUI
 #define MAX_FONT_ID		30000
 #define CARET_TIMERID	0x1999
 
-	// 鍒楄〃绫诲瀷
 	enum ListType
 	{
 		LT_LIST = 0,
@@ -14,7 +13,7 @@ namespace FYUI
 		LT_MENU,
 	};
 
-	// 榧犳爣鍏夋爣瀹氫箟
+
 #define DUI_ARROW           32512
 #define DUI_IBEAM           32513
 #define DUI_WAIT            32514
@@ -30,7 +29,7 @@ namespace FYUI
 #define DUI_NO              32648
 #define DUI_HAND            32649
 
-	// 娑堟伅绫诲瀷
+
 	enum DuiSig
 	{
 		DuiSig_end = 0, // [marks end of message map]
@@ -70,14 +69,14 @@ namespace FYUI
 
 	struct TooltipInfo
 	{
-		std::wstring		strText;		// 鎻愮ず鏂囨湰
-		RECT			rcPos;			// 鎻愮ず浣嶇疆
-		ToolTipType		emToolTipType;	// 鎻愮ず绫诲瀷
-		SIZE			szTooltipGap;	// 鎻愮ず闂撮殭
-		int				nMaxWidth;		// 鏈€澶у搴?
-		int				nDpi;			// current DPI
+		std::wstring		strText;		
+		RECT			rcPos;			
+		ToolTipType		emToolTipType;	
+		SIZE			szTooltipGap;	
+		int				nMaxWidth;	
+		int				nDpi;			
 
-		// 榛樿鏋勯€犲嚱鏁?
+	
 		/**
 		 * @brief 构造 TooltipInfo 对象
 		 * @details 用于构造 TooltipInfo 对象。具体行为由当前对象状态以及传入参数共同决定。
@@ -91,7 +90,7 @@ namespace FYUI
 			memset(&szTooltipGap, 0, sizeof(SIZE));
 		}
 
-		// 鎷疯礉鏋勯€犲嚱鏁?
+	
 		/**
 		 * @brief 构造 TooltipInfo 对象
 		 * @details 用于构造 TooltipInfo 对象。具体行为由当前对象状态以及传入参数共同决定。
@@ -107,7 +106,7 @@ namespace FYUI
 		{
 		}
 
-		// 鎷疯礉璧嬪€艰繍绠楃
+		
 		/**
 		 * @brief 执行 operator= 运算
 		 * @details 用于执行 operator= 运算。具体行为由当前对象状态以及传入参数共同决定。
@@ -130,7 +129,7 @@ namespace FYUI
 
 	};
 	class CNotifyPump;
-	typedef void (CNotifyPump::*DUI_PMSG)(TNotifyUI& msg);  //鎸囬拡绫诲瀷
+	typedef void (CNotifyPump::*DUI_PMSG)(TNotifyUI& msg);  
 
 	union DuiMessageMapFunctions
 	{
@@ -149,7 +148,7 @@ namespace FYUI
 		void (CNotifyPump::*pfn_Notify_vn)(TNotifyUI&);
 	};
 
-	//瀹氫箟鎵€鏈夋秷鎭被鍨?
+	
 	//////////////////////////////////////////////////////////////////////////
 
 #define DUI_MSGTYPE_MENU                   (_T("menu"))
@@ -210,6 +209,7 @@ namespace FYUI
 
 #define DUI_MSGTYPE_PAGECHANED				(_T("page_selected_changed"))
 #define DUI_MSGTYPE_WEBPPLAYCOMPLETE        (_T("webpplaycomplete"))
+#define DUI_MSGTYPE_GIFPLAYCOMPLETE         (_T("gifplaycomplete"))
 
 
 	//////////////////////////////////////////////////////////////////////////
@@ -225,16 +225,16 @@ namespace FYUI
 		const DUI_MSGMAP_ENTRY* lpEntries;
 	};
 
-	//缁撴瀯瀹氫箟
-	struct DUI_MSGMAP_ENTRY //瀹氫箟涓€涓粨鏋勪綋锛屾潵瀛樻斁娑堟伅淇℃伅
+	
+	struct DUI_MSGMAP_ENTRY 
 	{
-		std::wstring sMsgType;          // DUI娑堟伅绫诲瀷
-		std::wstring sCtrlName;         // 鎺т欢鍚嶇О
-		UINT       nSig;              // 鏍囪鍑芥暟鎸囬拡绫诲瀷
-		DUI_PMSG   pfn;               // 鎸囧悜鍑芥暟鐨勬寚閽?
+		std::wstring sMsgType;         
+		std::wstring sCtrlName;      
+		UINT       nSig;            
+		DUI_PMSG   pfn;            
 	};
 
-	//瀹氫箟
+
 #ifndef FYUI_STATIC
 #define DUI_DECLARE_MESSAGE_MAP()                                         \
 private:                                                                  \
@@ -255,7 +255,7 @@ protected:                                                                \
 #endif
 
 
-	//鍩虹被澹版槑寮€濮?
+
 #ifndef FYUI_STATIC
 #define DUI_BASE_BEGIN_MESSAGE_MAP(theClass)                              \
 	const DUI_MSGMAP* PASCAL theClass::_GetBaseMessageMap()               \
@@ -279,7 +279,7 @@ protected:                                                                \
 #endif
 
 
-	//瀛愮被澹版槑寮€濮?
+
 #ifndef FYUI_STATIC
 #define DUI_BEGIN_MESSAGE_MAP(theClass, baseClass)                        \
 	const DUI_MSGMAP* PASCAL theClass::_GetBaseMessageMap()               \
@@ -303,55 +303,48 @@ protected:                                                                \
 #endif
 
 
-	//澹版槑缁撴潫
+
 #define DUI_END_MESSAGE_MAP()                                             \
 	{ _T(""), _T(""), DuiSig_end, (DUI_PMSG)0 }                           \
 	};                                                                        \
 
 
-	//瀹氫箟娑堟伅绫诲瀷--鎵ц鍑芥暟瀹?
+	
 #define DUI_ON_MSGTYPE(msgtype, memberFxn)                                \
 	{ msgtype, _T(""), DuiSig_vn, (DUI_PMSG)&memberFxn},                  \
 
 
-	//瀹氫箟娑堟伅绫诲瀷--鎺т欢鍚嶇О--鎵ц鍑芥暟瀹?
+
 #define DUI_ON_MSGTYPE_CTRNAME(msgtype,ctrname,memberFxn)                 \
 	{ msgtype, ctrname, DuiSig_vn, (DUI_PMSG)&memberFxn },                \
 
 
-	//瀹氫箟click娑堟伅鐨勬帶浠跺悕绉?-鎵ц鍑芥暟瀹?
+
 #define DUI_ON_CLICK_CTRNAME(ctrname,memberFxn)                           \
 	{ DUI_MSGTYPE_CLICK, ctrname, DuiSig_vn, (DUI_PMSG)&memberFxn },      \
 
 
-	//瀹氫箟selectchanged娑堟伅鐨勬帶浠跺悕绉?-鎵ц鍑芥暟瀹?
+
 #define DUI_ON_SELECTCHANGED_CTRNAME(ctrname,memberFxn)                   \
 	{ DUI_MSGTYPE_SELECTCHANGED,ctrname,DuiSig_vn,(DUI_PMSG)&memberFxn }, \
 
 
-	//瀹氫箟killfocus娑堟伅鐨勬帶浠跺悕绉?-鎵ц鍑芥暟瀹?
+
 #define DUI_ON_KILLFOCUS_CTRNAME(ctrname,memberFxn)                       \
 	{ DUI_MSGTYPE_KILLFOCUS,ctrname,DuiSig_vn,(DUI_PMSG)&memberFxn },     \
 
 
-	//瀹氫箟menu娑堟伅鐨勬帶浠跺悕绉?-鎵ц鍑芥暟瀹?
+
 #define DUI_ON_MENU_CTRNAME(ctrname,memberFxn)                            \
 	{ DUI_MSGTYPE_MENU,ctrname,DuiSig_vn,(DUI_PMSG)&memberFxn },          \
 
 
-	//瀹氫箟涓庢帶浠跺悕绉版棤鍏崇殑娑堟伅瀹?
 
-	//瀹氫箟timer娑堟伅--鎵ц鍑芥暟瀹?
+
 #define DUI_ON_TIMER()                                                    \
 	{ DUI_MSGTYPE_TIMER, _T(""), DuiSig_vn,(DUI_PMSG)&OnTimer },          \
 
 
-	///
-	//////////////END娑堟伅鏄犲皠瀹忓畾涔?///////////////////////////////////////////////////
-
-
-	//////////////BEGIN鎺т欢鍚嶇О瀹忓畾涔?/////////////////////////////////////////////////
-	///
 #define  DUI_CTR_BOX							 (_T("Box")) //
 
 #define  DUI_CTR_EDIT                            (_T("Edit"))
@@ -417,8 +410,7 @@ protected:                                                                \
 #define  DUI_CTR_TEXTSCROLL						 (_T("TextScroll"))
 
 #define DUI_CTR_COLORPALETTE					  (_T("ColorPalette"))
-	///
-	//////////////END鎺т欢鍚嶇О瀹忓畾涔?/////////////////////////////////////////////////
+
 
 }
 

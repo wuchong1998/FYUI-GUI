@@ -38,19 +38,19 @@ namespace FYUI {
 
 	enum MenuItemDefaultInfo
 	{
-		ITEM_DEFAULT_HEIGHT = 30,		//濮ｅ繋绔存稉鐚em閻ㄥ嫰绮拋銈夌彯鎼达讣绱欓崣顏勬躬缁旀牜濮搁幒鎺戝灙閺冩儼鍤滅€规矮绠熼敍?
-		ITEM_DEFAULT_WIDTH = 150,		//缁愭褰涢惃鍕帛鐠併倕顔旀惔?
+		ITEM_DEFAULT_HEIGHT = 30,	
+		ITEM_DEFAULT_WIDTH = 150,		
 
-		ITEM_DEFAULT_ICON_WIDTH = 26,	//姒涙顓婚崶鐐垼閹碘偓閸楃姴顔旀惔?
-		ITEM_DEFAULT_ICON_SIZE = 16,	//姒涙顓婚崶鐐垼閻ㄥ嫬銇囩亸?
+		ITEM_DEFAULT_ICON_WIDTH = 26,	
+		ITEM_DEFAULT_ICON_SIZE = 16,	
 
-		ITEM_DEFAULT_EXPLAND_ICON_WIDTH = 20,	//姒涙顓绘稉瀣獓閼挎粌宕熼幍鈺佺潔閸ョ偓鐖ｉ幍鈧崡鐘差啍鎼?
-		ITEM_DEFAULT_EXPLAND_ICON_SIZE = 9,		//姒涙顓绘稉瀣獓閼挎粌宕熼幍鈺佺潔閸ョ偓鐖ｉ惃鍕亣鐏?
+		ITEM_DEFAULT_EXPLAND_ICON_WIDTH = 20,	
+		ITEM_DEFAULT_EXPLAND_ICON_SIZE = 9,		
 
-		DEFAULT_LINE_LEFT_INSET = ITEM_DEFAULT_ICON_WIDTH + 3,	//姒涙顓婚崚鍡涙缁捐法娈戝锕佺珶鐠?
-		DEFAULT_LINE_RIGHT_INSET = 7,	//姒涙顓婚崚鍡涙缁捐法娈戦崣瀹犵珶鐠?
-		DEFAULT_LINE_HEIGHT = 6,		//姒涙顓婚崚鍡涙缁炬寧澧嶉崡鐘荤彯鎼?
-		DEFAULT_LINE_COLOR = 0xFFBCBFC4	//姒涙顓婚崚鍡涙缁惧潡顤侀懝?
+		DEFAULT_LINE_LEFT_INSET = ITEM_DEFAULT_ICON_WIDTH + 3,
+		DEFAULT_LINE_RIGHT_INSET = 7,	
+		DEFAULT_LINE_HEIGHT = 6,		
+		DEFAULT_LINE_COLOR = 0xFFBCBFC4	
 
 	};
 
@@ -506,15 +506,7 @@ namespace FYUI {
 		 */
 		void Close(UINT nRet = IDOK);
 		bool isClosing;
-		/*
-		*	@pOwner 娑撯偓缁狙嗗綅閸楁洑绗夌憰浣瑰瘹鐎规俺绻栨稉顏勫棘閺佸府绱濇潻娆愭Ц閼挎粌宕熼崘鍛村劥娴ｈ法鏁ら惃?
-		*	@xml	閼挎粌宕熼惃鍕鐏炩偓閺傚洣娆?
-		*	@point	閼挎粌宕熼惃鍕箯娑撳﹨顫楅崸鎰垼
-		*	@pMainPaintManager	閼挎粌宕熼惃鍕煑缁愭ぞ缍嬬粻锛勬倞閸ｃ劍瀵氶柦?
-		*	@pMenuCheckInfo	娣囨繂鐡ㄩ懣婊冨礋閻ㄥ嫬宕熼柅澶婃嫲婢跺秹鈧淇婇幁顖滅波閺嬪嫭瀵氶柦?
-		*	@dwAlignment		閼挎粌宕熼惃鍕毉閻滈缍呯純顕嗙礉姒涙顓婚崙铏瑰箛閸︺劑绱堕弽鍥╂畱閸欏厖绗呮笟褋鈧?
-		*/
-
+		
 		/**
 		 * @brief 初始化对象
 		 * @details 用于初始化对象。具体行为由当前对象状态以及传入参数共同决定。
@@ -602,7 +594,7 @@ namespace FYUI {
 		 */
 		BOOL Receive(ContextMenuParam param);
 
-		// 閼惧嘲褰囬弽纭呭綅閸楁洘甯舵禒璁圭礉閻劋绨崝銊︹偓浣瑰潑閸旂姴鐡欓懣婊冨礋
+	
 		/**
 		 * @brief 获取菜单UI
 		 * @details 用于获取菜单UI。具体行为由当前对象状态以及传入参数共同决定。
@@ -610,14 +602,14 @@ namespace FYUI {
 		 */
 		CMenuUI* GetMenuUI();
 
-		// 闁插秵鏌婄拫鍐╂殻閼挎粌宕熼惃鍕亣鐏?
+	
 		/**
 		 * @brief 执行 ResizeMenu 操作
 		 * @details 用于执行 ResizeMenu 操作。具体行为由当前对象状态以及传入参数共同决定。
 		 */
 		void ResizeMenu();
 
-		// 闁插秵鏌婄拫鍐╂殻鐎涙劘褰嶉崡鏇犳畱婢堆冪毈
+
 		/**
 		 * @brief 执行 ResizeSubMenu 操作
 		 * @details 用于执行 ResizeSubMenu 操作。具体行为由当前对象状态以及传入参数共同决定。
@@ -861,11 +853,11 @@ namespace FYUI {
 	protected:
 		CMenuWnd*	m_pWindow;
 
-		bool		m_bDrawLine;	//閻㈣鍨庨梾鏃傚殠
-		DWORD		m_dwLineColor;  //閸掑棝娈х痪鍧楊杹閼?
-		RECT		m_rcLinePadding;	//閸掑棗澹婄痪璺ㄦ畱瀹革箑褰告潏纭呯獩
+		bool		m_bDrawLine;	
+		DWORD		m_dwLineColor;  
+		RECT		m_rcLinePadding;
 
-		SIZE		m_szIconSize; 	//閻㈣娴橀弽?
+		SIZE		m_szIconSize; 
 		std::wstring	m_strIcon;
 		bool		m_bCheckItem;
 		int m_nSpacing;

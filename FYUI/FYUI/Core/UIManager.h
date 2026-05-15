@@ -2325,13 +2325,13 @@ namespace FYUI
 
 	private:
 		std::wstring m_sName;
-		HWND m_hWndPaint =nullptr;	//鎵€闄勫姞鐨勭獥浣撶殑鍙ユ焺
+		HWND m_hWndPaint =nullptr;	
 		CPaintRenderSurface m_measureSurface;
 		const CPaintRenderContext* m_pCurrentRenderContext = nullptr;
 		CPaintRenderSurface m_offscreenSurface;
 		CPaintRenderSurface m_backgroundSurface;
 
-		// 鎻愮ず淇℃伅
+	
 		HWND m_hwndTooltip = nullptr;
 		TOOLINFO m_ToolTip;
 		std::wstring m_sToolTipText;
@@ -2398,10 +2398,10 @@ namespace FYUI
 		bool m_bForceUseSharedRes;
 		TResInfo m_ResInfo;
 
-		// 绐楀彛闃村奖
+	
 		CShadowUI m_shadow;
 
-		// DPI绠＄悊鍣?
+	
 		CDPI* m_pDPI;
 		ULONGLONG m_uDPIGeneration;
 		RenderBackendType m_renderBackend;
@@ -2426,7 +2426,7 @@ namespace FYUI
 		UINT m_nNativeWindowCacheRefreshes;
 		UINT m_nSampleNativeWindowCacheHits;
 		UINT m_nSampleNativeWindowCacheRefreshes;
-		// 鏄惁寮€鍚疓diplus
+
 		UINT m_nImageScaleCacheHits;
 		UINT m_nImageScaleCacheRefreshes;
 		UINT m_nSampleImageScaleCacheHits;
@@ -2478,7 +2478,7 @@ namespace FYUI
 		ULONG_PTR m_gdiplusToken;
 		Gdiplus::GdiplusStartupInput *m_pGdiplusStartupInput;
 
-		// 鎷栨嫿
+
 		bool m_bDragDrop;
 		bool m_bDragMode;
 		HBITMAP m_hDragBitmap = nullptr;

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>关闭2</title>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="0820-00PDF所用按钮三态表现" transform="translate(-1072, -106)">
+            <g id="关闭2" transform="translate(1072, 106)">
+                <rect id="矩形备份-10" fill="#E2392B" x="0" y="0" width="32" height="32" rx="4"></rect>
+                <rect id="矩形" fill="#FFFFFF" transform="translate(15.75, 16) rotate(-316) translate(-15.75, -16)" x="15.25" y="8" width="1" height="16" rx="0.5"></rect>
+                <rect id="矩形" fill="#FFFFFF" transform="translate(15.75, 16) rotate(-226) translate(-15.75, -16)" x="15.25" y="8" width="1" height="16" rx="0.5"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

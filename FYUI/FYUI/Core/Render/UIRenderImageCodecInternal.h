@@ -46,11 +46,6 @@ namespace FYUI
 	 */
 	void FreeWebpAnimationFramesInternal(std::vector<WebpAnimationFrameBitmapInternal>& frames);
 
-	/**
-	 * @brief 单帧 GIF 解码结果
-	 * @details 与 WebpAnimationFrameBitmapInternal 对齐的 GIF 帧描述。每帧 hBitmap 为 32 位 PBGRA top-down DIB，
-	 * 已经过画布合成，可以直接作为 D2D 渲染管线的位图源。
-	 */
 	struct GifAnimationFrameBitmapInternal
 	{
 		HBITMAP hBitmap = nullptr;
@@ -58,24 +53,9 @@ namespace FYUI
 		bool hasAlpha = false;
 	};
 
-	/**
-	 * @brief 从文件路径解码整段 GIF 动画
-	 * @details 通过 WIC 多帧解码 GIF，按 GIF 规范处理 disposal、帧偏移以及透明合成，得到等画布尺寸、
-	 * 可独立绘制的 PBGRA 位图序列。调用成功后帧位图所有权交给调用方，由 FreeGifAnimationFramesInternal 释放。
-	 * @param pStrFilename [in] GIF 文件绝对路径
-	 * @param frames [in,out] 输出帧集合
-	 * @param canvasSize [in,out] 输出画布尺寸（宽、高）
-	 * @return bool 解码成功返回 true，失败返回 false
-	 */
-	bool DecodeGifAnimationFromFileInternal(const wchar_t* pStrFilename,
-		std::vector<GifAnimationFrameBitmapInternal>& frames,
-		SIZE& canvasSize);
+	bool DecodeGifAnimationFromMemoryInternal(const void* pData,DWORD dwSize,DWORD mask,
+		std::vector<GifAnimationFrameBitmapInternal>& frames,SIZE& canvasSize);
 
-	/**
-	 * @brief 释放 GIF 动画帧位图集合
-	 * @details 释放 DecodeGifAnimationFromFileInternal 产出的所有帧位图，并清空容器。
-	 * @param frames [in,out] 动画帧集合
-	 */
 	void FreeGifAnimationFramesInternal(std::vector<GifAnimationFrameBitmapInternal>& frames);
 
 	/**

@@ -73,6 +73,15 @@ namespace FYUI
 
 	bool MakeImageDest(const RECT& rcControl, const CDuiSize& szImage, const std::wstring& sAlign, const RECT& rcPadding, RECT& rcDest)
 	{
+		if (szImage.cx <= 0 || szImage.cy <= 0) {
+			return false;
+		}
+
+		rcDest.left = rcControl.left;
+		rcDest.top = rcControl.top;
+		rcDest.right = rcDest.left + szImage.cx;
+		rcDest.bottom = rcDest.top + szImage.cy;
+
 		if (StringUtil::Find(sAlign, _T("left")) != -1)
 		{
 			rcDest.left = rcControl.left;
@@ -102,7 +111,7 @@ namespace FYUI
 		else if (StringUtil::Find(sAlign, _T("bottom")) != -1)
 		{
 			rcDest.top = rcControl.bottom - szImage.cy;
-			rcDest.bottom = rcDest.top + rcDest.top;
+			rcDest.bottom = rcDest.top + szImage.cy;
 		}
 
 		::OffsetRect(&rcDest, rcPadding.left, rcPadding.top);

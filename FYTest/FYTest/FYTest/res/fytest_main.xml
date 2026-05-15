@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window size="1180,760" mininfo="980,640" sizebox="6,6,6,6" caption="0,0,1180,50" roundcorner="12,12" defaultfontcolor="#FF243042" disabledfontcolor="#FF8A98A8" selectedcolor="#FFDCEBFA" renderbackend="direct2d" d2drendermode="hardware" renderdiagnostics="true" tooltiphovertime="400">
+<Window size="1180,760" mininfo="980,640" sizebox="6,6,6,6" caption="0,0,1180,50" roundcorner="12,12" 
+defaultfontcolor="#FF243042" disabledfontcolor="#FF8A98A8" selectedcolor="#FFDCEBFA" renderbackend="direct2d" 
+d2drendermode="hardware" renderdiagnostics="false" >
     <Font id="0" name="微软雅黑" size="13" default="true" />
     <Font id="1" name="微软雅黑" size="18" bold="true" />
     <Font id="2" name="微软雅黑" size="12" />
@@ -29,7 +31,7 @@
             <Button name="minbtn" text="-" width="36" height="30" bkcolor="#00222F3D" hotbkcolor="#FF334252" textcolor="#FFFFFFFF" />
             <Button name="maxbtn" text="[]" width="36" height="30" bkcolor="#00222F3D" hotbkcolor="#FF334252" textcolor="#FFFFFFFF" />
             <Button name="restorebtn" text="[]" width="36" height="30" visible="false" bkcolor="#00222F3D" hotbkcolor="#FF334252" textcolor="#FFFFFFFF" />
-            <Button name="closebtn" text="X" width="42" height="30" bkcolor="#00222F3D" hotbkcolor="#FFE15A5A" pushedbkcolor="#FFC84242" textcolor="#FFFFFFFF" />
+          <Button name="closebtn" width="32" height="32" padding="5" valign="vcenter" tooltip="关闭" normalimage="41.svg" hotimage="41.svg" pushedimage="43.svg"/>	
         </HBox>
 
         <HBox height="54" bkcolor="#FFFFFFFF" bordercolor="#FFE2E8EF" bottombordersize="1" childvalign="vcenter" childpadding="6" inset="18,8,18,8">

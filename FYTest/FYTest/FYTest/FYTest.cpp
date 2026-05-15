@@ -90,9 +90,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     (void)lpCmdLine;
     (void)nCmdShow;
 
+
+
     CPaintManagerUI::SetInstance(hInstance);
     CPaintManagerUI::SetResourceType(UILIB_FILE);
     FYUI::CPaintManagerUI::SetResourcePath(ResolveResourceDirectory(hInstance));
+
+   /* HRSRC hRes = FindResource(hInstance, MAKEINTRESOURCE(IDR_ZIP1), _T("ZIP"));
+    HGLOBAL hg = LoadResource(hInstance, hRes);
+    LPVOID pZipData = LockResource(hg);
+    FYUI::CPaintManagerUI::SetResourceZip(pZipData, SizeofResource(hInstance, hRes), L"");*/
 
     const HRESULT oleResult = ::OleInitialize(nullptr);
 

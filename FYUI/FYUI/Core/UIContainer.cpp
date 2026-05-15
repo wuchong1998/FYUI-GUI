@@ -516,16 +516,15 @@ namespace FYUI
         StartShowHideAnim(bVisible);
     }
 
-    // 闁槒绶稉濠忕礉鐎甸€涚艾Container閹貉傛娑撳秴鍙曞鈧銈嗘煙濞?
-    // 鐠嬪啰鏁ゅ銈嗘煙濞夋洜娈戠紒鎾寸亯閺勵垽绱濋崘鍛村劥鐎涙劖甯舵禒鍫曟閽樺骏绱濋幒褌娆㈤張顒冮煩娓氭繄鍔ч弰鍓с仛閿涘矁鍎楅弲顖滅搼閺佸牊鐏夌€涙ê婀?
+   
     void CContainerUI::SetInternVisible(bool bVisible) {
         CControlUI::SetInternVisible(bVisible);
         if (m_items.empty()) {
             return;
         }
-        for (int it = 0; it < m_items.GetSize(); it++) {
-            // 閹貉冨煑鐎涙劖甯舵禒鑸垫▔缁€铏瑰Ц閹?
-            // InternVisible閻樿埖鈧礁绨查悽鍗炵摍閹貉傛閼奉亜绻侀幒褍鍩?
+        for (int it = 0; it < m_items.GetSize(); it++)
+        {
+           
             static_cast<CControlUI*>(m_items[it])->SetInternVisible(IsVisible());
         }
     }
@@ -591,8 +590,6 @@ namespace FYUI
                 return;
             }
         }
-
-        // 姒х姵鐖ｅ姘崇枂閸旂娀鈧喎瀹虫径鍕倞閿涘牆鐎惄杈剧礆
         if (event.Type == UIEVENT_SCROLLWHEEL) {
             if ((event.wKeyState & MK_CONTROL) == 0)
             {
@@ -634,7 +631,6 @@ namespace FYUI
                 return;
         }
 
-        // 闁款喚娲忔稉搴″従鐎瑰啴鈧槒绶穱婵囧瘮
         if (m_pVerticalScrollBar != NULL && m_pVerticalScrollBar->IsVisible() &&
             m_pVerticalScrollBar->IsEnabled()) {
             if (event.Type == UIEVENT_KEYDOWN) {
@@ -1727,7 +1723,6 @@ namespace FYUI
 
         if (m_items.GetSize() > 0) {
             RECT rcInset = GetInset();
-            //娴滃窋dfium 閻ㄥ嫯顔曠純?
             rcInset.top = 0;
             RECT rc = m_rcItem;
             rc.left += rcInset.left;

@@ -189,9 +189,6 @@
     <ClInclude Include="Control\UIFadeButton.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
-    <ClInclude Include="Control\UIGifAnim.h">
-      <Filter>头文件\Control</Filter>
-    </ClInclude>
     <ClInclude Include="Control\UIWebpAnim.h">
       <Filter>头文件\Control</Filter>
     </ClInclude>
@@ -302,6 +299,9 @@
     </ClInclude>
     <ClInclude Include="..\..\third_party\libwebp\src\webp\types.h">
       <Filter>third_party\libwebp</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\UIGifAnim.h">
+      <Filter>头文件\Control</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -434,9 +434,6 @@
     <ClCompile Include="Control\UIFadeButton.cpp">
       <Filter>源文件\Control</Filter>
     </ClCompile>
-    <ClCompile Include="Control\UIGifAnim.cpp">
-      <Filter>源文件\Control</Filter>
-    </ClCompile>
     <ClCompile Include="Control\UIWebpAnim.cpp">
       <Filter>源文件\Control</Filter>
     </ClCompile>
@@ -492,9 +489,6 @@
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>
     <ClCompile Include="Core\Render\UIRenderImageCodec.cpp">
-      <Filter>源文件\Core\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Render\UIRenderImageGif.cpp">
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>
     <ClCompile Include="Core\Render\UIRenderImageStill.cpp">
@@ -616,6 +610,12 @@
     </ClCompile>
     <ClCompile Include="..\..\third_party\libwebp\src\dsp\yuv.c">
       <Filter>third_party\libwebp</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\UIGifAnim.cpp">
+      <Filter>源文件\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageGif.cpp">
+      <Filter>源文件\Core\Render</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

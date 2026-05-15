@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>关闭1</title>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="0820-14横向排版选中" transform="translate(-1880, -4)">
+            <g id="关闭1" transform="translate(1880, 4)">
+                <rect id="矩形备份-10" fill="#F5F5F5" opacity="0" x="0" y="0" width="32" height="32" rx="6"></rect>
+                <g id="编组-41" transform="translate(7, 7)">
+                    <rect id="矩形备份-10" fill="#F5F5F5" opacity="0" x="0" y="0" width="18" height="18" rx="6"></rect>
+                    <rect id="矩形" fill="#181818" transform="translate(8.75, 9) rotate(-316) translate(-8.75, -9)" x="8.25" y="1" width="1" height="16" rx="0.5"></rect>
+                    <rect id="矩形" fill="#181818" transform="translate(8.75, 9) rotate(-226) translate(-8.75, -9)" x="8.25" y="1" width="1" height="16" rx="0.5"></rect>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

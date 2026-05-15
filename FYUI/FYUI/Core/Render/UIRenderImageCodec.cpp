@@ -163,7 +163,7 @@ namespace FYUI
 			// 2) SVG
 #ifdef SVG
 			{
-				GetSvgHandleFunc GetSvgHandle = (GetSvgHandleFunc)g_SDK->GetFunction("GetSvgHandle");
+				GetSvgHandleFunc GetSvgHandle = g_SDK == nullptr ? nullptr : (GetSvgHandleFunc)g_SDK->GetFunction("GetSvgHandle");
 				if (GetSvgHandle != nullptr) {
 					int svgWidth = 0;
 					int svgHeight = 0;

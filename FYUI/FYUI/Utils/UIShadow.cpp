@@ -76,7 +76,7 @@ namespace FYUI
 
 	bool CShadowUI::Initialize(HINSTANCE hInstance)
 	{
-		// 杩涚▼绾ф牎楠岋細绫诲凡瀛樺湪鍒欒涓哄凡鍒濆鍖?
+		
 		WNDCLASSEXW wc = { 0 };
 		wc.cbSize = sizeof(wc);
 
@@ -86,7 +86,6 @@ namespace FYUI
 			return true;
 		}
 
-		// 闃插尽锛歨Instance 涓虹┖鏃跺厹搴曞埌 EXE module
 		if (hInstance == NULL)
 		{
 			hInstance = GetModuleHandleW(NULL);
@@ -108,7 +107,7 @@ namespace FYUI
 		{
 			const DWORD err = GetLastError();
 			(void)err;
-			// 甯歌锛欵RROR_CLASS_ALREADY_EXISTS(1410) 璇存槑宸茶鍒娉ㄥ唽杩囷紝姝ゆ椂涔熺畻鎴愬姛
+		
 			if (err == ERROR_CLASS_ALREADY_EXISTS)
 			{
 				s_bHasInit = true;

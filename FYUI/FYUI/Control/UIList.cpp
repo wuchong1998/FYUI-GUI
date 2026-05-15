@@ -45,7 +45,7 @@ namespace FYUI
 		Add(m_pHeader);
 		Add(m_pList);
 
-		// 閸掓銆冮柊宥囩枂
+		
 		m_ListInfo.nColumns = 0;
 		m_ListInfo.nFont = -1;
 		m_ListInfo.uTextStyle = DT_VCENTER | DT_SINGLELINE;
@@ -344,7 +344,7 @@ namespace FYUI
 			m_aSelItems.Add(ListIndexToPtr(index));
 		}
 
-		m_iCurSelActivate = pControl->m_iCurSelActivate;  // 閸欏苯鍤惃鍕灙
+		m_iCurSelActivate = pControl->m_iCurSelActivate; 
 		m_iExpandedItem = pControl->m_iExpandedItem;
 		m_ListInfo= pControl->m_ListInfo;	
 		__super::CopyData(pControl);
@@ -691,24 +691,24 @@ namespace FYUI
 
 	bool CListUI::SelectItem(int iIndex, bool bTakeFocus, bool bIsClick, bool bSetScrollPos)
 	{
-		// 闁插秶鐤嗘径姘垛偓澶庢崳婵绨崣?
+	
 		m_iFirstSel = -1;
 		const int iLastSel = m_iCurSel;
-		// 閸欐牗绉烽崗璺虹暊闁瀚ㄦい?
+
 		const int nSelCountBefore = m_aSelItems.GetSize();
 		UnSelectItem(iIndex, true);
-		// 閸掋倖鏌囬弰顖氭儊閸氬牊纭堕崚妤勩€冩い?
+	
 		if (iIndex < 0) {
 			if( nSelCountBefore > 0 && m_aSelItems.GetSize() == 0 ) {
 				NotifySelectionCleared();
 			}
 			return false;
 		}
-		// 闁瀚ㄨぐ鎾冲閸掓銆冩い?
+
 		CControlUI* pControl = NULL;
 		IListItemUI* pListItem = NULL;
 		if (!ResolveListItemByIndex(iIndex, pControl, pListItem, false, false)) return false;
-		// 瀹歌尙绮￠柅澶嬪
+
 		if (m_aSelItems.Find(ListIndexToPtr(iIndex)) != -1) {
 			m_iCurSel = iIndex;
 			ApplySelectionFocusAndScroll(pControl, iIndex, bTakeFocus, bSetScrollPos);
@@ -734,9 +734,9 @@ namespace FYUI
 
 	bool CListUI::SelectMultiItem(int iIndex, bool bTakeFocus)
 	{
-		// 閺堫亜绱戦崥顖氼樋闁?
+
 		if (!IsMultiSelect()) return SelectItem(iIndex, bTakeFocus);
-		// 閸忋劑鍎撮崣鏍ㄧХ
+
 		if (iIndex < 0) {
 			const bool bHadSelection = m_aSelItems.GetSize() > 0;
 			UnSelectAllItems();
@@ -746,7 +746,7 @@ namespace FYUI
 			return true;
 		}
 
-		// 婢舵岸鈧鎹ｆ慨瀣碍閸?
+
 		if (m_iFirstSel == -1) {
 			if (m_iCurSel != -1) {
 				m_iFirstSel = m_iCurSel;
@@ -760,7 +760,7 @@ namespace FYUI
 		IListItemUI* pListItem = NULL;
 		if (!ResolveListItemByIndex(iIndex, pControl, pListItem, true, false)) return false;
 
-		// 婢舵岸鈧鍨介弬?
+
 		if ((GetKeyState(VK_CONTROL) & 0x8000)) {
 			int aIndex = m_aSelItems.Find(ListIndexToPtr(iIndex));
 			if (aIndex != -1) {
@@ -1793,7 +1793,7 @@ namespace FYUI
 		}
 		UINT uListType = m_pOwner->GetListType();
 		if (uListType == LT_LIST) {
-			// 鐠侊紕鐣诲Ο顏勬倻鐏忓搫顕?
+			
 			int nItemCount = m_items.GetSize();
 			if (nItemCount > 0)
 			{
@@ -2588,7 +2588,7 @@ namespace FYUI
 	bool CListElementUI::Select(bool bSelect, bool bIsClick)
 	{
 		if (!IsEnabled()) return false;
-		// 閸欐牗绉烽崗璺虹暊閸掓銆冩い瑙勬殶閹?
+
 		if (m_pOwner) {
 			m_pOwner->UnSelectItem(m_iIndex, true);
 		}
@@ -2787,13 +2787,13 @@ namespace FYUI
 			return;
 		}
 
-		// 閸欐娊鏁柅澶嬪
+
 		if (m_pOwner != NULL)
 		{
 			if (m_pOwner->GetListInfo()->bRSelected && event.Type == UIEVENT_RBUTTONDOWN)
 			{
 				if (IsEnabled()) {
-					// 婢舵岸鈧?
+		
 					if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_SHIFT) & 0x8000)) {
 						if (m_pOwner != NULL) m_pOwner->SelectMultiItem(m_iIndex);
 					}
@@ -2813,7 +2813,6 @@ namespace FYUI
 					m_pManager->SendNotify(this, DUI_MSGTYPE_BUTTONDOWN);
 				}
 
-				// 婢舵岸鈧?
 				if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_SHIFT) & 0x8000)) {
 					if (m_pOwner != NULL) m_pOwner->SelectMultiItem(m_iIndex);
 				}
@@ -3332,7 +3331,7 @@ namespace FYUI
 	bool CListContainerElementUI::Select(bool bSelect, bool bIsClick )
 	{
 		if (!IsEnabled()) return false;
-		// 閸欐牗绉烽崗璺虹暊閸掓銆冩い瑙勬殶閹?
+
 		if (m_pOwner) {
 			m_pOwner->UnSelectItem(m_iIndex, true);
 		}
@@ -3404,7 +3403,7 @@ namespace FYUI
 			if (IsEnabled()) {
 				if(IsRichEvent()) m_pManager->SendNotify(this, DUI_MSGTYPE_BUTTONDOWN);
 
-				// 婢舵岸鈧?
+			
 				if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_SHIFT) & 0x8000)) {
 					if (m_pOwner != NULL) m_pOwner->SelectMultiItem(m_iIndex);
 				}
@@ -3414,13 +3413,13 @@ namespace FYUI
 			}
 			return;
 		}
-		// 閸欐娊鏁柅澶嬪
+
 		if (m_pOwner != NULL)
 		{
 			if (m_pOwner->GetListInfo()->bRSelected && event.Type == UIEVENT_RBUTTONDOWN)
 			{
 				if (IsEnabled()) {
-					// 婢舵岸鈧?
+				
 					if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_SHIFT) & 0x8000)) {
 						if (m_pOwner != NULL) m_pOwner->SelectMultiItem(m_iIndex);
 					}

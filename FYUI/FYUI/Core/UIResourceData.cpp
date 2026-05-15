@@ -42,11 +42,8 @@ namespace FYUI
 			bNeedClose = true;
 			std::wstring sFilePwd = CPaintManagerUI::GetResourceZipPwd();
 #ifdef UNICODE
-			char* pwd = w2a((wchar_t*)sFilePwd.c_str());
-			HZIP hz = OpenZip(sZipFile.c_str(), pwd);
-			if (pwd != NULL) {
-				delete[] pwd;
-			}
+			const std::string pwd = StringUtil::Utf16ToUtf8(sFilePwd);
+			HZIP hz = OpenZip(sZipFile.c_str(), pwd.empty() ? nullptr : pwd.c_str());
 			return hz;
 #else
 			return OpenZip(sZipFile.c_str(), sFilePwd.c_str());

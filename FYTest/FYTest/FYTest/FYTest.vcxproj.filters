@@ -110,5 +110,6 @@
     <None Include="res\fytest_popup.xml">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="res\res.zip" />
   </ItemGroup>
 </Project>

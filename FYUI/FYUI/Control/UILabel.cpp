@@ -155,14 +155,12 @@ namespace FYUI
 			m_bNeedEstimateSize = false;
 			m_szAvailableLast = szAvailable;
 			m_cxyFixedLast = GetFixedSize();
-			// 閼奉亜濮╃拋锛勭暬鐎硅棄瀹?
 			if ((m_uTextStyle & DT_SINGLELINE) != 0) {
-				// 妤傛ê瀹?
+		
 				if (m_cxyFixedLast.cy == 0) {
 					m_cxyFixedLast.cy = m_pManager->GetFontInfo(m_iFont)->tm.tmHeight + GetManager()->ScaleValue(8);
 					m_cxyFixedLast.cy += rcTextPadding.top + rcTextPadding.bottom;
 				}
-				// 鐎硅棄瀹?
 				if (m_cxyFixedLast.cx == 0) {
 					if(m_bAutoTextWidth) {
 						RECT rcText = { 0, 0, 9999999, m_cxyFixedLast.cy };
@@ -178,7 +176,6 @@ namespace FYUI
 					}
 				}
 			}
-			// 閼奉亜濮╃拋锛勭暬妤傛ê瀹?
 			else if(m_cxyFixedLast.cy == 0) {
 				if(m_bAutoTextHeight) {
 					RECT rcText = { 0, 0, m_cxyFixedLast.cx, 9999999 };
@@ -322,8 +319,7 @@ namespace FYUI
 
 	void CLabelUI::PaintText(CPaintRenderContext& renderContext)
 	{
-		/* std::wstring str = GetName();
-		RECT rc1 = GetPos();*/
+
 		if( m_dwTextColor == 0 ) m_dwTextColor = m_pManager->GetDefaultFontColor();
 		if( m_dwDisabledTextColor == 0 ) m_dwDisabledTextColor = m_pManager->GetDefaultDisabledColor();
 

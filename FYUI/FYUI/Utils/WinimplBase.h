@@ -20,13 +20,13 @@ namespace FYUI
 		 * @details 用于析构 WindowImplBase 对象。具体行为由当前对象状态以及传入参数共同决定。
 		 */
 		virtual ~WindowImplBase(){};
-		// 鍙渶涓荤獥鍙ｉ噸鍐欙紙鍒濆鍖栬祫婧愪笌澶氳瑷€鎺ュ彛锛?
+		//
 		/**
 		 * @brief 执行 InitResource 操作
 		 * @details 用于执行 InitResource 操作。具体行为由当前对象状态以及传入参数共同决定。
 		 */
 		virtual void InitResource(){};
-		// 姣忎釜绐楀彛閮藉彲浠ラ噸鍐?
+		//
 		/**
 		 * @brief 执行 InitWindow 操作
 		 * @details 用于执行 InitWindow 操作。具体行为由当前对象状态以及传入参数共同决定。

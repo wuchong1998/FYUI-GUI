@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "UIManager.h"
 #include "UIContainer.h"
 #include "Render/UIRenderBatchInternal.h"
@@ -804,8 +804,7 @@ namespace FYUI {
 
 	void tagTDrawInfo::Parse(std::wstring_view pStrImageView, std::wstring_view pStrModifyView, CPaintManagerUI* pManager)
 	{
-		// 1闂備線娼уΛ鏂款啅椤ь湩.jpg
-		// 2闂備線娼уΛ鏃堝礂閻炵灊e='aaa.jpg' res='' restype='0' dest='0,0,0,0' source='0,0,0,0' corner='0,0,0,0' 
+		//e='aaa.jpg' res='' restype='0' dest='0,0,0,0' source='0,0,0,0' corner='0,0,0,0' 
 		// mask='#FF0000' fade='255' hole='false' xtiled='false' ytiled='false'
 		sDrawString = pStrImageView;
 		sDrawModify = pStrModifyView;
@@ -874,25 +873,32 @@ namespace FYUI {
 					bHSL = StringUtil::ParseBool(attribute.value);
 				}
 				else if (StringUtil::EqualsNoCase(attribute.key, L"size")) {
-					StringUtil::TryParseSize(attribute.value, szImage);
+					if (StringUtil::TryParseSize(attribute.value, szImage) && pManager != NULL) {
+						szImage = pManager->ScaleSize(szImage);
+					}
 				}
 				else if (StringUtil::EqualsNoCase(attribute.key, L"align")) {
 					sAlign = attribute.value;
 				}
 				else if (StringUtil::EqualsNoCase(attribute.key, L"padding")) {
-					StringUtil::TryParseRect(attribute.value, rcPadding);
+					if (StringUtil::TryParseRect(attribute.value, rcPadding) && pManager != NULL) {
+						pManager->ScaleRect(&rcPadding);
+					}
 				}
 			}
 		}
 
+		std::wstring strName = sImageName;
+		StringUtil::MakeLower(strName);
+		const bool isSvgResource = StringUtil::Find(strName, L".svg") != -1 || StringUtil::EqualsNoCase(sResType, L"svg");
+		bSvg = isSvgResource;
+
         // Handle DPI-specific raster asset suffixes for non-SVG resources.
         if (pManager != NULL && pManager->GetScale() != 100) {
-			std::wstring strName = sImageName;
-			StringUtil::MakeLower(strName);
-			if (StringUtil::Find(strName, L".svg") == -1)
+			if (!isSvgResource)
 			{
 				std::wstring sScale;
-				sScale = StringUtil::Format(L"@{}.", pManager->GetScale());
+				sScale = StringUtil::Format(L"@.");
 				StringUtil::ReplaceAll(sImageName, _T("."), sScale);
 			}
 		}
@@ -937,7 +943,7 @@ namespace FYUI {
 	HINSTANCE CPaintManagerUI::m_hResourceInstance = NULL;
 	std::wstring CPaintManagerUI::m_pStrResourcePath;
 	std::wstring CPaintManagerUI::m_pStrResourceZip;
-	std::wstring CPaintManagerUI::m_pStrResourceZipPwd;  //Garfield 20160325 闂佹眹鍩勯崹鐣岀不閹达附鍎婇柟杈鹃檮閸庢ê霉濠婂啫鍔畃闂備礁鎲￠悧鏇㈠箠閹捐鏆伴梺?
+	std::wstring CPaintManagerUI::m_pStrResourceZipPwd;  
 	HANDLE CPaintManagerUI::m_hResourceZip = NULL;
 	bool CPaintManagerUI::m_bCachedResourceZip = true;
 	BYTE* CPaintManagerUI::m_cbZipBuf = nullptr;
@@ -1947,7 +1953,7 @@ namespace FYUI {
 		m_ptLastMousePos.x = m_ptLastMousePos.y = -1;
 
 		m_pGdiplusStartupInput = new Gdiplus::GdiplusStartupInput;
-		Gdiplus::GdiplusStartup(&m_gdiplusToken, m_pGdiplusStartupInput, NULL); // 闂備礁鎲″缁樻叏閹灐褰掑床閹垫“闂備浇顫夋禍浠嬪磿鏉堫偁浜?
+		Gdiplus::GdiplusStartup(&m_gdiplusToken, m_pGdiplusStartupInput, NULL); 
 
 		CShadowUI::Initialize(m_hInstance);
 
@@ -1989,12 +1995,11 @@ namespace FYUI {
 		m_backgroundSurface.Reset();
 		ResetMeasureDC();
 		m_aPreMessages.Remove(m_aPreMessages.Find(this));
-		// 闂傚倷绀佺花閬嶅磻閹惧瓨鍙忛柨婵嗗閸斿秹鎮楀顒夊剶妤犵偛绻橀幐濠冨緞鐎ｎ剦娲梻?
+		
 		if (m_hDragBitmap != NULL) CRenderEngine::FreeBitmap(m_hDragBitmap);
-		//闂備礁鎲￠〃鍡涙偤閺囩伝褰掑床閹垫“Plus
+
 		Gdiplus::GdiplusShutdown(m_gdiplusToken);
 		delete m_pGdiplusStartupInput;
-		// DPI缂傚倷鑳舵刊瀵告閺囥垹绠栧┑鐘插閸嬫捇鎮藉▓鎸庢暞闂?
 		if (m_pDPI != NULL) {
 			delete m_pDPI;
 			m_pDPI = NULL;
@@ -2148,16 +2153,12 @@ namespace FYUI {
 		}
 
 		m_bCachedResourceZip = true;
-		m_pStrResourceZipPwd.assign(password);  //Garfield 20160325 闂佹眹鍩勯崹鐣岀不閹达附鍎婇柟杈鹃檮閸庢ê霉濠婂啫鍔畃闂備礁鎲￠悧鏇㈠箠閹捐鏆伴梺?
+		m_pStrResourceZipPwd.assign(password);  
 		if (m_bCachedResourceZip)
 		{
 #ifdef UNICODE
-			char* pwd = password.empty() ? nullptr : w2a(const_cast<wchar_t*>(m_pStrResourceZipPwd.c_str()));
-			m_hResourceZip = (HANDLE)OpenZip(m_cbZipBuf, len, pwd);
-			if (pwd) {
-				delete[] pwd;
-				pwd = NULL;
-			}
+			const std::string pwd = StringUtil::Utf16ToUtf8(m_pStrResourceZipPwd);
+			m_hResourceZip = (HANDLE)OpenZip(m_cbZipBuf, len, pwd.empty() ? nullptr : pwd.c_str());
 #else
 			m_hResourceZip = (HANDLE)OpenZip(m_cbZipBuf, len, password);
 #endif
@@ -2187,12 +2188,8 @@ namespace FYUI {
 			std::wstring sFile = CPaintManagerUI::GetResourcePath();
 			sFile += CPaintManagerUI::GetResourceZip();
 #ifdef UNICODE
-			char* pwd = password.empty() ? nullptr : w2a(const_cast<wchar_t*>(m_pStrResourceZipPwd.c_str()));
-			m_hResourceZip = (HANDLE)OpenZip(sFile.c_str(), pwd);
-			if (pwd) {
-				delete[] pwd;
-				pwd = NULL;
-			}
+			const std::string pwd = StringUtil::Utf16ToUtf8(m_pStrResourceZipPwd);
+			m_hResourceZip = (HANDLE)OpenZip(sFile.c_str(), pwd.empty() ? nullptr : pwd.c_str());
 #else
 			m_hResourceZip = (HANDLE)OpenZip(sFile.c_str(), password);
 #endif
@@ -2973,7 +2970,7 @@ namespace FYUI {
 	bool CPaintManagerUI::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lRes)
 	{
 		if (m_hWndPaint == NULL) return false;
-		// Cycle through listeners
+	
 		for (int i = 0; i < m_aMessageFilters.GetSize(); i++)
 		{
 			IMessageFilterUI* pFilter = static_cast<IMessageFilterUI*>(m_aMessageFilters[i]);
@@ -3239,7 +3236,7 @@ namespace FYUI {
 					m_hwndTooltip = tooltip->GetHWND();
 				}
 
-				// 闂傚倷绶￠崑鍛┍閾忚宕查柛鎰╁妷濡插牓鏌涢銈呮瀺缂佽鲸鐗犻弻娑樷枎閹邦剛浼岄梺?TooltipInfo 闂備礁婀遍…鍫澝洪銏犵闁跨喓濮甸弲顒勬倵濞戞凹妫杘ltipWnd 闂佽崵濮甸崝妤呭窗閺囥垺鍎楁俊銈呮噺閻撳倸鈹戦悩鎻掓殲闁哄缍婇弻娑㈠箛椤掍礁娅ｉ梺?
+				
 				::SendMessage(m_hwndTooltip, 11858, 0, (LPARAM)pTooltipInfo);
 			#else
 
@@ -3326,8 +3323,7 @@ namespace FYUI {
 		break;
 		case WM_MOUSEMOVE:
 		{
-			// Start tracking this entire window again...
-			//闂備礁鎲￠悷锕傚垂閸ф鐒垫い鎴ｆ硶缁愭梻绱掗崡鐐靛煟鐎殿喕绮欏畷鍫曞Ω閵夈倕顥氶梻?
+			
 			if (!m_bMouseTracking) {
 				TRACKMOUSEEVENT tme = { 0 };
 				tme.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -3341,22 +3337,22 @@ namespace FYUI {
 
 			// Generate the appropriate mouse messages
 			POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-			// 闂備礁鎼€氱兘宕规导鏉戠畾濞达綀娅ｉ惌鎾绘偣閸ャ劌绲荤悮?
+		
 			bool bNeedDrag = true;
 			if (m_ptLastMousePos.x == pt.x && m_ptLastMousePos.y == pt.y) {
 				bNeedDrag = false;
 			}
-			// 闂佽崵濮抽悞锕€顭垮Ο鑲╃鐎广儱鏌堝Δ鍛亹鐎规洖娲ら悘杈ㄧ箾鏉堝墽鍒扮紒澶婄埣閹?
+		
 			m_ptLastMousePos = pt;
 			CControlUI* pNewHover = FindControl(pt);
 			if (pNewHover != NULL && pNewHover->GetManager() != this) break;
 
-			// 闂備礁缍婇弨閬嶆偋濡ゅ啠鍋撳顓烆嚋缂佸倸绉堕埀顒婄岛閺呮粓顢?			if (bNeedDrag && m_bDragMode && wParam == MK_LBUTTON)
+			
 			if (bNeedDrag && m_bDragMode && wParam == MK_LBUTTON)
 			{
-				// 闂傚倷鐒﹁ぐ鍐晝閵夆晛妫樺☉鎾虫懗pture
+				
 				ReleaseCapture();
-				// 闂備浇顫夋禍浠嬪磿鏉堫偁浜?
+			
 				if (m_pDragDrop != NULL && m_pDragDrop->OnDragDrop(m_pEventClick)) {
 
 					m_bDragMode = false;
@@ -3473,7 +3469,7 @@ namespace FYUI {
 			// and we need to remove them on focus change).
 			if (!m_bNoActivate) ::SetFocus(m_hWndPaint);
 			if (m_pRoot == NULL) break;
-			// 闂備礁鎼悮顐﹀磿閸欏鐝舵慨妞诲亾妤犵偞甯熼ˇ杈ㄧ箾?
+		
 			POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 			m_ptLastMousePos = pt;
 			CControlUI* pControl = FindControl(pt);
@@ -3490,7 +3486,7 @@ namespace FYUI {
 				m_hDragBitmap = CRenderEngine::GenerateBitmap(this, pControl, pControl->GetPos());
 			}
 
-			// 闁诲孩顔栭崰鎺楀磻閹剧粯鐓曟慨妯煎帶閻忥紕鈧娲滈崰鏍箠?
+			
 			SetCapture();
 			// Track the pressed control until button-up.
 			m_pEventClick = pControl;
@@ -4141,12 +4137,11 @@ namespace FYUI {
 
 	void CPaintManagerUI::Term()
 	{
-		// 闂傚倷绀佺花閬嶅磻閹惧瓨鍙忛柨婵嗗缁佹壆绱掓笟鍥т簻闁崇懓鍟撮獮鍥敋閸涱厽鍊庨梻浣藉吹閸嬫稑螞濡も偓閳?
+		
 		CResourceManager::GetInstance()->Release();
 		CControlFactory::GetInstance()->Release();
 
-		// 婵犵數鍋為幐鎼佸箠閹版澘绠栧┑鐘叉搐缁€鍌炴煕濞嗘劧鑰块柣鎾櫊閹顦查悗姘煎幘閼?
-		// 闂備焦鎮堕崕杈ㄦ櫠閼恒儲娅?
+
 		TImageInfo* data;
 		for (auto& pair : m_SharedResInfo.m_ImageHash) {
 			data = pair.second;
@@ -4166,13 +4161,13 @@ namespace FYUI {
 			}
 		}
 		m_SharedResInfo.m_CustomFonts.clear();
-		// 濠殿喗甯楃粙鎺椻€﹂崼銉晣闁煎鍊愰崑鎾斥槈濞嗗秳娌紓?
+		
 		ReleaseFontHandle(m_SharedResInfo.m_DefaultFontInfo, true);
-		// 闂備礁鎼粔鎾床閼碱剚顫?/ 濠殿喗甯楃粙鎺椻€﹂崼銉晣闁煎鍊撳▽顏堟煟閹邦喛藟闁?
+	
 		m_SharedResInfo.m_StyleHash.clear();
 		m_SharedResInfo.m_AttrHash.clear();
 
-		// 闂備胶顭堢换鎴炵箾婵犲伣娑氬枈閻ゆザ
+		
 		if (m_bCachedResourceZip && m_hResourceZip != NULL) {
 			CloseZip((HZIP)m_hResourceZip);
 			m_hResourceZip = NULL;
@@ -5470,9 +5465,7 @@ namespace FYUI {
 
 	TDrawInfo* CPaintManagerUI::GetDrawInfo(std::wstring_view image, std::wstring_view modify)
 	{
-		std::wstring sKey = StringUtil::Format(L"{}{}",
-			image,
-			modify);
+		std::wstring sKey = StringUtil::Format(L"{}{}",image,modify);
 
 		TDrawInfo* pDrawInfo = nullptr;
 		auto it = m_SharedResInfo.m_DrawInfoHash.find(sKey.c_str());
@@ -5487,9 +5480,7 @@ namespace FYUI {
 
 	void CPaintManagerUI::RemoveDrawInfo(std::wstring_view image, std::wstring_view modify)
 	{
-		std::wstring sKey = StringUtil::Format(L"{}{}",
-			image,
-			modify);
+		std::wstring sKey = StringUtil::Format(L"{}{}",image,modify);
 		auto it = m_SharedResInfo.m_DrawInfoHash.find(sKey.c_str());
 		if (it != m_SharedResInfo.m_DrawInfoHash.end()) {
 			delete it->second;
@@ -5645,9 +5636,7 @@ namespace FYUI {
 		CPaintManagerUI* pManager = static_cast<CPaintManagerUI*>(pData);
 		const std::wstring& sName = pThis->GetName();
 		if (sName.empty()) return NULL;
-		// Add this control to the hash list
 		pManager->m_mapName[sName.c_str()] = pThis;
-		//pManager->m_mNameHash.Set(sName, pThis);
 		return NULL; // Attempt to add all controls
 	}
 

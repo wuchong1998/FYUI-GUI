@@ -2,12 +2,8 @@
 <Window  showshadow="true" bktrans="true" >
 <Font name="微软雅黑" id="1"  size="12"  shared="true"  />
 
-<!-- Menu样式 -->
-<Default name="Menu" value="bktrans=&quot;true&quot;  inset=&quot;5,10,5,12&quot; itemtextpadding=&quot;15,0,0,0&quot; bkimage=&quot;file='loginmenubk.png' corner='40,40,40,40' &quot; itemtextcolor=&quot;ff333333&quot; itemselectedbkcolor=&quot;00333333&quot; itemselectedtextcolor=&quot;ff333333&quot; itemfont=&quot;30&quot;" shared="true" />
-
-
-<Default name="ExplandIcon"  bkimage="file='loginmenubk.png' corner='40,40,40,40' "  shared="true"/>
-  <Menu  bkimage="loginmenubk.png' corner='40,40,40,40' " cursor="hand" itemfont="30" itemtextpadding="40,0,20,0" 
+<Default name="ExplandIcon"  bkimage="file='001.svg' corner='40,40,40,40' "  shared="true"/>
+  <Menu  bkimage="file='001.svg' corner='40,40,40,40' " cursor="hand" itemfont="30" itemtextpadding="40,0,20,0" 
  itemselectedbkcolor="#00000ffff" inset="12,9,5,18"   >
 	<MenuElement name ="menu" height="245" width="220" >
      	<VerticalLayout height="450" name="home_sort_ver_layout" >

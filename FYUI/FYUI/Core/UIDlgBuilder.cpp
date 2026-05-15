@@ -2,6 +2,9 @@
 #include "UIDlgBuilder.h"
 #include "UIResourceData.h"
 
+#include <mutex>
+#include <unordered_map>
+
 namespace FYUI
 {
 	namespace
@@ -9,6 +12,97 @@ namespace FYUI
 		bool EqualsNoCase(std::wstring_view lhs, std::wstring_view rhs)
 		{
 			return StringUtil::CompareNoCase(lhs, rhs) == 0;
+		}
+
+		// ---------------------------------------------------------------------
+		// 进程级 XML AST 缓存（CDialogBuilder 全局共享只读）
+		// ---------------------------------------------------------------------
+		//
+		// 缓存的是 CMarkup 文档对象，对应一份已经从磁盘/资源加载并解析完成的 XML AST。
+		// CDialogBuilder 在构造控件树时仅读取 CMarkup，不修改其内部数据，所以同一个
+		// 共享 CMarkup 可以被多个窗口、多次 Create 反复消费，跳过磁盘 IO 与 XML 解析。
+		// 注意：控件实例本身仍然由每次 Create 单独创建，不在缓存范围。
+		//
+		// 缓存 key 由三段组成：dll instance + xml 来源标识（路径或资源 ID） + type，
+		// 避免相同文件名跨 dll、跨资源类型时互相串扰。
+		//
+		// 内联 XML（首字符 '<'）以及加载失败的输入不会进入缓存。
+		// ---------------------------------------------------------------------
+		struct DialogBuilderXmlCache
+		{
+			static DialogBuilderXmlCache& Instance()
+			{
+				static DialogBuilderXmlCache s;
+				return s;
+			}
+
+			std::shared_ptr<CMarkup> GetOrLoad(const std::wstring& key,
+				STRINGorID xml, std::wstring_view type, HINSTANCE instance)
+			{
+				if (!key.empty()) {
+					std::lock_guard<std::mutex> lock(m_mutex);
+					auto it = m_map.find(key);
+					if (it != m_map.end()) {
+						return it->second;
+					}
+				}
+
+				auto markup = std::make_shared<CMarkup>();
+				if (!LoadMarkupDocument(*markup, xml, type, instance, xml.IsString())) {
+					return nullptr;
+				}
+
+				if (key.empty()) {
+					return markup;
+				}
+
+				std::lock_guard<std::mutex> lock(m_mutex);
+				// 二次检查：可能已被并发线程写入
+				auto it = m_map.find(key);
+				if (it != m_map.end()) {
+					return it->second;
+				}
+				m_map.emplace(key, markup);
+				return markup;
+			}
+
+			void Clear()
+			{
+				std::lock_guard<std::mutex> lock(m_mutex);
+				m_map.clear();
+			}
+
+		private:
+			std::mutex m_mutex;
+			std::unordered_map<std::wstring, std::shared_ptr<CMarkup>> m_map;
+		};
+
+		// 构造缓存 key；返回空串表示禁止缓存（内联 XML 或非法输入）
+		std::wstring MakeXmlCacheKey(STRINGorID xml, std::wstring_view type, HINSTANCE instance)
+		{
+			std::wstring key;
+			if (xml.IsString()) {
+				const std::wstring_view view = xml.view();
+				if (view.empty() || view.front() == L'<') {
+					return {};
+				}
+				key.reserve(view.size() + type.size() + 32);
+				key.append(L"path:");
+				key.append(view);
+			}
+			else {
+				wchar_t buf[32] = {};
+				const auto ordinal = reinterpret_cast<ULONG_PTR>(xml.c_str());
+				::swprintf_s(buf, L"id:%llu", static_cast<unsigned long long>(ordinal));
+				key.append(buf);
+			}
+			key.append(L"|type:");
+			key.append(type);
+			wchar_t inst[32] = {};
+			::swprintf_s(inst, L"|inst:%llu",
+				static_cast<unsigned long long>(reinterpret_cast<ULONG_PTR>(instance)));
+			key.append(inst);
+			return key;
 		}
 
 		int ParseInt(std::wstring_view text)
@@ -76,18 +170,35 @@ namespace FYUI
 	CControlUI* CDialogBuilder::Create(STRINGorID xml, std::wstring_view type, IDialogBuilderCallback* pCallback, 
 		CPaintManagerUI* pManager, CControlUI* pParent)
 	{
-		//璧勬簮ID涓?-65535锛屼袱涓瓧鑺傦紱瀛楃涓叉寚閽堜负4涓瓧鑺?
-		//瀛楃涓蹭互<寮€澶磋涓烘槸XML瀛楃涓诧紝鍚﹀垯璁や负鏄疿ML鏂囦欢
+		// 走 ResourceManager 解析后的真实路径，便于跨语言/皮肤切换；缓存 key 同样基于这一最终路径
+		std::wstring xmlPathStorage;
 		if(xml.IsString() && !xml.view().empty() && xml.view().front() != _T('<')) {
 			const std::wstring_view xmlpath = CResourceManager::GetInstance()->GetXmlPath(xml.view());
 			if (!xmlpath.empty()) {
-				const std::wstring xmlpathStorage(xmlpath);
-				xml = STRINGorID(xmlpathStorage);
+				xmlPathStorage.assign(xmlpath);
+				xml = STRINGorID(xmlPathStorage);
 			}
 		}
 
 		HINSTANCE dll_instence = m_instance ? m_instance : CPaintManagerUI::GetResourceDll();
-		if( !LoadMarkupDocument(m_xml, xml, type, dll_instence, xml.IsString()) ) return NULL;
+
+		m_pSharedXml.reset();
+		if (m_bUseGlobalXmlCache) {
+			const std::wstring key = MakeXmlCacheKey(xml, type, dll_instence);
+			std::shared_ptr<CMarkup> shared = DialogBuilderXmlCache::Instance().GetOrLoad(
+				key, xml, type, dll_instence);
+			if (shared) {
+				m_pSharedXml = std::move(shared);
+			}
+		}
+
+		// 缓存禁用 / 内联 XML / 缓存内部已加载失败：回退到实例自有 m_xml 现场加载
+		if (!m_pSharedXml) {
+			if (!LoadMarkupDocument(m_xml, xml, type, dll_instence, xml.IsString())) {
+				return NULL;
+			}
+		}
+
 		m_pCallback = pCallback;
 		m_typeStorage.assign(type);
 		m_pstrtype = m_typeStorage.empty() ? nullptr : m_typeStorage.c_str();
@@ -95,10 +206,33 @@ namespace FYUI
 		return Create(pCallback, pManager, pParent);
 	}
 
+	CMarkup& CDialogBuilder::_ActiveMarkup()
+	{
+		return m_pSharedXml ? *m_pSharedXml : m_xml;
+	}
+
+	CControlUI* CDialogBuilder::CreateControlsFromXml(STRINGorID xml, std::wstring_view type,
+		IDialogBuilderCallback* pCallback, CPaintManagerUI* pManager, CControlUI* pParent,
+		HINSTANCE instance)
+	{
+		CDialogBuilder builder;
+		if (instance != NULL) {
+			builder.SetInstance(instance);
+		}
+		// 全局接口默认启用缓存（与构造默认值一致），显式写出便于阅读
+		builder.SetUseGlobalXmlCache(true);
+		return builder.Create(xml, type, pCallback, pManager, pParent);
+	}
+
+	void CDialogBuilder::ClearXmlCache()
+	{
+		DialogBuilderXmlCache::Instance().Clear();
+	}
+
 	CControlUI* CDialogBuilder::Create(IDialogBuilderCallback* pCallback, CPaintManagerUI* pManager, CControlUI* pParent)
 	{
 		m_pCallback = pCallback;
-		CMarkupNode root = m_xml.GetRoot();
+		CMarkupNode root = _ActiveMarkup().GetRoot();
 		if( !root.IsValid() ) return NULL;
 
 		if( pManager ) {
@@ -405,17 +539,20 @@ namespace FYUI
 
 	CMarkup* CDialogBuilder::GetMarkup()
 	{
-		return &m_xml;
+		return &_ActiveMarkup();
 	}
 
 	void CDialogBuilder::GetLastErrorMessage(wchar_t* pstrMessage, SIZE_T cchMax) const
 	{
-		return m_xml.GetLastErrorMessage(pstrMessage, cchMax);
+		// 错误信息在共享 CMarkup 上同样可读取（仅读访问，不会修改 CMarkup）
+		CMarkup& xml = const_cast<CDialogBuilder*>(this)->_ActiveMarkup();
+		return xml.GetLastErrorMessage(pstrMessage, cchMax);
 	}
 
 	void CDialogBuilder::GetLastErrorLocation(wchar_t* pstrSource, SIZE_T cchMax) const
 	{
-		return m_xml.GetLastErrorLocation(pstrSource, cchMax);
+		CMarkup& xml = const_cast<CDialogBuilder*>(this)->_ActiveMarkup();
+		return xml.GetLastErrorLocation(pstrSource, cchMax);
 	}
 
 	CControlUI* CDialogBuilder::_ParseControlNode(CMarkupNode& node, CControlUI* pParent, CPaintManagerUI* pManager)

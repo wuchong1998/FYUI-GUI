@@ -36,12 +36,8 @@ namespace FYUI
 	 * @param canvasSize [in,out] 输出动画画布尺寸
 	 * @return bool 解码成功返回 true，数据无效或解码失败返回 false
 	 */
-	bool DecodeWebpAnimationFromMemoryInternal(
-		const void* pData,
-		DWORD dwSize,
-		DWORD mask,
-		std::vector<WebpAnimationFrameBitmapInternal>& frames,
-		SIZE& canvasSize);
+	bool DecodeWebpAnimationFromMemoryInternal(const void* pData,DWORD dwSize,DWORD mask,
+		std::vector<WebpAnimationFrameBitmapInternal>& frames,SIZE& canvasSize);
 
 	/**
 	 * @brief 释放 WebP 动画帧位图集合
@@ -71,8 +67,7 @@ namespace FYUI
 	 * @param canvasSize [in,out] 输出画布尺寸（宽、高）
 	 * @return bool 解码成功返回 true，失败返回 false
 	 */
-	bool DecodeGifAnimationFromFileInternal(
-		const wchar_t* pStrFilename,
+	bool DecodeGifAnimationFromFileInternal(const wchar_t* pStrFilename,
 		std::vector<GifAnimationFrameBitmapInternal>& frames,
 		SIZE& canvasSize);
 
@@ -82,4 +77,22 @@ namespace FYUI
 	 * @param frames [in,out] 动画帧集合
 	 */
 	void FreeGifAnimationFramesInternal(std::vector<GifAnimationFrameBitmapInternal>& frames);
+
+	/**
+	 * @brief 使用 WIC 解码静态位图（PNG/JPEG/BMP/TIFF/ICO/HEIF 等）
+	 * @details 调用 Windows Imaging Component 将内存中的图像数据解码为 32 位预乘 BGRA top-down DIB，
+	 *          与 FYUI D2D 渲染管线期望的像素布局完全一致，避免 stb 路径的二次像素拷贝与手工预乘。
+	 *          支持范围 = WIC 内置 codec 所覆盖的格式（PNG/JPEG/BMP/TIFF/GIF 单帧/ICO 等）。
+	 *          调用成功后输出的 HBITMAP 所有权交给调用方。
+	 * @param pData [in] 图像二进制起始地址
+	 * @param dwSize [in] 图像二进制长度
+	 * @param mask [in] 颜色掩码，命中该颜色的像素会被视为透明
+	 * @param hBitmap [out] 解码成功时返回的 HBITMAP（失败时为 NULL）
+	 * @param outWidth [out] 图像宽度（像素）
+	 * @param outHeight [out] 图像高度（像素）
+	 * @param bHasAlpha [out] 是否包含 alpha 通道（含 mask 命中导致的透明像素）
+	 * @return bool 解码成功返回 true，数据为空、WIC 不识别该格式或解码失败返回 false
+	 */
+	bool DecodeStillBitmapWithWicInternal(const BYTE* pData,DWORD dwSize,DWORD mask,
+		HBITMAP& hBitmap,int& outWidth,int& outHeight,bool& bHasAlpha);
 }

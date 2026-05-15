@@ -582,12 +582,7 @@ namespace FYUI
 		* @return 返回对应的字符串内容
 		*/
 		std::wstring GetSubControlUserData(std::wstring_view pstrSubControlName);
-		/*
-		** 鏍规嵁鍚嶅瓧鏌ユ壘瀛愭帶浠讹紝杩斿洖鎵惧埌鐨勭涓€涓帶浠舵寚閽?
-		*  param pstrSubControlName: 瀛愭帶浠跺悕瀛?
-		*  param strEliminateControlName: 鎺掗櫎鏌愪釜鍚嶅瓧鐨勬帶浠?涓嶄細鍦ㄨ鍚嶇О鎺т欢杩涜瀛愭帶浠舵煡鎵?
-		*  return CControlUI*: 鎵惧埌鐨勫瓙鎺т欢鎸囬拡锛屾湭鎵惧埌杩斿洖nullptr
-		*/
+		
 		/**
 		* @brief 查找Sub控件
 		* @details 用于查找Sub控件。具体行为由当前对象状态以及传入参数共同决定。
@@ -597,11 +592,7 @@ namespace FYUI
 		*/
 		CControlUI* FindSubControl(std::wstring_view pstrSubControlName, std::wstring_view strEliminateControlName = {});
 
-		/*
-		** 鏍规嵁鍚嶅瓧鏌ユ壘瀛愭帶浠讹紝鍙煡鎵?m_items 閲岀殑瀛愭帶浠讹紝杩斿洖鎵惧埌鐨勭涓€涓帶浠舵寚閽?
-		*  param pstrChildControlName: 瀛愭帶浠跺悕瀛?
-		*  return CControlUI*: 鎵惧埌鐨勫瓙鎺т欢鎸囬拡锛屾湭鎵惧埌杩斿洖nullptr
-		*/
+		
 		/**
 		* @brief 查找Itme控件
 		* @details 用于查找Itme控件。具体行为由当前对象状态以及传入参数共同决定。

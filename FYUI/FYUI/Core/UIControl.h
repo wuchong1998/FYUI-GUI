@@ -1,14 +1,45 @@
 #pragma once
 
+#include <array>
+#include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <string_view>
 
 namespace FYUI
 {
 	class CPaintRenderContext;
+	class CControlUI;
 
 	typedef CControlUI* (CALLBACK* FINDCONTROLPROC)(CControlUI*, LPVOID);
+
+	/**
+	 * @brief 控件绘制阶段枚举
+	 * @details 标识 CControlUI::DoPaint 链路中的 7 个绘制位点，
+	 *          供 SetPaintCallback / ClearPaintCallback 选择目标 Paint 函数。
+	 *          数值顺序与 DoPaint 内部调用顺序一致，可用于排序断言。
+	 */
+	enum PaintStage
+	{
+		PaintStageBkColor = 0,        // PaintBkColor
+		PaintStageBkImage,            // PaintBkImage
+		PaintStageStatusImage,        // PaintStatusImage
+		PaintStageForeColor,          // PaintForeColor
+		PaintStageForeImage,          // PaintForeImage
+		PaintStageText,               // PaintText
+		PaintStageBorder,             // PaintBorder
+		PaintStageCount
+	};
+
+	/**
+	 * @brief 控件绘制回调函数类型
+	 * @details C++11 std::function 形式的绘制回调。在每个 Paint 位点的默认绘制前后被调用，
+	 *          允许调用方读取 sender 状态，并直接通过 ctx 调用 CRenderEngine::* 在控件之上绘制自定义内容。
+	 * @param sender 触发回调的控件实例
+	 * @param ctx    当前绘制上下文，与 PaintXxx 中的 renderContext 同一对象
+	 */
+	using PaintCallback = std::function<void(CControlUI* sender, CPaintRenderContext& ctx)>;
 
 	class FYUI_API CControlUI
 	{
@@ -1182,6 +1213,54 @@ namespace FYUI
 		virtual void PaintBorder(CPaintRenderContext& renderContext);
 
 		/**
+		 * @brief 为指定绘制阶段设置回调函数
+		 * @details 在 PaintBkColor / PaintBkImage / PaintStatusImage / PaintForeColor / PaintForeImage / PaintText / PaintBorder
+		 *          的默认绘制逻辑前后插入用户回调。`before` 在默认绘制前调用，`after` 在默认绘制后调用，
+		 *          任意一个可传空函数表示不挂钩。回调内部可通过 ctx 直接调用 CRenderEngine::* 在控件之上绘制自定义内容。
+		 *          多次为同一 stage 设置会覆盖之前的回调。
+		 *          注意：回调不会改变默认绘制结果，仅在其前后做补充绘制；如需完全替代默认行为，请重写对应 Paint 虚函数。
+		 *			//使用方式如下:
+		 * control->SetPaintCallback(PaintStageBkColor,
+			[](CControlUI* sender, CPaintRenderContext& ctx) {
+				// 在默认 PaintBkColor 之前绘制（垫底层）
+			},
+			[](CControlUI* sender, CPaintRenderContext& ctx) {
+				// 在默认 PaintBkColor 之后绘制（覆盖装饰，例如水印 / hover ring）
+				RECT rc = sender->GetPos();
+				CRenderEngine::DrawColor(ctx, rc, 0x40FF0000);
+			});
+
+		 * @param stage  绘制阶段枚举
+		 * @param before 默认绘制前回调，可为空
+		 * @param after  默认绘制后回调，可为空
+		 */
+		void SetPaintCallback(PaintStage stage, PaintCallback before, PaintCallback after = {});
+
+		/**
+		 * @brief 清空指定绘制阶段的回调函数
+		 * @details 同时清掉该 stage 的 before 与 after 回调。stage 越界时静默忽略。
+		 * @param stage 绘制阶段枚举
+		 */
+		void ClearPaintCallback(PaintStage stage);
+
+		/**
+		 * @brief 清空所有绘制阶段的回调函数
+		 * @details 释放绑定的回调存储结构，恢复零开销状态。
+		 */
+		void ClearAllPaintCallbacks();
+
+		/**
+		 * @brief [内部使用] 触发指定 Paint 阶段的回调
+		 * @details 由 PaintXxx 在默认绘制前后调用，封装空指针检查与边界检查。
+		 *          虽暴露在 public 区域以便 PaintAfterScope RAII 工具调用，但属于内部 API，
+		 *          外部代码不应直接调用。
+		 * @param stage   绘制阶段枚举
+		 * @param isAfter true 表示触发 after 回调，false 表示触发 before 回调
+		 * @param ctx     当前绘制上下文
+		 */
+		void _InvokePaintCallback(PaintStage stage, bool isAfter, CPaintRenderContext& ctx);
+
+		/**
 		 * @brief 执行后置绘制
 		 * @details 用于执行后置绘制。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param renderContext [in,out] 绘制上下文
@@ -1294,6 +1373,14 @@ namespace FYUI
 		CEventSource OnNotify;
 
 	protected:
+		// 控件上未设置任何绘制回调时为 nullptr，避免每控件常驻 7*2 个 std::function 槽位开销
+		struct PaintCallbackTable
+		{
+			std::array<PaintCallback, PaintStageCount> beforeCb;
+			std::array<PaintCallback, PaintStageCount> afterCb;
+		};
+		std::unique_ptr<PaintCallbackTable> m_pPaintCallbacks;
+
 		CPaintManagerUI* m_pManager;
 		CControlUI* m_pParent;
 		std::wstring m_sVirtualWnd;

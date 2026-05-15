@@ -16,6 +16,19 @@ namespace FYUI
 			return rcResolved;
 		}
 
+		// PaintXxx 中所有 return（含 early return）都会先析构本地变量，因此使用 RAII 保证 after 回调一定被调用一次
+		struct PaintAfterScope
+		{
+			PaintAfterScope(CControlUI* p, PaintStage s, CPaintRenderContext& c) noexcept
+				: self(p), stage(s), ctx(c) {}
+			~PaintAfterScope() { self->_InvokePaintCallback(stage, true, ctx); }
+			PaintAfterScope(const PaintAfterScope&) = delete;
+			PaintAfterScope& operator=(const PaintAfterScope&) = delete;
+			CControlUI* self;
+			PaintStage stage;
+			CPaintRenderContext& ctx;
+		};
+
 		bool IsAttributeName(std::wstring_view actual, std::wstring_view expected)
 		{
 			return StringUtil::EqualsNoCase(actual, expected);
@@ -2082,8 +2095,54 @@ namespace FYUI
 		return true;
 	}
 
+	void CControlUI::SetPaintCallback(PaintStage stage, PaintCallback before, PaintCallback after)
+	{
+		if (stage < 0 || stage >= PaintStageCount) {
+			return;
+		}
+		if (!m_pPaintCallbacks) {
+			m_pPaintCallbacks = std::make_unique<PaintCallbackTable>();
+		}
+		m_pPaintCallbacks->beforeCb[stage] = std::move(before);
+		m_pPaintCallbacks->afterCb[stage] = std::move(after);
+	}
+
+	void CControlUI::ClearPaintCallback(PaintStage stage)
+	{
+		if (!m_pPaintCallbacks) {
+			return;
+		}
+		if (stage < 0 || stage >= PaintStageCount) {
+			return;
+		}
+		m_pPaintCallbacks->beforeCb[stage] = nullptr;
+		m_pPaintCallbacks->afterCb[stage] = nullptr;
+	}
+
+	void CControlUI::ClearAllPaintCallbacks()
+	{
+		m_pPaintCallbacks.reset();
+	}
+
+	void CControlUI::_InvokePaintCallback(PaintStage stage, bool isAfter, CPaintRenderContext& ctx)
+	{
+		if (!m_pPaintCallbacks) {
+			return;
+		}
+		if (stage < 0 || stage >= PaintStageCount) {
+			return;
+		}
+		const PaintCallback& cb = isAfter ? m_pPaintCallbacks->afterCb[stage]
+			: m_pPaintCallbacks->beforeCb[stage];
+		if (cb) {
+			cb(this, ctx);
+		}
+	}
+
 	void CControlUI::PaintBkColor(CPaintRenderContext& renderContext)
 	{
+		_InvokePaintCallback(PaintStageBkColor, false, renderContext);
+		PaintAfterScope _afterGuard(this, PaintStageBkColor, renderContext);
 		SIZE cxyBorderRound = GetBorderRound();
 		if (IsEnabled() == false)
 		{
@@ -2132,33 +2191,45 @@ namespace FYUI
 
 	void CControlUI::PaintBkImage(CPaintRenderContext& renderContext)
 	{
+		_InvokePaintCallback(PaintStageBkImage, false, renderContext);
+		PaintAfterScope _afterGuard(this, PaintStageBkImage, renderContext);
 		if( m_sBkImage.empty() ) return;
 		if( !DrawImage(renderContext, m_sBkImage) ) {}
 	}
 
 	void CControlUI::PaintStatusImage(CPaintRenderContext& renderContext)
 	{
+		_InvokePaintCallback(PaintStageStatusImage, false, renderContext);
+		PaintAfterScope _afterGuard(this, PaintStageStatusImage, renderContext);
 		return;
 	}
 
 	void CControlUI::PaintForeColor(CPaintRenderContext& renderContext)
 	{
+		_InvokePaintCallback(PaintStageForeColor, false, renderContext);
+		PaintAfterScope _afterGuard(this, PaintStageForeColor, renderContext);
 		CRenderEngine::DrawColor(renderContext, m_rcItem, GetAdjustColor(m_dwForeColor));
 	}
 
 	void CControlUI::PaintForeImage(CPaintRenderContext& renderContext)
 	{
+		_InvokePaintCallback(PaintStageForeImage, false, renderContext);
+		PaintAfterScope _afterGuard(this, PaintStageForeImage, renderContext);
 		if( m_sForeImage.empty() ) return;
 		DrawImage(renderContext, m_sForeImage);
 	}
 
 	void CControlUI::PaintText(CPaintRenderContext& renderContext)
 	{
+		_InvokePaintCallback(PaintStageText, false, renderContext);
+		PaintAfterScope _afterGuard(this, PaintStageText, renderContext);
 		return;
 	}
 
 	void CControlUI::PaintBorder(CPaintRenderContext& renderContext)
 	{
+		_InvokePaintCallback(PaintStageBorder, false, renderContext);
+		PaintAfterScope _afterGuard(this, PaintStageBorder, renderContext);
 		int nBorderSize = GetBorderSize();
 		SIZE cxyBorderRound = GetBorderRound();
 		RECT rcBorderSize = GetBorderRectSize();

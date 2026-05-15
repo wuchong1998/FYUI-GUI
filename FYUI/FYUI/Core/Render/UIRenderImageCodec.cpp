@@ -87,13 +87,8 @@ namespace FYUI
 			}
 		}
 
-		bool CreateBitmapFromPremultipliedBgraBufferInternal(
-			const uint8_t* pBuffer,
-			int width,
-			int height,
-			DWORD mask,
-			HBITMAP& hBitmap,
-			bool& bAlphaChannel)
+		bool CreateBitmapFromPremultipliedBgraBufferInternal(const uint8_t* pBuffer,int width,int height,
+			DWORD mask, HBITMAP& hBitmap, bool& bAlphaChannel)
 		{
 			hBitmap = nullptr;
 			bAlphaChannel = false;
@@ -113,11 +108,7 @@ namespace FYUI
 			return true;
 		}
 
-		TImageInfo* CreateWebpImageInfoFromDecodedBitmapInternal(
-			HBITMAP hBitmap,
-			int width,
-			int height,
-			bool bAlphaChannel)
+		TImageInfo* CreateWebpImageInfoFromDecodedBitmapInternal(HBITMAP hBitmap,int width,int height,bool bAlphaChannel)
 		{
 			if (hBitmap == nullptr || width <= 0 || height <= 0) {
 				return nullptr;
@@ -144,64 +135,95 @@ namespace FYUI
 				return NULL;
 			}
 
-			LPBYTE pImage = nullptr;
-			int nImageWidth = 1;
-			int nImageHeight = 1;
-			int n = 0;
-			pImage = stbi_load_from_memory(pData, static_cast<int>(dwSize), &nImageWidth, &nImageHeight, &n, 4);
-
+			// 解码优先级：
+			// 1. WIC：覆盖 PNG/JPEG/BMP/TIFF/ICO/HEIF/GIF 单帧等系统 codec 支持的格式，直出预乘 BGRA，避免一次像素拷贝
+			// 2. SVG：由 SDK 插件提供（保留原逻辑）
+			// 3. stb_image：兜底处理 WIC 不识别的格式（PSD/PIC/HDR/TGA/PGM 等）
+			// 4. WebP 静态图：兜底兼容老版本 WIC 不带 WebP codec 的系统
+			int nImageWidth = 0;
+			int nImageHeight = 0;
 			bool bAlphaChannel = false;
 			HBITMAP hBitmap = nullptr;
-			bool bSvg = false;
-			TImageInfo* data = new TImageInfo;
 
-			if (pImage == nullptr)
-			{
+			// 1) WIC
+			if (DecodeStillBitmapWithWicInternal(pData, dwSize, mask, hBitmap, nImageWidth, nImageHeight, bAlphaChannel)
+				&& hBitmap != nullptr) {
+				TImageInfo* data = new TImageInfo;
+				data->pBits = NULL;
+				data->pSrcBits = NULL;
+				data->hBitmap = hBitmap;
+				data->nX = nImageWidth;
+				data->nY = nImageHeight;
+				data->nDestWidth = nImageWidth;
+				data->nDestHeight = nImageHeight;
+				data->bAlpha = bAlphaChannel;
+				return data;
+			}
+
+			// 2) SVG
 #ifdef SVG
+			{
 				GetSvgHandleFunc GetSvgHandle = (GetSvgHandleFunc)g_SDK->GetFunction("GetSvgHandle");
 				if (GetSvgHandle != nullptr) {
-					void* pHandle = GetSvgHandle(const_cast<BYTE*>(pData), dwSize, nScale, nImageWidth, nImageHeight, bAlphaChannel, hBitmap);
-					if (pHandle != nullptr)
-					{
+					int svgWidth = 0;
+					int svgHeight = 0;
+					bool svgAlpha = false;
+					HBITMAP svgBitmap = nullptr;
+					void* pHandle = GetSvgHandle(const_cast<BYTE*>(pData), dwSize, nScale, svgWidth, svgHeight, svgAlpha, svgBitmap);
+					if (pHandle != nullptr) {
+						TImageInfo* data = new TImageInfo;
 						data->pHandle = pHandle;
-						data->nOriWidth = nImageWidth;
-						data->nOriHeight = nImageHeight;
+						data->nOriWidth = svgWidth;
+						data->nOriHeight = svgHeight;
 						data->fPresent = nScale * 1.0f / 100.0f;
-						bSvg = true;
+						data->pBits = NULL;
+						data->pSrcBits = NULL;
+						data->hBitmap = svgBitmap;
+						data->nX = svgWidth;
+						data->nY = svgHeight;
+						data->nDestWidth = svgWidth;
+						data->nDestHeight = svgHeight;
+						data->bAlpha = svgAlpha;
+						return data;
 					}
 				}
+			}
 #endif
-			}
 
-			if ((!pImage) && (!bSvg))
+			// 3) stb_image fallback：仅当前面均无法识别时才进入
 			{
-				delete data;
-				return LoadWebpStillImageInfoFromMemoryInternal(pData, dwSize, nScale, mask);
-			}
+				int stbW = 1;
+				int stbH = 1;
+				int n = 0;
+				LPBYTE pImage = stbi_load_from_memory(pData, static_cast<int>(dwSize), &stbW, &stbH, &n, 4);
+				if (pImage != nullptr) {
+					BYTE* pDibBits = NULL;
+					HBITMAP stbBitmap = CreateTopDownImageCodecDibInternal(stbW, stbH, &pDibBits);
+					if (stbBitmap == nullptr) {
+						stbi_image_free(pImage);
+						return NULL;
+					}
 
-			if (bSvg == false)
-			{
-				BYTE* pDibBits = NULL;
-				hBitmap = CreateTopDownImageCodecDibInternal(nImageWidth, nImageHeight, &pDibBits);
-				if (!hBitmap) {
+					bool stbAlpha = false;
+					CopyStbImageToPremultipliedBgraDibInternal(pImage, stbW, stbH, mask, pDibBits, stbAlpha);
 					stbi_image_free(pImage);
-					delete data;
-					return NULL;
-				}
 
-				CopyStbImageToPremultipliedBgraDibInternal(pImage, nImageWidth, nImageHeight, mask, pDibBits, bAlphaChannel);
-				stbi_image_free(pImage);
+					TImageInfo* data = new TImageInfo;
+					data->pBits = NULL;
+					data->pSrcBits = NULL;
+					data->hBitmap = stbBitmap;
+					data->nX = stbW;
+					data->nY = stbH;
+					data->nDestWidth = stbW;
+					data->nDestHeight = stbH;
+					data->bAlpha = stbAlpha;
+					return data;
+				}
 			}
 
-			data->pBits = NULL;
-			data->pSrcBits = NULL;
-			data->hBitmap = hBitmap;
-			data->nX = nImageWidth;
-			data->nY = nImageHeight;
-			data->nDestWidth = nImageWidth;
-			data->nDestHeight = nImageHeight;
-			data->bAlpha = bAlphaChannel;
-			return data;
+			// 4) WebP 静态图
+			(void)nScale;
+			return LoadWebpStillImageInfoFromMemoryInternal(pData, dwSize, nScale, mask);
 		}
 	}
 
@@ -254,11 +276,7 @@ namespace FYUI
 		return CreateWebpImageInfoFromDecodedBitmapInternal(hBitmap, features.width, features.height, bAlphaChannel);
 	}
 
-	bool DecodeWebpAnimationFromMemoryInternal(
-		const void* pData,
-		DWORD dwSize,
-		DWORD mask,
-		std::vector<WebpAnimationFrameBitmapInternal>& frames,
+	bool DecodeWebpAnimationFromMemoryInternal(const void* pData,DWORD dwSize,DWORD mask,std::vector<WebpAnimationFrameBitmapInternal>& frames,
 		SIZE& canvasSize)
 	{
 		frames.clear();

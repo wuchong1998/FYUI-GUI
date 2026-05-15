@@ -497,6 +497,9 @@
     <ClCompile Include="Core\Render\UIRenderImageGif.cpp">
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderImageStill.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Render\UIRenderImageD2DInternal.cpp">
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>

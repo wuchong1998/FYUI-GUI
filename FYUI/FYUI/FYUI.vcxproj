@@ -276,6 +276,7 @@
     <ClCompile Include="Core\Render\UIRenderImageLegacy.cpp" />
     <ClCompile Include="Core\Render\UIRenderImageRuntime.cpp" />
     <ClCompile Include="Core\Render\UIRenderImageScale.cpp" />
+    <ClCompile Include="Core\Render\UIRenderImageStill.cpp" />
     <ClCompile Include="Core\Render\UIRenderImageSpec.cpp" />
     <ClCompile Include="Core\Render\UIRenderSurface.cpp" />
     <ClCompile Include="Core\Render\UIRenderTextSharedInternal.cpp" />

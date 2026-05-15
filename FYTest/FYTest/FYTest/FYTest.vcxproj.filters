@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="源文件">
@@ -12,6 +12,9 @@
     <Filter Include="资源文件">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="CustomPaint">
+      <UniqueIdentifier>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -33,6 +36,24 @@
     <ClInclude Include="MainDemoWindow.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CustomPaint\BasicShapesUI.h">
+      <Filter>CustomPaint</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomPaint\PolygonShapesUI.h">
+      <Filter>CustomPaint</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomPaint\ArrowBubbleUI.h">
+      <Filter>CustomPaint</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomPaint\CurveWaveUI.h">
+      <Filter>CustomPaint</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomPaint\PieGaugeUI.h">
+      <Filter>CustomPaint</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomPaint\MemoryImageUI.h">
+      <Filter>CustomPaint</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FYTest.cpp">
@@ -43,6 +64,24 @@
     </ClCompile>
     <ClCompile Include="MainDemoWindow.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomPaint\BasicShapesUI.cpp">
+      <Filter>CustomPaint</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomPaint\PolygonShapesUI.cpp">
+      <Filter>CustomPaint</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomPaint\ArrowBubbleUI.cpp">
+      <Filter>CustomPaint</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomPaint\CurveWaveUI.cpp">
+      <Filter>CustomPaint</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomPaint\PieGaugeUI.cpp">
+      <Filter>CustomPaint</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomPaint\MemoryImageUI.cpp">
+      <Filter>CustomPaint</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

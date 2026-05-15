@@ -560,6 +560,17 @@ namespace FYUI {
 		 * @param dwFillColor [in] 填充颜色
 		 */
 		static void FillPolygon(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, DWORD dwFillColor);
+		/**
+		 * @brief 填充扇形（饼图区域）
+		 * @details 按椭圆外接矩形与角度范围填充扇形区域，适合绘制饼图、仪表盘扇区等场景。
+		 * 角度以右侧水平方向为 0 度，正值按顺时针方向增长。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param rc [in] 扇形所在椭圆的外接矩形
+		 * @param fStartAngle [in] 起始角度，单位为度
+		 * @param fSweepAngle [in] 扫过角度，单位为度，正值顺时针，负值逆时针
+		 * @param dwFillColor [in] 填充颜色
+		 */
+		static void FillPie(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle, DWORD dwFillColor);
 
 		// ----------------------------------------------------------------
 		// (6) 文本绘制与度量

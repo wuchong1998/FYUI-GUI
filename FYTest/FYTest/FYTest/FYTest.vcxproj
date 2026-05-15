@@ -166,11 +166,23 @@
     <ClInclude Include="MainDemoWindow.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="CustomPaint\BasicShapesUI.h" />
+    <ClInclude Include="CustomPaint\PolygonShapesUI.h" />
+    <ClInclude Include="CustomPaint\ArrowBubbleUI.h" />
+    <ClInclude Include="CustomPaint\CurveWaveUI.h" />
+    <ClInclude Include="CustomPaint\PieGaugeUI.h" />
+    <ClInclude Include="CustomPaint\MemoryImageUI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DemoPopupWindow.cpp" />
     <ClCompile Include="FYTest.cpp" />
     <ClCompile Include="MainDemoWindow.cpp" />
+    <ClCompile Include="CustomPaint\BasicShapesUI.cpp" />
+    <ClCompile Include="CustomPaint\PolygonShapesUI.cpp" />
+    <ClCompile Include="CustomPaint\ArrowBubbleUI.cpp" />
+    <ClCompile Include="CustomPaint\CurveWaveUI.cpp" />
+    <ClCompile Include="CustomPaint\PieGaugeUI.cpp" />
+    <ClCompile Include="CustomPaint\MemoryImageUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FYTest.rc" />

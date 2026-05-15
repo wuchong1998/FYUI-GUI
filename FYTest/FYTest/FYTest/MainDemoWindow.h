@@ -20,6 +20,7 @@ namespace FYTestApp
         void OnClick(TNotifyUI& msg) override;
         LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) override;
         LRESULT HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) override;
+        CControlUI* CreateControl(std::wstring_view pstrClass) override;
 
     private:
         void SetupVirtualListDemo();

@@ -8,6 +8,12 @@
 #include <string>
 
 #include "DemoPopupWindow.h"
+#include "CustomPaint/BasicShapesUI.h"
+#include "CustomPaint/PolygonShapesUI.h"
+#include "CustomPaint/ArrowBubbleUI.h"
+#include "CustomPaint/CurveWaveUI.h"
+#include "CustomPaint/PieGaugeUI.h"
+#include "CustomPaint/MemoryImageUI.h"
 
 namespace
 {
@@ -686,5 +692,15 @@ namespace FYTestApp
 
         last_fps_ui_update_time_ = now;
         UpdateFpsMeter();
+    }
+    CControlUI* MainDemoWindow::CreateControl(std::wstring_view pstrClass)
+    {
+        if (pstrClass == L"BasicShapes")   return new CBasicShapesUI();
+        if (pstrClass == L"PolygonShapes") return new CPolygonShapesUI();
+        if (pstrClass == L"ArrowBubble")   return new CArrowBubbleUI();
+        if (pstrClass == L"CurveWave")     return new CCurveWaveUI();
+        if (pstrClass == L"PieGauge")      return new CPieGaugeUI();
+        if (pstrClass == L"MemoryImage")   return new CMemoryImageUI();
+        return WindowImplBase::CreateControl(pstrClass);
     }
 }

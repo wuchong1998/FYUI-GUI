@@ -3631,6 +3631,67 @@ namespace FYUI
 		DrawPolylineInternal(renderContext, pPoints, nCount, 0, dwFillColor, PS_SOLID, true, true);
 	}
 
+	void CRenderEngine::FillPie(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle, DWORD dwFillColor)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectValid(rc) || std::fabs(fSweepAngle) <= 0.01f) {
+			return;
+		}
+
+		D2DDrawScope drawScope(renderContext, rc);
+		if (!drawScope) {
+			return;
+		}
+
+		ComPtr<ID2D1SolidColorBrush> brush;
+		if (!CreateFillBrushInternal(drawScope.Get(), dwFillColor, brush)) {
+			return;
+		}
+
+		// 满圆退化为填充椭圆
+		if (std::fabs(fSweepAngle) >= 360.0f) {
+			drawScope.Get()->FillEllipse(
+				D2D1::Ellipse(
+					D2D1::Point2F((rc.left + rc.right) * 0.5f, (rc.top + rc.bottom) * 0.5f),
+					static_cast<float>(rc.right - rc.left) * 0.5f,
+					static_cast<float>(rc.bottom - rc.top) * 0.5f),
+				brush.Get());
+			return;
+		}
+
+		ComPtr<ID2D1PathGeometry> geometry;
+		ComPtr<ID2D1GeometrySink> sink;
+		if (!CreatePathGeometryInternal(geometry, sink)) {
+			return;
+		}
+
+		constexpr float kPi = 3.14159265358979323846f;
+		const float radiusX = static_cast<float>(rc.right - rc.left) * 0.5f;
+		const float radiusY = static_cast<float>(rc.bottom - rc.top) * 0.5f;
+		const float centerX = (rc.left + rc.right) * 0.5f;
+		const float centerY = (rc.top + rc.bottom) * 0.5f;
+		const float startRadians = fStartAngle * kPi / 180.0f;
+		const float endRadians = (fStartAngle + fSweepAngle) * kPi / 180.0f;
+		const D2D1_POINT_2F center = D2D1::Point2F(centerX, centerY);
+		const D2D1_POINT_2F startPoint = D2D1::Point2F(centerX + std::cos(startRadians) * radiusX, centerY + std::sin(startRadians) * radiusY);
+		const D2D1_POINT_2F endPoint = D2D1::Point2F(centerX + std::cos(endRadians) * radiusX, centerY + std::sin(endRadians) * radiusY);
+
+		// 扇形路径：中心 → 起始弧点 → 弧 → 终止弧点 → 闭合回中心
+		sink->BeginFigure(center, D2D1_FIGURE_BEGIN_FILLED);
+		sink->AddLine(startPoint);
+		sink->AddArc(D2D1::ArcSegment(
+			endPoint,
+			D2D1::SizeF(radiusX, radiusY),
+			0.0f,
+			fSweepAngle >= 0.0f ? D2D1_SWEEP_DIRECTION_CLOCKWISE : D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE,
+			std::fabs(fSweepAngle) > 180.0f ? D2D1_ARC_SIZE_LARGE : D2D1_ARC_SIZE_SMALL));
+		sink->EndFigure(D2D1_FIGURE_END_CLOSED);
+		if (FAILED(sink->Close())) {
+			return;
+		}
+
+		drawScope.Get()->FillGeometry(geometry.Get(), brush.Get());
+	}
+
 	void CRenderEngine::DrawArc(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle, int nSize, DWORD dwPenColor, int nStyle)
 	{
 		DrawArcInternal(renderContext, rc, fStartAngle, fSweepAngle, nSize, dwPenColor, nStyle);

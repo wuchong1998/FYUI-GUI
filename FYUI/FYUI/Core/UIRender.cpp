@@ -2733,6 +2733,122 @@ namespace FYUI
 		return true;
 	}
 
+	bool TryDrawBitmapRotateAroundWithDirect2DInternal(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rcDest, const RECT& rcPaint, const RECT& rcSource, bool useAlpha, UINT uFade, float fAngle, POINT ptRotateCenter, const RECT& rcClip)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext) || hBitmap == nullptr || !IsRectValid(rcDest) || !IsRectValid(rcSource)) {
+			return false;
+		}
+
+		// 计算绕指定中心旋转后的轴对齐外包，再与 rcClip 取交集，作为绑定区估算
+		RECT rcRotatedBounds = rcDest;
+		const float normalizedAngle = std::fmod(fAngle, 360.0f);
+		if (std::fabs(normalizedAngle) >= 0.001f) {
+			const float radians = normalizedAngle * 3.14159265358979323846f / 180.0f;
+			const float cosTheta = std::cos(radians);
+			const float sinTheta = std::sin(radians);
+			const float cx = static_cast<float>(ptRotateCenter.x);
+			const float cy = static_cast<float>(ptRotateCenter.y);
+			const float corners[4][2] = {
+				{ static_cast<float>(rcDest.left),  static_cast<float>(rcDest.top) },
+				{ static_cast<float>(rcDest.right), static_cast<float>(rcDest.top) },
+				{ static_cast<float>(rcDest.left),  static_cast<float>(rcDest.bottom) },
+				{ static_cast<float>(rcDest.right), static_cast<float>(rcDest.bottom) }
+			};
+			float minX = 0.0f, minY = 0.0f, maxX = 0.0f, maxY = 0.0f;
+			for (int i = 0; i < 4; ++i) {
+				const float ox = corners[i][0] - cx;
+				const float oy = corners[i][1] - cy;
+				const float rx = cx + ox * cosTheta - oy * sinTheta;
+				const float ry = cy + ox * sinTheta + oy * cosTheta;
+				if (i == 0) { minX = maxX = rx; minY = maxY = ry; }
+				else {
+					minX = (std::min)(minX, rx);
+					minY = (std::min)(minY, ry);
+					maxX = (std::max)(maxX, rx);
+					maxY = (std::max)(maxY, ry);
+				}
+			}
+			rcRotatedBounds.left = static_cast<LONG>(std::floor(minX));
+			rcRotatedBounds.top = static_cast<LONG>(std::floor(minY));
+			rcRotatedBounds.right = static_cast<LONG>(std::ceil(maxX));
+			rcRotatedBounds.bottom = static_cast<LONG>(std::ceil(maxY));
+		}
+
+		RECT rcEffectiveBounds = rcRotatedBounds;
+		if (IsRectValid(rcClip)) {
+			rcEffectiveBounds.left = (std::max)(rcEffectiveBounds.left, rcClip.left);
+			rcEffectiveBounds.top = (std::max)(rcEffectiveBounds.top, rcClip.top);
+			rcEffectiveBounds.right = (std::min)(rcEffectiveBounds.right, rcClip.right);
+			rcEffectiveBounds.bottom = (std::min)(rcEffectiveBounds.bottom, rcClip.bottom);
+			if (!IsRectValid(rcEffectiveBounds)) {
+				return true;
+			}
+		}
+
+		if (IsRectValid(rcPaint) && !HasVisibleIntersection(rcPaint, rcEffectiveBounds)) {
+			return true;
+		}
+
+		const RECT rcBind = IsRectValid(rcPaint) ? rcPaint : rcEffectiveBounds;
+		D2DDrawScope drawScope(renderContext, rcBind);
+		if (!drawScope) {
+			return false;
+		}
+
+		ComPtr<ID2D1Bitmap> bitmap;
+		if (FAILED(GetCachedD2DBitmapFromHBITMAP(drawScope.Get(), hBitmap, useAlpha, bitmap.GetAddressOf()))) {
+			return false;
+		}
+
+		const float opacity = static_cast<float>(uFade) / 255.0f;
+		const D2D1_MATRIX_3X2_F bindTransform = GetD2DRenderState().dcBindTransform;
+
+		// 依次：rcPaint 剪裁 → 用户 rcClip 剪裁 → 旋转变换 → DrawBitmap → 还原
+		bool pushedPaintClip = false;
+		bool pushedUserClip = false;
+		if (IsRectValid(rcPaint)) {
+			drawScope.Get()->PushAxisAlignedClip(ToD2DRectF(rcPaint), D2D1_ANTIALIAS_MODE_ALIASED);
+			pushedPaintClip = true;
+		}
+		if (IsRectValid(rcClip)) {
+			drawScope.Get()->PushAxisAlignedClip(ToD2DRectF(rcClip), D2D1_ANTIALIAS_MODE_ALIASED);
+			pushedUserClip = true;
+		}
+
+		const float destWidth = static_cast<float>(rcDest.right - rcDest.left);
+		const float destHeight = static_cast<float>(rcDest.bottom - rcDest.top);
+		const float sourceWidth = static_cast<float>(rcSource.right - rcSource.left);
+		const float sourceHeight = static_cast<float>(rcSource.bottom - rcSource.top);
+		const bool isIntegerScaled =
+			std::fabs(destWidth - sourceWidth) < 0.001f &&
+			std::fabs(destHeight - sourceHeight) < 0.001f;
+
+		if (std::fabs(normalizedAngle) >= 0.001f) {
+			const D2D1_POINT_2F rotationCenter = D2D1::Point2F(
+				static_cast<float>(ptRotateCenter.x),
+				static_cast<float>(ptRotateCenter.y));
+			drawScope.Get()->SetTransform(
+				D2D1::Matrix3x2F::Rotation(fAngle, rotationCenter) * bindTransform);
+		}
+
+		const D2D1_RECT_F sourceRect = ToD2DRectF(rcSource);
+		drawScope.Get()->DrawBitmap(
+			bitmap.Get(),
+			ToD2DRectF(rcDest),
+			opacity,
+			isIntegerScaled ? D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR : D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
+			&sourceRect);
+
+		drawScope.Get()->SetTransform(bindTransform);
+		if (pushedUserClip) {
+			drawScope.Get()->PopAxisAlignedClip();
+		}
+		if (pushedPaintClip) {
+			drawScope.Get()->PopAxisAlignedClip();
+		}
+		return true;
+	}
+
 	bool TryDrawImageWithDirect2DInternal(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, const RECT& rcPaint, const RECT& rcBmpPart, const RECT& rcCorners, bool bAlpha, UINT uFade, bool hole, bool xtiled, bool ytiled)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || hBitmap == nullptr) {

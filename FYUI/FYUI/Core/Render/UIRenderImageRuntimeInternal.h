@@ -25,6 +25,15 @@ namespace FYUI
 	 */
 	bool TryDrawBitmapRectWithDirect2DInternal(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rcDest, const RECT& rcPaint, const RECT& rcSource, bool useAlpha, UINT uFade, UINT uRotate);
 	/**
+	 * @brief 执行 TryDrawBitmapRotateAroundWithDirect2DInternal 操作
+	 * @details 与 TryDrawBitmapRectWithDirect2DInternal 类似，区别在于：
+	 *          1) 旋转角度为浮点（顺时针为正，单位：度）；
+	 *          2) 旋转中心由 ptRotateCenter 指定（绝对坐标，与 rcDest 同坐标系）；
+	 *          3) 当 rcClip 有效时，对绘制结果进行轴对齐剪裁。
+	 * @return bool 操作成功返回 true，否则返回 false
+	 */
+	bool TryDrawBitmapRotateAroundWithDirect2DInternal(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rcDest, const RECT& rcPaint, const RECT& rcSource, bool useAlpha, UINT uFade, float fAngle, POINT ptRotateCenter, const RECT& rcClip);
+	/**
 	 * @brief 执行 TryDrawImageWithDirect2DInternal 操作
 	 * @details 用于执行 TryDrawImageWithDirect2DInternal 操作。具体行为由当前对象状态以及传入参数共同决定。
 	 * @param renderContext [in,out] 绘制上下文

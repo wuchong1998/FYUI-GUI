@@ -71,6 +71,8 @@ d2drendermode="hardware" renderdiagnostics="false" >
                         <Button name="progress_step" text="点击响应右侧滚动条进度" style="ActionButton" width="260" />
 						
 						<Button name="" text="上侧右侧边框" bordercolor="0xFFC8D5E2" bordersize="0,1,1" width="260" height="30" borderround="8,8" padding="0,0,0,20" />
+						
+						<Button name="" bkimage="0.svg" width="150" height="50" padding="0,0,0,20" />
 						 
                     </VBox>
 

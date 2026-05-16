@@ -1,0 +1,11 @@
+prefix=${pcfiledir}/../..
+includedir=${prefix}/include
+libdir=${prefix}/lib
+
+Name: cairo-win32
+Description: Microsoft Windows surface backend for cairo graphics library
+Version: 1.18.4
+
+Libs: -lgdi32 -lmsimg32
+Requires: cairo
+Cflags: "-I${includedir}"

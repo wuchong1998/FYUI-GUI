@@ -139,4 +139,12 @@ namespace FYUI
 	{
 		DrawRotateImageInternal(renderContext, hBitmap, rc, renderContext.GetPaintRect(), rcBmpPart, bAlpha, uFade, uRotate);
 	}
+
+	void CRenderEngine::DrawRotateImageEx(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, const RECT& rcBmpPart, bool bAlpha, UINT uFade, float fAngle, POINT ptRotateCenter, const RECT& rcClip)
+	{
+		if (hBitmap == NULL) {
+			return;
+		}
+		TryDrawBitmapRotateAroundWithDirect2DInternal(renderContext, hBitmap, rc, renderContext.GetPaintRect(), rcBmpPart, bAlpha, uFade, fAngle, ptRotateCenter, rcClip);
+	}
 }

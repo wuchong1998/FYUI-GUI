@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../pdfium/depot_tools/pdfium"
+		}
+	],
+	"settings": {}
+}

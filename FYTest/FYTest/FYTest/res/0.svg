@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="150px" height="50px" viewBox="0 0 150 50" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>上传到云盘1</title>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="0820-00PDF所用按钮三态表现" transform="translate(-399, -727)">
+            <g id="上传到云盘1" transform="translate(399, 727)">
+                <rect id="上传到云盘正常" fill="#E3E5FF" x="0" y="0" width="150" height="50" rx="8"></rect>
+                <rect id="矩形备份-3" fill="#471BFF" x="21" y="16" width="18" height="18" rx="4"></rect>
+                <polyline id="路径" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="translate(30, 22.125) rotate(-180) translate(-30, -22.125)" points="34.25 20 30 24.25 25.75 20"></polyline>
+                <rect id="矩形" fill="#FFFFFF" x="29" y="21" width="2" height="9" rx="1"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

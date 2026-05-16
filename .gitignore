@@ -74,3 +74,7 @@ Testing/
 /FYTest/FYTest/FYTest/FYTest/x64
 x64
 /FYTest/FYTest/x64/Debug
+/FYTest/FYTest/bin/svg.exp
+/FYTest/FYTest/bin/svg.lib
+/FYTest/FYTest/bin/svg.pdb
+/FYTest/FYTest/bin/FYTest.pdb

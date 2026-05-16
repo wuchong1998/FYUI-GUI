@@ -377,6 +377,25 @@ namespace FYUI {
 		static void DrawRotateImage(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc,
 										const RECT& rcBmpPart, bool bAlpha, UINT uFade = 255, UINT uRotate = 0);
 		/**
+		 * @brief 绘制Rotate图像（任意旋转中心 + 浮点角度 + 可选剪裁）
+		 * @details 与 DrawRotateImage 不同，本接口允许调用方指定旋转中心（绝对坐标，
+		 *          与 rc 同坐标系）以及浮点角度，并支持一个屏幕坐标的剪裁矩形。
+		 *          当 rcClip 为 0 矩形时，不应用剪裁。该接口用于复刻 GDI+
+		 *          "RotateTransform 后再 AlphaBlend 到偏移位置" 的旋转语义。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param hBitmap       [in] HBITMAP
+		 * @param rc            [in] 目标矩形（不包含旋转外扩）
+		 * @param rcBmpPart     [in] 源位图采样矩形
+		 * @param bAlpha        [in] 是否使用 Alpha
+		 * @param uFade         [in] Fade，0~255
+		 * @param fAngle        [in] 旋转角度（度），D2D 顺时针为正
+		 * @param ptRotateCenter[in] 旋转中心（绝对坐标，与 rc 同坐标系）
+		 * @param rcClip        [in] 屏幕坐标剪裁矩形；为空则不剪裁
+		 */
+		static void DrawRotateImageEx(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc,
+										const RECT& rcBmpPart, bool bAlpha, UINT uFade,
+										float fAngle, POINT ptRotateCenter, const RECT& rcClip);
+		/**
 		 * @brief 绘制图像信息
 		 * @details 用于绘制图像信息。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param renderContext [in,out] 绘制上下文

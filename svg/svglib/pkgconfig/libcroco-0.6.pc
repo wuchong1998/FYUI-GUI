@@ -1,0 +1,13 @@
+prefix=${pcfiledir}/../..
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libcroco
+Version: 0.6.13
+Description: a CSS2 Parsing and manipulation Library in C.
+
+
+Libs: "-L${libdir}" -lcroco-0.6
+Requires: glib-2.0 libxml-2.0
+Cflags: "-I${includedir}/libcroco-0.6"

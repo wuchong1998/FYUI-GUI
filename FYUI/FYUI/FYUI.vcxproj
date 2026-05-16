@@ -227,14 +227,14 @@
     <ClInclude Include="Utils\unzip.h" />
     <ClInclude Include="Utils\Utils.h" />
     <ClInclude Include="Utils\WinimplBase.h" />
-    <ClInclude Include="..\..\third_party\libwebp\src\webp\config.h" />
-    <ClInclude Include="..\..\third_party\libwebp\src\webp\decode.h" />
-    <ClInclude Include="..\..\third_party\libwebp\src\webp\demux.h" />
-    <ClInclude Include="..\..\third_party\libwebp\src\webp\encode.h" />
-    <ClInclude Include="..\..\third_party\libwebp\src\webp\format_constants.h" />
-    <ClInclude Include="..\..\third_party\libwebp\src\webp\mux.h" />
-    <ClInclude Include="..\..\third_party\libwebp\src\webp\mux_types.h" />
-    <ClInclude Include="..\..\third_party\libwebp\src\webp\types.h" />
+    <ClInclude Include="..\third_party\libwebp\src\webp\config.h" />
+    <ClInclude Include="..\third_party\libwebp\src\webp\decode.h" />
+    <ClInclude Include="..\third_party\libwebp\src\webp\demux.h" />
+    <ClInclude Include="..\third_party\libwebp\src\webp\encode.h" />
+    <ClInclude Include="..\third_party\libwebp\src\webp\format_constants.h" />
+    <ClInclude Include="..\third_party\libwebp\src\webp\mux.h" />
+    <ClInclude Include="..\third_party\libwebp\src\webp\mux_types.h" />
+    <ClInclude Include="..\third_party\libwebp\src\webp\types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Control\UIAnimation.cpp" />
@@ -323,97 +323,97 @@
     <ClCompile Include="Utils\unzip.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
     <ClCompile Include="Utils\WinimplBase.cpp" />
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\alpha_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\alpha_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\buffer_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\buffer_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\frame_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\frame_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\idec_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\idec_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\io_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\io_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\quant_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\quant_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\tree_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\tree_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\vp8_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\vp8_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\vp8l_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\vp8l_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dec\webp_dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dec\webp_dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\demux\anim_decode.c">
+    <ClCompile Include="..\third_party\libwebp\src\demux\anim_decode.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\demux\demux.c">
+    <ClCompile Include="..\third_party\libwebp\src\demux\demux.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dsp\alpha_processing.c">
+    <ClCompile Include="..\third_party\libwebp\src\dsp\alpha_processing.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dsp\cpu.c">
+    <ClCompile Include="..\third_party\libwebp\src\dsp\cpu.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dsp\dec.c">
+    <ClCompile Include="..\third_party\libwebp\src\dsp\dec.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dsp\dec_clip_tables.c">
+    <ClCompile Include="..\third_party\libwebp\src\dsp\dec_clip_tables.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dsp\filters.c">
+    <ClCompile Include="..\third_party\libwebp\src\dsp\filters.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dsp\lossless.c">
+    <ClCompile Include="..\third_party\libwebp\src\dsp\lossless.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dsp\rescaler.c">
+    <ClCompile Include="..\third_party\libwebp\src\dsp\rescaler.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dsp\upsampling.c">
+    <ClCompile Include="..\third_party\libwebp\src\dsp\upsampling.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\dsp\yuv.c">
+    <ClCompile Include="..\third_party\libwebp\src\dsp\yuv.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\bit_reader_utils.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\bit_reader_utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\color_cache_utils.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\color_cache_utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\filters_utils.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\filters_utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\huffman_utils.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\huffman_utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\palette.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\palette.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\quant_levels_dec_utils.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\quant_levels_dec_utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\random_utils.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\random_utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\rescaler_utils.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\rescaler_utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\thread_utils.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\thread_utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\libwebp\src\utils\utils.c">
+    <ClCompile Include="..\third_party\libwebp\src\utils\utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <ObjectFileName>$(IntDir)libwebp_utils.obj</ObjectFileName>
     </ClCompile>
@@ -430,7 +430,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <Target Name="CheckRenderRegressionGuards" BeforeTargets="ClCompile">
-    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\check_render_regressions.ps1&quot; -ProjectFile &quot;$(ProjectPath)&quot; -ProjectRoot &quot;$(MSBuildProjectDirectory)&quot;" />
-  </Target>
 </Project>

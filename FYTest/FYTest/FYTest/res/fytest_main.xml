@@ -73,6 +73,9 @@ d2drendermode="hardware" renderdiagnostics="false" >
 						<Button name="" text="上侧右侧边框" bordercolor="0xFFC8D5E2" bordersize="0,1,1" width="260" height="30" borderround="8,8" padding="0,0,0,20" />
 						
 						<Button name="" bkimage="0.svg" width="150" height="50" padding="0,0,0,20" />
+						
+						<Button name="" borderround="8,8" style="ActionButton" width="150" height="50" padding="20,0,0,20" 
+						shadow="true"  shadow_width="10" shadow_color="0x55999999" />
 						 
                     </VBox>
 

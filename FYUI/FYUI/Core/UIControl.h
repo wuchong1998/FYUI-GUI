@@ -423,6 +423,12 @@ namespace FYUI
 		 * @param bColorHSL [in] 是否颜色HSL 颜色
 		 */
 		void SetColorHSL(bool bColorHSL);
+		bool IsShadow() const;
+		void SetShadow(bool bShadow);
+		int GetShadowWidth() const;
+		void SetShadowWidth(int nShadowWidth);
+		DWORD GetShadowColor() const;
+		void SetShadowColor(DWORD dwShadowColor);
 		/**
 		 * @brief 获取边框圆角
 		 * @details 用于获取边框圆角。具体行为由当前对象状态以及传入参数共同决定。
@@ -1457,6 +1463,9 @@ namespace FYUI
 		DWORD m_dwDisabledBorderColor;
 		DWORD m_dwFocusBkColor;
 		bool m_bColorHSL;
+		bool m_bShadow;
+		int m_nShadowWidth;
+		DWORD m_dwShadowColor;
 		int m_nBorderSize;
 		int m_nBorderStyle;
 		int m_nTooltipWidth;

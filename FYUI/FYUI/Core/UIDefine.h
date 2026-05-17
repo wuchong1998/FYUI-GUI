@@ -1,5 +1,8 @@
 #pragma once
 
+#include <windows.h>
+#include <string>
+
 namespace FYUI
 {
 #define MAX_FONT_ID		30000
@@ -146,6 +149,20 @@ namespace FYUI
 		 * @param pfn_Notify_vn [in] pfn通知vn参数
 		 */
 		void (CNotifyPump::*pfn_Notify_vn)(TNotifyUI&);
+	};
+
+	struct RectF
+	{
+		float left;
+		float top;
+		float right;
+		float bottom;
+	};
+
+	struct PointF
+	{
+		float x;
+		float y;
 	};
 
 	

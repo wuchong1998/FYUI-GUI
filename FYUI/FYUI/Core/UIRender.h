@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "UIDefine.h"
 #include "Render/UIRenderContext.h"
 
 namespace FYUI {
@@ -430,6 +431,7 @@ namespace FYUI {
 		 * @param color [in] 颜色参数
 		 */
 		static void DrawColor(CPaintRenderContext& renderContext, const RECT& rc, DWORD color);
+		static void DrawColor(CPaintRenderContext& renderContext, const RectF& rc, DWORD color);
 		/**
 		 * @brief 绘制圆角颜色
 		 * @details 用于绘制圆角颜色。具体行为由当前对象状态以及传入参数共同决定。
@@ -440,6 +442,19 @@ namespace FYUI {
 		 * @param color [in] 颜色参数
 		 */
 		static void DrawRoundColor(CPaintRenderContext& renderContext, const RECT& rc, int radiusX, int radiusY, DWORD color);
+		static void DrawRoundColor(CPaintRenderContext& renderContext, const RectF& rc, float radiusX, float radiusY, DWORD color);
+		/**
+		 * @brief 绘制控件阴影
+		 * @details 在指定矩形外侧绘制一圈渐隐阴影，适合控件背景绘制前调用。阴影宽度会按当前 PaintManager 的 DPI 自动缩放。
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param rc [in] 控件矩形区域
+		 * @param radiusX [in] 圆角 X 半径（像素）
+		 * @param radiusY [in] 圆角 Y 半径（像素）
+		 * @param dwShadowColor [in] 阴影颜色，格式为 0xAARRGGBB，默认半透明黑色
+		 * @param nShadowWidth [in] 阴影宽度，单位为逻辑像素，默认 5
+		 */
+		static void DrawShadow(CPaintRenderContext& renderContext, const RECT& rc, int radiusX = 0, int radiusY = 0,
+			DWORD dwShadowColor = 0x66000000, int nShadowWidth = 5);
 		/**
 		 * @brief 绘制渐变
 		 * @details 用于绘制渐变。具体行为由当前对象状态以及传入参数共同决定。
@@ -451,6 +466,7 @@ namespace FYUI {
 		 * @param nSteps [in] Steps数值
 		 */
 		static void DrawGradient(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps);
+		static void DrawGradient(CPaintRenderContext& renderContext, const RectF& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps);
 		/**
 		 * @brief 绘制行
 		 * @details 用于绘制行。具体行为由当前对象状态以及传入参数共同决定。
@@ -462,6 +478,7 @@ namespace FYUI {
 		 * 其它 `PS_*` 标志当前不会单独生效，最终按最接近的虚线样式或实线处理。
 		 */
 		static void DrawLine(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor,int nStyle = PS_SOLID);
+		static void DrawLine(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制矩形
 		 * @details 用于绘制矩形。具体行为由当前对象状态以及传入参数共同决定。
@@ -472,6 +489,7 @@ namespace FYUI {
 		 * @param nStyle [in] 边框样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`。
 		 */
 		static void DrawRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor,int nStyle = PS_SOLID);
+		static void DrawRect(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制圆角矩形
 		 * @details 用于绘制圆角矩形。具体行为由当前对象状态以及传入参数共同决定。
@@ -485,6 +503,8 @@ namespace FYUI {
 		 */
 		static void DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int radiusX,
 									int radiusY, DWORD dwPenColor,int nStyle = PS_SOLID);
+		static void DrawRoundRect(CPaintRenderContext& renderContext, const RectF& rc, float nSize, float radiusX,
+			float radiusY, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制部分边的圆角矩形边框
 		 * @details 用于支持 `bordersize="L,T,R,B"` 中存在 0 值的部分边场景，并保持指定 `borderround` 的圆角效果。
@@ -510,6 +530,7 @@ namespace FYUI {
 		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
 		 */
 		static void DrawEllipse(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		static void DrawEllipse(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 填充椭圆
 		 * @details 按目标矩形外接椭圆进行纯色填充，适合绘制徽标圆点、选中状态、圆形按钮底色等场景。
@@ -518,6 +539,7 @@ namespace FYUI {
 		 * @param dwFillColor [in] 填充颜色
 		 */
 		static void FillEllipse(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFillColor);
+		static void FillEllipse(CPaintRenderContext& renderContext, const RectF& rc, DWORD dwFillColor);
 		/**
 		 * @brief 绘制圆弧
 		 * @details 按椭圆外接矩形与角度范围绘制圆弧，常用于进度环、仪表盘、加载动画和趋势刻度等场景。
@@ -532,6 +554,8 @@ namespace FYUI {
 		 */
 		static void DrawArc(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle,
 			int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		static void DrawArc(CPaintRenderContext& renderContext, const RectF& rc, float fStartAngle, float fSweepAngle,
+			float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制贝塞尔曲线
 		 * @details 使用 4 个控制点绘制三次贝塞尔曲线，适合绘制平滑连线、流程图曲线、波形或图表趋势线。
@@ -546,6 +570,9 @@ namespace FYUI {
 		 */
 		static void DrawBezier(CPaintRenderContext& renderContext, const POINT& ptStart, const POINT& ptControl1,
 			const POINT& ptControl2, const POINT& ptEnd, int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		
+		static void DrawBezier(CPaintRenderContext& renderContext, const PointF& ptStart, const PointF& ptControl1,
+			const PointF& ptControl2, const PointF& ptEnd, float fSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制折线
 		 * @details 按给定点序列顺次连线但不自动闭合，适合折线图、分隔折角、路径轨迹等 GUI 场景。
@@ -557,6 +584,8 @@ namespace FYUI {
 		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
 		 */
 		static void DrawPolyline(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, int nSize,
+			DWORD dwPenColor, int nStyle = PS_SOLID);
+		static void DrawPolyline(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, float fSize,
 			DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制多边形边框
@@ -570,6 +599,8 @@ namespace FYUI {
 		 */
 		static void DrawPolygon(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, int nSize,
 			DWORD dwPenColor, int nStyle = PS_SOLID);
+		static void DrawPolygon(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, float fSize,
+			DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 填充多边形
 		 * @details 按给定点序列首尾闭合填充纯色，适合绘制三角箭头、气泡尖角、标记面片和自定义区域高亮。
@@ -579,6 +610,8 @@ namespace FYUI {
 		 * @param dwFillColor [in] 填充颜色
 		 */
 		static void FillPolygon(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, DWORD dwFillColor);
+		
+		static void FillPolygon(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, DWORD dwFillColor);
 		/**
 		 * @brief 填充扇形（饼图区域）
 		 * @details 按椭圆外接矩形与角度范围填充扇形区域，适合绘制饼图、仪表盘扇区等场景。
@@ -590,6 +623,7 @@ namespace FYUI {
 		 * @param dwFillColor [in] 填充颜色
 		 */
 		static void FillPie(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle, DWORD dwFillColor);
+		static void FillPie(CPaintRenderContext& renderContext, const RectF& rc, float fStartAngle, float fSweepAngle, DWORD dwFillColor);
 
 		// ----------------------------------------------------------------
 		// (6) 文本绘制与度量

@@ -16,6 +16,26 @@ namespace FYUI
 			return rcResolved;
 		}
 
+		RECT ExpandRectForShadow(const RECT& rc, int shadowWidth)
+		{
+			RECT rcExpanded = rc;
+			if (shadowWidth > 0) {
+				::InflateRect(&rcExpanded, shadowWidth, shadowWidth);
+			}
+			return rcExpanded;
+		}
+
+		int GetScaledShadowWidthForControl(const CControlUI* control)
+		{
+			if (control == nullptr || !control->IsShadow()) {
+				return 0;
+			}
+
+			CPaintManagerUI* manager = control->GetManager();
+			const int shadowWidth = control->GetShadowWidth();
+			return manager != nullptr ? manager->ScaleValue(shadowWidth) : shadowWidth;
+		}
+
 		// PaintXxx 中所有 return（含 early return）都会先析构本地变量，因此使用 RAII 保证 after 回调一定被调用一次
 		struct PaintAfterScope
 		{
@@ -248,6 +268,9 @@ namespace FYUI
 		m_dwDisabledBorderColor(0),
 		m_dwFocusBkColor(0),
 		m_bColorHSL(false),
+		m_bShadow(false),
+		m_nShadowWidth(5),
+		m_dwShadowColor(0x66000000),
 		m_nBorderSize(0),
 		m_nBorderStyle(PS_SOLID),
 		m_nTooltipWidth(300),
@@ -656,6 +679,48 @@ namespace FYUI
 		Invalidate();
 	}
 
+	bool CControlUI::IsShadow() const
+	{
+		return m_bShadow;
+	}
+
+	void CControlUI::SetShadow(bool bShadow)
+	{
+		if (m_bShadow == bShadow) return;
+
+		Invalidate();
+		m_bShadow = bShadow;
+		Invalidate();
+	}
+
+	int CControlUI::GetShadowWidth() const
+	{
+		return m_nShadowWidth;
+	}
+
+	void CControlUI::SetShadowWidth(int nShadowWidth)
+	{
+		const int shadowWidth = (std::max)(0, nShadowWidth);
+		if (m_nShadowWidth == shadowWidth) return;
+
+		Invalidate();
+		m_nShadowWidth = shadowWidth;
+		Invalidate();
+	}
+
+	DWORD CControlUI::GetShadowColor() const
+	{
+		return m_dwShadowColor;
+	}
+
+	void CControlUI::SetShadowColor(DWORD dwShadowColor)
+	{
+		if (m_dwShadowColor == dwShadowColor) return;
+
+		m_dwShadowColor = dwShadowColor;
+		Invalidate();
+	}
+
 	int CControlUI::GetBorderSize() const
 	{
 		if(m_pManager != NULL) return m_pManager->ScaleValue(m_nBorderSize);
@@ -744,7 +809,7 @@ namespace FYUI
 		CDuiRect invalidateRc={0,0,0,0};
 		if (bNeedInvalidate)
 		{
-			invalidateRc = m_rcItem;
+			invalidateRc = ExpandRectForShadow(m_rcItem, GetScaledShadowWidthForControl(this));
 			if( ::IsRectEmpty(&invalidateRc) ) invalidateRc = rc;
 		}
 
@@ -764,7 +829,7 @@ namespace FYUI
 		m_bUpdateNeeded = false;
 
 		if( bNeedInvalidate && IsVisible() ) {
-			invalidateRc.Join(m_rcItem);
+			invalidateRc.Join(ExpandRectForShadow(m_rcItem, GetScaledShadowWidthForControl(this)));
 			CControlUI* pParent = this;
 			RECT rcTemp;
 			RECT rcParent;
@@ -1517,6 +1582,9 @@ namespace FYUI
 		SetPushedBorderColor(pControl->m_dwPushedBorderColor);
 		SetDisabledBorderColor(pControl->m_dwDisabledBorderColor);
 		SetFocusBKColor(pControl->m_dwFocusBkColor);
+		SetShadow(pControl->m_bShadow);
+		SetShadowWidth(pControl->m_nShadowWidth);
+		SetShadowColor(pControl->m_dwShadowColor);
 		SetBorderSize(pControl->m_rcBorderSize);
 		SetBorderSize(pControl->m_nBorderSize);
 		SetBorderRound(pControl->m_cxyBorderRound);
@@ -1568,7 +1636,7 @@ namespace FYUI
 	{
 		if( !IsVisible() ) return;
 
-		RECT invalidateRc = m_rcItem;
+		RECT invalidateRc = ExpandRectForShadow(m_rcItem, GetScaledShadowWidthForControl(this));
 
 		CControlUI* pParent = this;
 		RECT rcTemp;
@@ -1861,6 +1929,15 @@ namespace FYUI
 			if (StringUtil::TryParseColor(pstrValueView, color)) SetDisabledBorderColor(color);
 		}
 		else if (IsAttributeName(name, L"colorhsl")) SetColorHSL(StringUtil::ParseBool(pstrValueView));
+		else if (IsAttributeName(name, L"shadow")) SetShadow(StringUtil::ParseBool(pstrValueView));
+		else if (IsAttributeName(name, L"shadow_width")) {
+			int value = 0;
+			if (StringUtil::TryParseInt(pstrValueView, value)) SetShadowWidth(value);
+		}
+		else if (IsAttributeName(name, L"shadow_color")) {
+			DWORD color = 0;
+			if (StringUtil::TryParseColor(pstrValueView, color)) SetShadowColor(color);
+		}
 		else if (IsAttributeName(name, L"bordersize")) {
 			if (StringUtil::Find(pstrValueView, L',') < 0) {
 				int borderSize = 0;
@@ -2059,7 +2136,8 @@ namespace FYUI
 	bool CControlUI::Paint(CPaintRenderContext& renderContext, CControlUI* pStopControl)
 	{
 		if (pStopControl == this) return false;
-		if (!::IntersectRect(&m_rcPaint, &renderContext.GetPaintRect(), &m_rcItem)) return true;
+		const RECT rcPaintBounds = ExpandRectForShadow(m_rcItem, GetScaledShadowWidthForControl(this));
+		if (!::IntersectRect(&m_rcPaint, &renderContext.GetPaintRect(), &rcPaintBounds)) return true;
 		if (!DoPaint(renderContext, pStopControl)) return false;
 		return true;
 	}
@@ -2069,6 +2147,10 @@ namespace FYUI
 		SIZE cxyBorderRound = GetBorderRound();
 		RECT rcBorderSize = GetBorderRectSize();
 		(void)rcBorderSize;
+
+		if (m_bShadow) {
+			CRenderEngine::DrawShadow(renderContext, m_rcItem, cxyBorderRound.cx, cxyBorderRound.cy, m_dwShadowColor, m_nShadowWidth);
+		}
 
 		if( cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0 ) {
 			PaintBkColor(renderContext);

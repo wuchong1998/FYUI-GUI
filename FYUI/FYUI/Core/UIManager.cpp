@@ -961,6 +961,35 @@ namespace FYUI {
 
 	namespace
 	{
+		// Layered 窗口 UpdateLayeredWindow 节流的延迟刷新 timer ID。
+		// 取值远高于 CPaintManagerUI::SetTimer 分配的 0x1000~0xFFFF 范围，避免冲突。
+		constexpr UINT_PTR kLayeredPresentFlushTimerID = 0x7FFFFFF1u;
+
+		// 通过 RtlGetVersion 探测系统主版本，避免 GetVersionEx 因为 manifest 兼容性返回 6.2 的陷阱。
+		// dwMajorVersion 6.2 = Win 8 / Server 2012；Win 10 上报 10；Win 11 上报 10（用 BuildNumber 区分，但本场景仅需 >=8）。
+		bool IsWindows8OrLater()
+		{
+			static const bool s_bWin8OrLater = []() -> bool {
+				typedef LONG(WINAPI* RtlGetVersionFn)(PRTL_OSVERSIONINFOW);
+				HMODULE hNtdll = ::GetModuleHandleW(L"ntdll.dll");
+				if (hNtdll == NULL) {
+					return false;
+				}
+				auto pRtlGetVersion = reinterpret_cast<RtlGetVersionFn>(::GetProcAddress(hNtdll, "RtlGetVersion"));
+				if (pRtlGetVersion == nullptr) {
+					return false;
+				}
+				RTL_OSVERSIONINFOW osVer = {};
+				osVer.dwOSVersionInfoSize = sizeof(osVer);
+				if (pRtlGetVersion(&osVer) != 0 /* STATUS_SUCCESS */) {
+					return false;
+				}
+				return osVer.dwMajorVersion > 6
+					|| (osVer.dwMajorVersion == 6 && osVer.dwMinorVersion >= 2);
+			}();
+			return s_bWin8OrLater;
+		}
+
 		double QpcDeltaToMilliseconds(LONGLONG nStartQpc, LONGLONG nEndQpc, LONGLONG nFrequency)
 		{
 			if (nFrequency <= 0 || nEndQpc <= nStartQpc) {
@@ -1624,19 +1653,107 @@ namespace FYUI {
 
 	bool CPaintManagerUI::PresentLayeredSurface(CPaintRenderContext& targetContext, const TPaintFrameState& paintFrame)
 	{
+		// === Layered 窗口节流：避免每次 WM_PAINT 都全量调 UpdateLayeredWindow（单次 ~8-15ms / 1080p） ===
+		// 距上次 Present 不足 m_nLayeredPresentMinIntervalMs 毫秒时，把本帧 dirty 矩形累积到 m_rcPendingLayeredDirty，
+		// 启动一次性 timer，到点用 InvalidateRect 把累积区交还给标准 paint 流程，重新进入本函数时一次性提交。
+		if (m_nLayeredPresentMinIntervalMs > 0 && m_nRenderPerfFrequency > 0 && m_nLastLayeredPresentQpc > 0 && m_hWndPaint != NULL) {
+			LARGE_INTEGER qpcNow = {};
+			::QueryPerformanceCounter(&qpcNow);
+			const double msSinceLast = QpcDeltaToMilliseconds(m_nLastLayeredPresentQpc, qpcNow.QuadPart, m_nRenderPerfFrequency);
+			if (msSinceLast >= 0.0 && msSinceLast < static_cast<double>(m_nLayeredPresentMinIntervalMs)) {
+				if (m_bHasPendingLayeredDirty) {
+					::UnionRect(&m_rcPendingLayeredDirty, &m_rcPendingLayeredDirty, &paintFrame.rcPaint);
+				}
+				else {
+					m_rcPendingLayeredDirty = paintFrame.rcPaint;
+					m_bHasPendingLayeredDirty = true;
+				}
+				const double msRemain = static_cast<double>(m_nLayeredPresentMinIntervalMs) - msSinceLast;
+				const UINT uTimerInterval = static_cast<UINT>((std::max)(1.0, msRemain));
+				::SetTimer(m_hWndPaint, kLayeredPresentFlushTimerID, uTimerInterval, NULL);
+				return true; // offscreen 已绘好，仅延迟 Present，整体绘制流程视为成功
+			}
+		}
+
 		RECT rcWnd = { 0 };
 		::GetWindowRect(m_hWndPaint, &rcWnd);
 
 		POINT ptPos = { rcWnd.left, rcWnd.top };
 		SIZE sizeWnd = { static_cast<LONG>(paintFrame.dwWidth), static_cast<LONG>(paintFrame.dwHeight) };
-		return UpdateLayeredWindowFromRenderSurfaceInternal(
+
+		// 把累积的 dirty rect 并入本次提交区，确保延迟期内的所有更新一次刷出去
+		RECT rcDirty = paintFrame.rcPaint;
+		if (m_bHasPendingLayeredDirty) {
+			::UnionRect(&rcDirty, &rcDirty, &m_rcPendingLayeredDirty);
+		}
+
+		const bool bRet = UpdateLayeredWindowFromRenderSurfaceInternal(
 			m_offscreenSurface,
 			m_hWndPaint,
 			targetContext,
 			ptPos,
 			sizeWnd,
 			static_cast<BYTE>(m_nOpacity),
-			&paintFrame.rcPaint);
+			&rcDirty);
+		if (bRet) {
+			LARGE_INTEGER qpcNow = {};
+			::QueryPerformanceCounter(&qpcNow);
+			m_nLastLayeredPresentQpc = qpcNow.QuadPart;
+			m_bHasPendingLayeredDirty = false;
+			::SetRectEmpty(&m_rcPendingLayeredDirty);
+			if (m_hWndPaint != NULL) {
+				::KillTimer(m_hWndPaint, kLayeredPresentFlushTimerID);
+			}
+		}
+		return bRet;
+	}
+
+	void CPaintManagerUI::FlushPendingLayeredPresent()
+	{
+		if (m_hWndPaint == NULL || !::IsWindow(m_hWndPaint)) {
+			m_bHasPendingLayeredDirty = false;
+			::SetRectEmpty(&m_rcPendingLayeredDirty);
+			return;
+		}
+		if (!m_bLayered || !m_bHasPendingLayeredDirty) {
+			m_bHasPendingLayeredDirty = false;
+			::SetRectEmpty(&m_rcPendingLayeredDirty);
+			return;
+		}
+		// 不直接调 UpdateLayeredWindow：把累积区还给 InvalidateRect，让 WM_PAINT 走标准流程，
+		// 重新进入 PresentLayeredSurface 时，节流条件已满足（间隔已到），会真正提交。
+		// 累积矩形保留，PresentLayeredSurface 内部会再 UnionRect 一次以防万一。
+		const RECT rcDirty = m_rcPendingLayeredDirty;
+		::InvalidateRect(m_hWndPaint, &rcDirty, FALSE);
+	}
+
+	void CPaintManagerUI::SetLayeredPresentMinIntervalMs(UINT nIntervalMs)
+	{
+		m_nLayeredPresentMinIntervalMs = nIntervalMs;
+		if (nIntervalMs == 0 && m_bHasPendingLayeredDirty && m_hWndPaint != NULL) {
+			// 关闭节流时立即把累积脏区刷出去
+			::KillTimer(m_hWndPaint, kLayeredPresentFlushTimerID);
+			FlushPendingLayeredPresent();
+		}
+	}
+
+	void CPaintManagerUI::SetLayeredPresentMode(LayeredPresentMode mode)
+	{
+		m_emLayeredPresentMode = mode;
+	}
+
+	LayeredPresentMode CPaintManagerUI::GetActiveLayeredPresentMode() const
+	{
+		// 用户显式指定时直接返回；DComp 在 Win7 上自动回退为 GdiThrottled
+		switch (m_emLayeredPresentMode) {
+		case LayeredPresentModeGdiThrottled:
+			return LayeredPresentModeGdiThrottled;
+		case LayeredPresentModeDComp:
+			return IsWindows8OrLater() ? LayeredPresentModeDComp : LayeredPresentModeGdiThrottled;
+		case LayeredPresentModeAuto:
+		default:
+			return IsWindows8OrLater() ? LayeredPresentModeDComp : LayeredPresentModeGdiThrottled;
+		}
 	}
 
 	void CPaintManagerUI::PresentWindowSurface(CPaintRenderContext& targetContext, const TPaintFrameState& paintFrame)
@@ -1852,6 +1969,11 @@ namespace FYUI {
 		m_nOpacity(0xFF),
 		m_bLayered(false),
 		m_bLayeredChanged(false),
+		m_nLayeredPresentMinIntervalMs(8),
+		m_nLastLayeredPresentQpc(0),
+		m_bHasPendingLayeredDirty(false),
+		m_emLayeredPresentMode(LayeredPresentModeAuto),
+		m_emToolTipMode(BlcakBubbles),
 		m_bNoActivate(false),
 		m_bShowUpdateRect(false),
 		m_renderBackend(RenderBackendAuto),
@@ -1950,6 +2072,7 @@ namespace FYUI {
 		::ZeroMemory(&m_rcCaption, sizeof(m_rcCaption));
 		::ZeroMemory(&m_rcLayeredInset, sizeof(m_rcLayeredInset));
 		::ZeroMemory(&m_rcLayeredUpdate, sizeof(m_rcLayeredUpdate));
+		::ZeroMemory(&m_rcPendingLayeredDirty, sizeof(m_rcPendingLayeredDirty));
 		m_ptLastMousePos.x = m_ptLastMousePos.y = -1;
 
 		m_pGdiplusStartupInput = new Gdiplus::GdiplusStartupInput;
@@ -1978,6 +2101,13 @@ namespace FYUI {
 		RemoveAllWindowCustomAttribute();
 		RemoveAllOptionGroups();
 		RemoveAllTimers();
+
+		// 清理 layered 节流的延迟刷新 timer，避免窗口销毁后继续触发 WM_TIMER
+		if (m_hWndPaint != NULL && ::IsWindow(m_hWndPaint)) {
+			::KillTimer(m_hWndPaint, kLayeredPresentFlushTimerID);
+		}
+		m_bHasPendingLayeredDirty = false;
+		::SetRectEmpty(&m_rcPendingLayeredDirty);
 
 		if (m_hwndTooltip != NULL) {
 			::DestroyWindow(m_hwndTooltip);
@@ -2555,6 +2685,16 @@ namespace FYUI {
 		m_diLayered.Parse(image, {}, this);
 		m_bLayeredChanged = true;
 		Invalidate();
+	}
+
+	ToolTipMode CPaintManagerUI::GetToolTipMode() const
+	{
+		return m_emToolTipMode;
+	}
+
+	void CPaintManagerUI::SetToolTipMode(ToolTipMode mode)
+	{
+		m_emToolTipMode = mode;
 	}
 
 	CShadowUI* CPaintManagerUI::GetShadow()
@@ -3149,6 +3289,12 @@ namespace FYUI {
 		return true;
 		case WM_TIMER:
 		{
+			// Layered 窗口节流的延迟刷新 timer：与控件 timer 不属于同一池，需优先识别
+			if (static_cast<UINT_PTR>(wParam) == kLayeredPresentFlushTimerID) {
+				::KillTimer(m_hWndPaint, kLayeredPresentFlushTimerID);
+				FlushPendingLayeredPresent();
+				return true;
+			}
 			for (int i = 0; i < m_aTimers.GetSize(); i++) {
 				const TIMERINFO* pTimer = static_cast<TIMERINFO*>(m_aTimers[i]);
 				if (pTimer != NULL &&
@@ -3224,6 +3370,7 @@ namespace FYUI {
 				pTooltipInfo->strText = sToolTip;
 				pTooltipInfo->rcPos = rcPos;
 				pTooltipInfo->emToolTipType = pHover->GetToolTipShowMode();
+				pTooltipInfo->emToolTipMode = m_emToolTipMode; // 当前 PaintManager 配置的气泡模式
 				pTooltipInfo->szTooltipGap = pHover->GetToolTipGap();
 				pTooltipInfo->nMaxWidth = pHover->GetToolTipWidth();
 				pTooltipInfo->nDpi = static_cast<int>(GetDPI());

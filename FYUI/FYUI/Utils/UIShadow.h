@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <vector>
 
 namespace FYUI
 {
@@ -102,6 +103,14 @@ namespace FYUI
 		 */
 		bool SetShadowCorner(RECT rcCorner);	
 
+		/**
+		 * @brief 设置中央挖空区的圆角半径
+		 * @details 仅在非图片模式生效。为 0 时按矩形挖空（默认），大于 0 时挖空区变为圆角矩形，
+		 *          适用于透明窗口 + 控件 borderround 圆角场景，防止阴影窗口与圆角之间漏底。
+		 * @param nRadius [in] 逻辑像素半径，需 <= root 控件的 borderround 半径
+		 */
+		bool SetCornerRadius(int nRadius);
+
 		bool CopyShadow(CShadowUI* pShadow);
 
 	
@@ -119,6 +128,7 @@ namespace FYUI
 		 * @details 用于执行 RefreshScaledMetrics 操作。具体行为由当前对象状态以及传入参数共同决定。
 		 */
 		void RefreshScaledMetrics();
+		void InvalidateShadowCache();
 		/**
 		 * @brief 确保Scaled度量信息UpToDate
 		 * @details 用于确保Scaled度量信息UpToDate。具体行为由当前对象状态以及传入参数共同决定。
@@ -166,6 +176,17 @@ namespace FYUI
 		 */
 		static LRESULT CALLBACK ParentProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+		/**
+		 * @brief 执行 ShadowProc 操作
+		 * @details 用于执行 ShadowProc 操作。具体行为由当前对象状态以及传入参数共同决定。
+		 * @param hwnd [in] hwnd参数
+		 * @param uMsg [in] Msg标志
+		 * @param wParam [in] wParam参数
+		 * @param lParam [in] lParam参数
+		 * @return LRESULT CALLBACK 返回 执行 ShadowProc 操作 的结果
+		 */
+		static LRESULT CALLBACK ShadowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 		
 		/**
 		 * @brief 执行 Update 操作
@@ -173,6 +194,11 @@ namespace FYUI
 		 * @param hParent [in] h父级控件参数
 		 */
 		void Update(HWND hParent);
+		bool PresentScaledCachedShadow(HWND hParent);
+		void StretchShadowCache(UINT32* pDstBits, int nDstWidth, int nDstHeight, int nDstParentWidth, int nDstParentHeight);
+		// 方案 C：在最小尺寸的虚拟父矩形上跑一次高斯，得到一张可九宫格拉伸的阴影模板，
+		// 之后任意窗口尺寸/位置变化都仅做九宫格映射，不再重新做卷积。
+		void BuildShadowTemplate();
 
 		
 		/**
@@ -230,6 +256,8 @@ namespace FYUI
 		int m_nLogicalSize;
 		int m_nLogicalXOffset;
 		int m_nLogicalYOffset;
+		int m_nCornerRadius;		// 设备像素，中央挖空圆角矩形半径
+		int m_nLogicalCornerRadius;
 		ULONGLONG m_uAppliedDpiGeneration;
 
 		// Restore last parent window size, used to determine the update strategy when parent window is resized
@@ -237,8 +265,26 @@ namespace FYUI
 
 		// Set this to true if the shadow should not be update until next WM_PAINT is received
 		bool m_bUpdate;
+		bool m_bInSizeMove;
 
 		COLORREF m_Color;	// Color of shadow
+
+		std::vector<UINT32> m_ShadowCacheBits;
+		int m_nShadowCacheWidth;
+		int m_nShadowCacheHeight;
+		int m_nShadowCacheParentWidth;
+		int m_nShadowCacheParentHeight;
+		int m_nShadowCacheSize;
+		int m_nShadowCacheSharpness;
+		int m_nShadowCacheXOffset;
+		int m_nShadowCacheYOffset;
+		int m_nShadowCacheCornerRadius;
+		BYTE m_nShadowCacheDarkness;
+		COLORREF m_ShadowCacheColor;
+		bool m_bShadowCacheValid;
+		bool m_bLayeredShadowPresented;
+		int m_nScaledPreviewWidth;
+		int m_nScaledPreviewHeight;
 
 		
 		std::wstring	m_sShadowImage;

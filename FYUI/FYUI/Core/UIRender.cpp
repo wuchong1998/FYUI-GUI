@@ -11,6 +11,7 @@
 #include "Render/UIRenderImageD2DInternal.h"
 #include "Render/UIRenderImageRuntimeInternal.h"
 #include "Render/UIRenderClipStackInternal.h"
+#include "Render/UIRenderPathInternal.h"
 #include "Render/UIRenderTextSharedInternal.h"
 #include "Render/UIRenderSurface.h"
 
@@ -114,6 +115,14 @@ namespace FYUI
 			std::unordered_map<UINT_PTR, HtmlDrawingEffectState> htmlDrawingEffectStates;
 
 			Direct2DFrameMetricsInternal frameMetrics;
+
+			// CRenderEngine::PushTransform / PopTransform 用的"先前变换"栈。
+			// 入栈时保存当前 RT 的旧 transform，出栈时还原。Push/Pop 必须严格配对。
+			std::vector<D2D1_MATRIX_3X2_F> transformStack;
+
+			// CRenderEngine::PushPathClip / PopPathClip 用的 D2D Layer 栈，
+			// 与 transformStack 类似，必须严格配对。每个元素是已 PushLayer 的 Layer。
+			std::vector<ComPtr<ID2D1Layer>> pathClipLayerStack;
 		};
 
 		D2DRenderState& GetD2DRenderState()
@@ -122,7 +131,7 @@ namespace FYUI
 			return state;
 		}
 
-		bool IsRectFValid(const RectF& rc)
+		bool IsRectFValid(const RECTF& rc)
 		{
 			return std::isfinite(rc.left) && std::isfinite(rc.top) && std::isfinite(rc.right) && std::isfinite(rc.bottom) &&
 				rc.right > rc.left && rc.bottom > rc.top;
@@ -132,33 +141,33 @@ namespace FYUI
 		using RenderD2DInternal::ToD2DRectF;
 		using RenderD2DInternal::ToInsetD2DRectF;
 
-		D2D1_RECT_F ToD2DRectF(const RectF& rc)
+		D2D1_RECT_F ToD2DRectF(const RECTF& rc)
 		{
 			return D2D1::RectF(rc.left, rc.top, rc.right, rc.bottom);
 		}
 
-		D2D1_RECT_F ToInsetD2DRectF(const RectF& rc, float strokeWidth)
+		D2D1_RECT_F ToInsetD2DRectF(const RECTF& rc, float strokeWidth)
 		{
 			const float inset = strokeWidth * 0.5f;
 			return D2D1::RectF(rc.left + inset, rc.top + inset, rc.right - inset, rc.bottom - inset);
 		}
 
-		PointF ToPointF(const POINT& pt)
+		POINTF ToPointF(const POINT& pt)
 		{
-			return PointF{ static_cast<float>(pt.x), static_cast<float>(pt.y) };
+			return POINTF{ static_cast<float>(pt.x), static_cast<float>(pt.y) };
 		}
 
-		bool IsPointFValid(const PointF& pt)
+		bool IsPointFValid(const POINTF& pt)
 		{
-			return std::isfinite(pt.x) && std::isfinite(pt.y);
+			return std::isfinite(pt.X) && std::isfinite(pt.Y);
 		}
 
-		D2D1_POINT_2F ToD2DPointF(const PointF& pt)
+		D2D1_POINT_2F ToD2DPointF(const POINTF& pt)
 		{
-			return D2D1::Point2F(pt.x, pt.y);
+			return D2D1::Point2F(pt.X, pt.Y);
 		}
 
-		RECT ToBindRect(const RectF& rc)
+		RECT ToBindRect(const RECTF& rc)
 		{
 			RECT rcBind = {
 				static_cast<LONG>(std::floor(rc.left)),
@@ -175,9 +184,9 @@ namespace FYUI
 			return rcBind;
 		}
 
-		RectF ToRectF(const RECT& rc)
+		RECTF ToRectF(const RECT& rc)
 		{
-			return RectF{
+			return RECTF{
 				static_cast<float>(rc.left),
 				static_cast<float>(rc.top),
 				static_cast<float>(rc.right),
@@ -399,7 +408,7 @@ namespace FYUI
 			if (state.factory) {
 				return S_OK;
 			}
-			return ::D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, state.factory.ReleaseAndGetAddressOf());
+			return ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, state.factory.ReleaseAndGetAddressOf());
 		}
 
 		HRESULT EnsureDCRenderTarget()
@@ -698,6 +707,25 @@ namespace FYUI
 					return;
 				}
 
+				// [2026-05-18 修复] PushAxisAlignedClip / RoundedRect mask 的几何
+				// 矩形在调用瞬间会被乘以 RT 的当前 transform 后存入栈。
+				// 如果业务在外面 PushTransform 设置了带旋转或缩放的 transform，
+				// 这里 push 容器 clip 就会被错误地变换，导致后续绘制被裁到错位
+				// 或几乎为零的区域（例如 Section D 螺旋星显示成一个黑点）。
+				// 因此在 push clip 期间先把 transform 临时切回 dcBindTransform
+				// （RT 绑定时的标准平移坐标系），push 完再还原用户 transform。
+				// pop 阶段（PopActiveClips）只是栈操作，不依赖当前 transform。
+				D2D1_MATRIX_3X2_F userTransform;
+				m_renderTarget->GetTransform(&userTransform);
+				const D2D1_MATRIX_3X2_F& bindTransform = GetD2DRenderState().dcBindTransform;
+				const bool transformDiffers =
+					userTransform._11 != bindTransform._11 || userTransform._12 != bindTransform._12 ||
+					userTransform._21 != bindTransform._21 || userTransform._22 != bindTransform._22 ||
+					userTransform._31 != bindTransform._31 || userTransform._32 != bindTransform._32;
+				if (transformDiffers) {
+					m_renderTarget->SetTransform(bindTransform);
+				}
+
 				for (const D2DClipState& clip : clipStack) {
 					if (!IsRectValid(clip.rc)) {
 						continue;
@@ -733,6 +761,11 @@ namespace FYUI
 					m_clipLayers.push_back(layer);
 					m_clipGeometries.push_back(geometry);
 					m_clipOperations.push_back(D2DClipType::RoundRect);
+				}
+
+				// 还原用户 transform：业务后续绘制仍在原 transform 下进行
+				if (transformDiffers) {
+					m_renderTarget->SetTransform(userTransform);
 				}
 			}
 
@@ -2734,6 +2767,75 @@ namespace FYUI
 		state.bitmapCache.erase(D2DBitmapCacheKey{ hBitmap, true });
 	}
 
+	HRESULT CRenderEngine::CreateD2DBitmapFromHBITMAP(HBITMAP hBitmap, bool bAlpha, ID2D1Bitmap** ppBitmap)
+	{
+		if (ppBitmap == nullptr) {
+			return E_INVALIDARG;
+		}
+		*ppBitmap = nullptr;
+
+		if (hBitmap == nullptr) {
+			return E_INVALIDARG;
+		}
+
+		D2DRenderState& state = GetD2DRenderState();
+		HRESULT hr = EnsureDCRenderTarget();
+		if (FAILED(hr) || !state.dcRenderTarget) {
+			return FAILED(hr) ? hr : E_FAIL;
+		}
+
+		hr = EnsureWICFactory();
+		if (FAILED(hr) || !state.wicFactory) {
+			return FAILED(hr) ? hr : E_FAIL;
+		}
+
+		return CreateD2DBitmapFromHBITMAPInternal(state.dcRenderTarget.Get(), state.wicFactory.Get(), hBitmap, bAlpha, ppBitmap);
+	}
+
+	bool CRenderEngine::DrawImage(CPaintRenderContext& renderContext, ID2D1Bitmap* pBitmap, const RECT& rc, const RECT* prcBmpPart, UINT uFade)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext) || pBitmap == nullptr || !IsRectValid(rc)) {
+			return false;
+		}
+
+		RECT rcSource = {};
+		if (prcBmpPart != nullptr) {
+			rcSource = *prcBmpPart;
+		}
+		else {
+			const D2D1_SIZE_U pixelSize = pBitmap->GetPixelSize();
+			rcSource = RECT{
+				0,
+				0,
+				static_cast<LONG>(pixelSize.width),
+				static_cast<LONG>(pixelSize.height)
+			};
+		}
+
+		if (!IsRectValid(rcSource)) {
+			return false;
+		}
+
+		const RECT rcPaint = renderContext.GetPaintRect();
+		if (IsRectValid(rcPaint) && !HasVisibleIntersection(rcPaint, rc)) {
+			return true;
+		}
+
+		const RECT rcBind = IsRectValid(rcPaint) ? rcPaint : rc;
+		D2DDrawScope drawScope(renderContext, rcBind);
+		if (!drawScope) {
+			return false;
+		}
+
+		const float opacity = static_cast<float>(uFade) / 255.0f;
+		return DrawBitmapSegmentWithDirect2DInternal(drawScope.Get(), pBitmap, rc, rcSource, rcBind, opacity);
+	}
+
+	bool CRenderEngine::DrawImage(CPaintRenderContext& renderContext, ID2D1Bitmap* pBitmap, const RECT& rc, const RECT& rcBmpPart, UINT uFade)
+	{
+		return DrawImage(renderContext, pBitmap, rc, &rcBmpPart, uFade);
+	}
+
 	bool TryDrawBitmapRectWithDirect2DInternal(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rcDest, const RECT& rcPaint, const RECT& rcSource, bool useAlpha, UINT uFade, UINT uRotate)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || hBitmap == nullptr || !IsRectValid(rcDest) || !IsRectValid(rcSource)) {
@@ -3175,7 +3277,7 @@ namespace FYUI
 		DrawColor(renderContext, ToRectF(rc), color);
 	}
 
-	void CRenderEngine::DrawColor(CPaintRenderContext& renderContext, const RectF& rc, DWORD color)
+	void CRenderEngine::DrawColor(CPaintRenderContext& renderContext, const RECTF& rc, DWORD color)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectFValid(rc) || color <= 0x00FFFFFF) {
 			return;
@@ -3199,7 +3301,7 @@ namespace FYUI
 		DrawRoundColor(renderContext, ToRectF(rc), static_cast<float>(radiusX), static_cast<float>(radiusY), color);
 	}
 
-	void CRenderEngine::DrawRoundColor(CPaintRenderContext& renderContext, const RectF& rc, float radiusX, float radiusY, DWORD color)
+	void CRenderEngine::DrawRoundColor(CPaintRenderContext& renderContext, const RECTF& rc, float radiusX, float radiusY, DWORD color)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectFValid(rc) || color <= 0x00FFFFFF) {
 			return;
@@ -3305,7 +3407,7 @@ namespace FYUI
 		DrawGradient(renderContext, ToRectF(rc), dwFirst, dwSecond, bVertical, nSteps);
 	}
 
-	void CRenderEngine::DrawGradient(CPaintRenderContext& renderContext, const RectF& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps)
+	void CRenderEngine::DrawGradient(CPaintRenderContext& renderContext, const RECTF& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps)
 	{
 		(void)nSteps;
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectFValid(rc)) {
@@ -3343,7 +3445,7 @@ namespace FYUI
 		DrawLine(renderContext, ToRectF(rc), static_cast<float>(nSize), dwPenColor, nStyle);
 	}
 
-	void CRenderEngine::DrawLine(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
+	void CRenderEngine::DrawLine(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || nSize <= 0.0f ||
 			!std::isfinite(rc.left) || !std::isfinite(rc.top) || !std::isfinite(rc.right) || !std::isfinite(rc.bottom)) {
@@ -3351,7 +3453,7 @@ namespace FYUI
 		}
 
 		const float inset = nSize * 0.5f + 1.0f;
-		const RectF rcBounds = {
+		const RECTF rcBounds = {
 			(std::min)(rc.left, rc.right) - inset,
 			(std::min)(rc.top, rc.bottom) - inset,
 			(std::max)(rc.left, rc.right) + inset,
@@ -3387,7 +3489,7 @@ namespace FYUI
 		DrawRect(renderContext, ToRectF(rc), static_cast<float>(nSize), dwPenColor, nStyle);
 	}
 
-	void CRenderEngine::DrawRect(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
+	void CRenderEngine::DrawRect(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectFValid(rc) || nSize <= 0.0f) {
 			return;
@@ -3416,7 +3518,7 @@ namespace FYUI
 		DrawRoundRect(renderContext, ToRectF(rc), static_cast<float>(nSize), static_cast<float>(radiusX), static_cast<float>(radiusY), dwPenColor, nStyle);
 	}
 
-	void CRenderEngine::DrawRoundRect(CPaintRenderContext& renderContext, const RectF& rc, float nSize, float radiusX, float radiusY, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
+	void CRenderEngine::DrawRoundRect(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, float radiusX, float radiusY, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectFValid(rc) || nSize <= 0.0f) {
 			return;
@@ -3473,25 +3575,25 @@ namespace FYUI
 		return NormalizeBindRectForPrimitiveInternal(rc);
 	}
 
-	RECT BuildPointsBoundsInternal(const PointF* pPoints, int nCount, float strokeWidth = 0.0f)
+	RECT BuildPointsBoundsInternal(const POINTF* pPoints, int nCount, float strokeWidth = 0.0f)
 	{
 		if (pPoints == nullptr || nCount <= 0) {
 			return RECT{ 0, 0, 1, 1 };
 		}
 
-		float left = pPoints[0].x;
-		float top = pPoints[0].y;
-		float right = pPoints[0].x;
-		float bottom = pPoints[0].y;
+		float left = pPoints[0].X;
+		float top = pPoints[0].Y;
+		float right = pPoints[0].X;
+		float bottom = pPoints[0].Y;
 		for (int i = 1; i < nCount; ++i) {
-			left = (std::min)(left, pPoints[i].x);
-			top = (std::min)(top, pPoints[i].y);
-			right = (std::max)(right, pPoints[i].x);
-			bottom = (std::max)(bottom, pPoints[i].y);
+			left = (std::min)(left, pPoints[i].X);
+			top = (std::min)(top, pPoints[i].Y);
+			right = (std::max)(right, pPoints[i].X);
+			bottom = (std::max)(bottom, pPoints[i].Y);
 		}
 
 		const float inset = (std::max)(0.0f, strokeWidth) * 0.5f + 1.0f;
-		const RectF bounds{ left - inset, top - inset, right + inset, bottom + inset };
+		const RECTF bounds{ left - inset, top - inset, right + inset, bottom + inset };
 		return ToBindRect(bounds);
 	}
 
@@ -3500,9 +3602,9 @@ namespace FYUI
 		return D2D1::Point2F(static_cast<float>(pt.x), static_cast<float>(pt.y));
 	}
 
-	D2D1_POINT_2F ToD2DPointFInternal(const PointF& pt)
+	D2D1_POINT_2F ToD2DPointFInternal(const POINTF& pt)
 	{
-		return D2D1::Point2F(pt.x, pt.y);
+		return D2D1::Point2F(pt.X, pt.Y);
 	}
 
 	bool CreatePathGeometryInternal(ComPtr<ID2D1PathGeometry>& geometry, ComPtr<ID2D1GeometrySink>& sink)
@@ -3547,16 +3649,16 @@ namespace FYUI
 			SUCCEEDED(GetCachedSolidColorBrush(pRenderTarget, NormalizeRenderableColor(dwFillColor), brush.GetAddressOf()));
 	}
 
-	void DrawEllipseInternal(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle);
-	void FillEllipseInternal(CPaintRenderContext& renderContext, const RectF& rc, DWORD dwFillColor);
-	void DrawArcInternal(CPaintRenderContext& renderContext, const RectF& rc, float fStartAngle, float fSweepAngle, float nSize, DWORD dwPenColor, int nStyle);
+	void DrawEllipseInternal(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, DWORD dwPenColor, int nStyle);
+	void FillEllipseInternal(CPaintRenderContext& renderContext, const RECTF& rc, DWORD dwFillColor);
+	void DrawArcInternal(CPaintRenderContext& renderContext, const RECTF& rc, float fStartAngle, float fSweepAngle, float nSize, DWORD dwPenColor, int nStyle);
 
 	void DrawEllipseInternal(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor, int nStyle)
 	{
 		DrawEllipseInternal(renderContext, ToRectF(rc), static_cast<float>(nSize), dwPenColor, nStyle);
 	}
 
-	void DrawEllipseInternal(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle)
+	void DrawEllipseInternal(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, DWORD dwPenColor, int nStyle)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectFValid(rc) || nSize <= 0.0f) {
 			return;
@@ -3590,7 +3692,7 @@ namespace FYUI
 		FillEllipseInternal(renderContext, ToRectF(rc), dwFillColor);
 	}
 
-	void FillEllipseInternal(CPaintRenderContext& renderContext, const RectF& rc, DWORD dwFillColor)
+	void FillEllipseInternal(CPaintRenderContext& renderContext, const RECTF& rc, DWORD dwFillColor)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectFValid(rc)) {
 			return;
@@ -3614,7 +3716,7 @@ namespace FYUI
 			brush.Get());
 	}
 
-	void DrawBezierInternal(CPaintRenderContext& renderContext, const PointF& ptStart, const PointF& ptControl1, const PointF& ptControl2, const PointF& ptEnd, float fSize, DWORD dwPenColor, int nStyle)
+	void DrawBezierInternal(CPaintRenderContext& renderContext, const POINTF& ptStart, const POINTF& ptControl1, const POINTF& ptControl2, const POINTF& ptEnd, float fSize, DWORD dwPenColor, int nStyle)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || fSize <= 0.0f) {
 			return;
@@ -3623,7 +3725,7 @@ namespace FYUI
 			return;
 		}
 
-		const PointF points[] = { ptStart, ptControl1, ptControl2, ptEnd };
+		const POINTF points[] = { ptStart, ptControl1, ptControl2, ptEnd };
 		D2DDrawScope drawScope(renderContext, BuildPointsBoundsInternal(points, 4, fSize));
 		if (!drawScope) {
 			return;
@@ -3661,7 +3763,7 @@ namespace FYUI
 			static_cast<float>(nSize), dwPenColor, nStyle);
 	}
 
-	void DrawPolylineInternal(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, float fSize, DWORD dwPenColor, int nStyle, bool bClosed, bool bFilled)
+	void DrawPolylineInternal(CPaintRenderContext& renderContext, const POINTF* pPoints, int nCount, float fSize, DWORD dwPenColor, int nStyle, bool bClosed, bool bFilled)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || pPoints == nullptr || nCount < (bFilled || bClosed ? 3 : 2)) {
 			return;
@@ -3722,7 +3824,7 @@ namespace FYUI
 			return;
 		}
 
-		std::vector<PointF> converted;
+		std::vector<POINTF> converted;
 		converted.reserve(static_cast<size_t>(nCount));
 		for (int i = 0; i < nCount; ++i) {
 			converted.push_back(ToPointF(pPoints[i]));
@@ -3736,7 +3838,7 @@ namespace FYUI
 		DrawArcInternal(renderContext, ToRectF(rc), fStartAngle, fSweepAngle, static_cast<float>(nSize), dwPenColor, nStyle);
 	}
 
-	void DrawArcInternal(CPaintRenderContext& renderContext, const RectF& rc, float fStartAngle, float fSweepAngle, float nSize, DWORD dwPenColor, int nStyle)
+	void DrawArcInternal(CPaintRenderContext& renderContext, const RECTF& rc, float fStartAngle, float fSweepAngle, float nSize, DWORD dwPenColor, int nStyle)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectFValid(rc) || nSize <= 0.0f || std::fabs(fSweepAngle) <= 0.01f) {
 			return;
@@ -3967,7 +4069,7 @@ namespace FYUI
 		DrawEllipse(renderContext, ToRectF(rc), static_cast<float>(nSize), dwPenColor, nStyle);
 	}
 
-	void CRenderEngine::DrawEllipse(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle)
+	void CRenderEngine::DrawEllipse(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, DWORD dwPenColor, int nStyle)
 	{
 		DrawEllipseInternal(renderContext, rc, nSize, dwPenColor, nStyle);
 	}
@@ -3977,7 +4079,7 @@ namespace FYUI
 		FillEllipse(renderContext, ToRectF(rc), dwFillColor);
 	}
 
-	void CRenderEngine::FillEllipse(CPaintRenderContext& renderContext, const RectF& rc, DWORD dwFillColor)
+	void CRenderEngine::FillEllipse(CPaintRenderContext& renderContext, const RECTF& rc, DWORD dwFillColor)
 	{
 		FillEllipseInternal(renderContext, rc, dwFillColor);
 	}
@@ -3987,7 +4089,7 @@ namespace FYUI
 		DrawBezierInternal(renderContext, ptStart, ptControl1, ptControl2, ptEnd, nSize, dwPenColor, nStyle);
 	}
 
-	void CRenderEngine::DrawBezier(CPaintRenderContext& renderContext, const PointF& ptStart, const PointF& ptControl1, const PointF& ptControl2, const PointF& ptEnd, float fSize, DWORD dwPenColor, int nStyle)
+	void CRenderEngine::DrawBezier(CPaintRenderContext& renderContext, const POINTF& ptStart, const POINTF& ptControl1, const POINTF& ptControl2, const POINTF& ptEnd, float fSize, DWORD dwPenColor, int nStyle)
 	{
 		DrawBezierInternal(renderContext, ptStart, ptControl1, ptControl2, ptEnd, fSize, dwPenColor, nStyle);
 	}
@@ -3997,7 +4099,7 @@ namespace FYUI
 		DrawPolylineInternal(renderContext, pPoints, nCount, nSize, dwPenColor, nStyle, false, false);
 	}
 
-	void CRenderEngine::DrawPolyline(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, float fSize, DWORD dwPenColor, int nStyle)
+	void CRenderEngine::DrawPolyline(CPaintRenderContext& renderContext, const POINTF* pPoints, int nCount, float fSize, DWORD dwPenColor, int nStyle)
 	{
 		DrawPolylineInternal(renderContext, pPoints, nCount, fSize, dwPenColor, nStyle, false, false);
 	}
@@ -4007,7 +4109,7 @@ namespace FYUI
 		DrawPolylineInternal(renderContext, pPoints, nCount, nSize, dwPenColor, nStyle, true, false);
 	}
 
-	void CRenderEngine::DrawPolygon(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, float fSize, DWORD dwPenColor, int nStyle)
+	void CRenderEngine::DrawPolygon(CPaintRenderContext& renderContext, const POINTF* pPoints, int nCount, float fSize, DWORD dwPenColor, int nStyle)
 	{
 		DrawPolylineInternal(renderContext, pPoints, nCount, fSize, dwPenColor, nStyle, true, false);
 	}
@@ -4017,7 +4119,7 @@ namespace FYUI
 		DrawPolylineInternal(renderContext, pPoints, nCount, 0, dwFillColor, PS_SOLID, true, true);
 	}
 
-	void CRenderEngine::FillPolygon(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, DWORD dwFillColor)
+	void CRenderEngine::FillPolygon(CPaintRenderContext& renderContext, const POINTF* pPoints, int nCount, DWORD dwFillColor)
 	{
 		DrawPolylineInternal(renderContext, pPoints, nCount, 0.0f, dwFillColor, PS_SOLID, true, true);
 	}
@@ -4027,7 +4129,7 @@ namespace FYUI
 		FillPie(renderContext, ToRectF(rc), fStartAngle, fSweepAngle, dwFillColor);
 	}
 
-	void CRenderEngine::FillPie(CPaintRenderContext& renderContext, const RectF& rc, float fStartAngle, float fSweepAngle, DWORD dwFillColor)
+	void CRenderEngine::FillPie(CPaintRenderContext& renderContext, const RECTF& rc, float fStartAngle, float fSweepAngle, DWORD dwFillColor)
 	{
 		if (!CanUseDirect2DRenderContext(renderContext) || !IsRectFValid(rc) || std::fabs(fSweepAngle) <= 0.01f) {
 			return;
@@ -4091,7 +4193,7 @@ namespace FYUI
 		DrawArc(renderContext, ToRectF(rc), fStartAngle, fSweepAngle, static_cast<float>(nSize), dwPenColor, nStyle);
 	}
 
-	void CRenderEngine::DrawArc(CPaintRenderContext& renderContext, const RectF& rc, float fStartAngle, float fSweepAngle, float nSize, DWORD dwPenColor, int nStyle)
+	void CRenderEngine::DrawArc(CPaintRenderContext& renderContext, const RECTF& rc, float fStartAngle, float fSweepAngle, float nSize, DWORD dwPenColor, int nStyle)
 	{
 		DrawArcInternal(renderContext, rc, fStartAngle, fSweepAngle, nSize, dwPenColor, nStyle);
 	}
@@ -4137,6 +4239,342 @@ namespace FYUI
 		::DeleteDC(hdc);
 		if (!ok) { outPrefix.clear(); return false; }
 		return true;
+	}
+
+	// ====================================================================
+	// 自由路径几何（CRenderPath）+ 仿射变换栈（Matrix2D）的真实 D2D 实现
+	// 详见 Core/Render/UIRenderPath.h 与 UIRenderPathInternal.h 中的设计说明
+	// ====================================================================
+	namespace
+	{
+		// 把 CRenderEngine::Matrix2D 翻译成 D2D 的 Matrix3x2F
+		D2D1_MATRIX_3X2_F ToD2DMatrix3x2(const CRenderEngine::Matrix2D& m)
+		{
+			D2D1_MATRIX_3X2_F r = {};
+			r.m11 = m.m11; r.m12 = m.m12;
+			r.m21 = m.m21; r.m22 = m.m22;
+			r.dx  = m.dx;  r.dy  = m.dy;
+			return r;
+		}
+
+		// 描述路径包围盒到 D2DDrawScope 的绑定矩形（加 stroke 半线宽外扩）
+		RECT BuildBindRectFromPath(const CRenderPathImpl* pImpl, float strokeInset)
+		{
+			if (pImpl == nullptr || !pImpl->hasBounds) {
+				return RECT{ 0, 0, 0, 0 };
+			}
+			const float pad = (std::max)(0.0f, strokeInset) * 0.5f + 1.0f;
+			const RECTF expanded = {
+				pImpl->cachedBounds.left   - pad,
+				pImpl->cachedBounds.top    - pad,
+				pImpl->cachedBounds.right  + pad,
+				pImpl->cachedBounds.bottom + pad,
+			};
+			return ToBindRect(expanded);
+		}
+	}
+
+	// CRenderPathImpl::commands → ID2D1PathGeometry。失败返回 false。
+	bool BuildOrReuseGeometryForRenderPathInternal(CRenderPathImpl* pImpl)
+	{
+		if (pImpl == nullptr || pImpl->commands.empty()) {
+			return false;
+		}
+		if (pImpl->d2dGeometry && !pImpl->d2dGeometryDirty) {
+			return true;
+		}
+
+		// 重新构建：先确保 D2D Factory 已初始化
+		if (FAILED(EnsureD2DFactory())) {
+			return false;
+		}
+		ComPtr<ID2D1PathGeometry> geometry;
+		ComPtr<ID2D1GeometrySink> sink;
+		if (!CreatePathGeometryInternal(geometry, sink)) {
+			return false;
+		}
+
+		bool figureOpen = false;
+		POINTF figureStartPt = { 0.0f, 0.0f };
+		POINTF currentPt = { 0.0f, 0.0f };
+
+		auto closeFigureIfOpen = [&](D2D1_FIGURE_END endState) {
+			if (figureOpen) {
+				sink->EndFigure(endState);
+				figureOpen = false;
+			}
+		};
+
+		for (const CRenderPathImpl::Command& c : pImpl->commands) {
+			switch (c.type) {
+			case CRenderPathImpl::CommandType::MoveTo:
+				closeFigureIfOpen(D2D1_FIGURE_END_OPEN);
+				sink->BeginFigure(ToD2DPointF(c.p0), D2D1_FIGURE_BEGIN_FILLED);
+				figureOpen = true;
+				figureStartPt = c.p0;
+				currentPt = c.p0;
+				break;
+			case CRenderPathImpl::CommandType::LineTo:
+				if (!figureOpen) {
+					sink->BeginFigure(ToD2DPointF(currentPt), D2D1_FIGURE_BEGIN_FILLED);
+					figureOpen = true;
+					figureStartPt = currentPt;
+				}
+				sink->AddLine(ToD2DPointF(c.p0));
+				currentPt = c.p0;
+				break;
+			case CRenderPathImpl::CommandType::BezierTo:
+				if (!figureOpen) {
+					sink->BeginFigure(ToD2DPointF(currentPt), D2D1_FIGURE_BEGIN_FILLED);
+					figureOpen = true;
+					figureStartPt = currentPt;
+				}
+				sink->AddBezier(D2D1::BezierSegment(
+					ToD2DPointF(c.p1),
+					ToD2DPointF(c.p2),
+					ToD2DPointF(c.p0)));
+				currentPt = c.p0;
+				break;
+			case CRenderPathImpl::CommandType::QuadraticTo:
+				if (!figureOpen) {
+					sink->BeginFigure(ToD2DPointF(currentPt), D2D1_FIGURE_BEGIN_FILLED);
+					figureOpen = true;
+					figureStartPt = currentPt;
+				}
+				sink->AddQuadraticBezier(D2D1::QuadraticBezierSegment(
+					ToD2DPointF(c.p1),
+					ToD2DPointF(c.p0)));
+				currentPt = c.p0;
+				break;
+			case CRenderPathImpl::CommandType::ArcTo:
+				if (!figureOpen) {
+					sink->BeginFigure(ToD2DPointF(currentPt), D2D1_FIGURE_BEGIN_FILLED);
+					figureOpen = true;
+					figureStartPt = currentPt;
+				}
+				{
+					D2D1_ARC_SEGMENT seg = {};
+					seg.point = ToD2DPointF(c.p0);
+					seg.size = D2D1::SizeF(c.arc.radiusX, c.arc.radiusY);
+					seg.rotationAngle = c.arc.rotationAngle;
+					seg.sweepDirection = c.arc.sweepClockwise
+						? D2D1_SWEEP_DIRECTION_CLOCKWISE
+						: D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE;
+					seg.arcSize = c.arc.largeArc
+						? D2D1_ARC_SIZE_LARGE
+						: D2D1_ARC_SIZE_SMALL;
+					sink->AddArc(seg);
+				}
+				currentPt = c.p0;
+				break;
+			case CRenderPathImpl::CommandType::Close:
+				closeFigureIfOpen(D2D1_FIGURE_END_CLOSED);
+				currentPt = figureStartPt;
+				break;
+			}
+		}
+		closeFigureIfOpen(D2D1_FIGURE_END_OPEN);
+
+		if (FAILED(sink->Close())) {
+			return false;
+		}
+
+		pImpl->d2dGeometry = geometry;
+		pImpl->d2dGeometryDirty = false;
+		return true;
+	}
+
+	// 给 internal header 暴露的辅助：业务很少直接调用
+	RECT ToBindRectFromRenderPathInternal(const CRenderPathImpl* pImpl, float strokeInset)
+	{
+		return BuildBindRectFromPath(pImpl, strokeInset);
+	}
+
+	// ----------------- StrokePath / FillPath -------------------
+	void CRenderEngine::StrokePath(CPaintRenderContext& renderContext,
+		const CRenderPath& path, float nSize, DWORD dwPenColor, int nStyle /*= PS_SOLID*/)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext) || nSize <= 0.0f) {
+			return;
+		}
+		CRenderPathImpl* pImpl = path.GetImpl();
+		if (pImpl == nullptr || pImpl->commands.empty()) {
+			return;
+		}
+		if (!BuildOrReuseGeometryForRenderPathInternal(pImpl)) {
+			return;
+		}
+
+		const RECT rcBind = BuildBindRectFromPath(pImpl, nSize);
+		D2DDrawScope drawScope(renderContext, rcBind);
+		if (!drawScope) {
+			return;
+		}
+
+		ComPtr<ID2D1SolidColorBrush> brush;
+		ComPtr<ID2D1StrokeStyle> strokeStyle;
+		if (!CreateStrokeBrushInternal(drawScope.Get(), dwPenColor, nStyle, brush, strokeStyle)) {
+			return;
+		}
+
+		drawScope.Get()->DrawGeometry(pImpl->d2dGeometry.Get(), brush.Get(), nSize, strokeStyle.Get());
+	}
+
+	void CRenderEngine::FillPath(CPaintRenderContext& renderContext,
+		const CRenderPath& path, DWORD dwFillColor)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext)) {
+			return;
+		}
+		CRenderPathImpl* pImpl = path.GetImpl();
+		if (pImpl == nullptr || pImpl->commands.empty()) {
+			return;
+		}
+		if (!BuildOrReuseGeometryForRenderPathInternal(pImpl)) {
+			return;
+		}
+
+		const RECT rcBind = BuildBindRectFromPath(pImpl, 0.0f);
+		D2DDrawScope drawScope(renderContext, rcBind);
+		if (!drawScope) {
+			return;
+		}
+
+		ComPtr<ID2D1SolidColorBrush> brush;
+		if (!CreateFillBrushInternal(drawScope.Get(), dwFillColor, brush)) {
+			return;
+		}
+
+		drawScope.Get()->FillGeometry(pImpl->d2dGeometry.Get(), brush.Get());
+	}
+
+	// ----------------- PushPathClip / PopPathClip -------------------
+	void CRenderEngine::PushPathClip(CPaintRenderContext& renderContext, const CRenderPath& path)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext)) {
+			return;
+		}
+		CRenderPathImpl* pImpl = path.GetImpl();
+		if (pImpl == nullptr || pImpl->commands.empty()) {
+			// 推入空 layer 占位，让 Pop 计数对得上
+			GetD2DRenderState().pathClipLayerStack.emplace_back();
+			return;
+		}
+		if (!BuildOrReuseGeometryForRenderPathInternal(pImpl)) {
+			GetD2DRenderState().pathClipLayerStack.emplace_back();
+			return;
+		}
+
+		// [2026-05-18 修复] 不能使用 D2DDrawScope 来 PushLayer：D2DDrawScope
+		// 在构造时 ApplyActiveClips（PushAxisAlignedClip × N），在析构时
+		// PopActiveClips（PopAxisAlignedClip × N）。如果 PushLayer 在二者之
+		// 间执行，RT 栈会变成 [Clip, Clip, ..., Layer]，而 D2D 要求 Push*
+		// 与 Pop* 严格 LIFO；析构阶段紧接的 PopAxisAlignedClip 会跨过栈顶
+		// 的 Layer，硬件模式下导致 RT 进入错误状态、EndDraw 返回 D2DERR，
+		// 反复触发 ResetD2DRenderTargetResources/重建，表现为卡死。
+		// 修复办法：绕过 D2DDrawScope，手动 ResumeDirect2DBatch 拿到 batch RT，
+		// 直接 PushLayer。期间不引入 PushAxisAlignedClip 包裹层，配对的
+		// PopPathClip 同理。
+		D2DRenderState& state = GetD2DRenderState();
+		HDC hNativeDC = renderContext.GetDC();
+		if (state.batchDepth == 0 || state.batchNativeDC != hNativeDC) {
+			// 不在批量绘制中，无法跨 BeginDraw/EndDraw 维持 layer，退化占位
+			state.pathClipLayerStack.emplace_back();
+			return;
+		}
+		if (!ResumeDirect2DBatch(state) || !state.dcRenderTarget) {
+			state.pathClipLayerStack.emplace_back();
+			return;
+		}
+		ID2D1RenderTarget* pRT = state.dcRenderTarget.Get();
+
+		ComPtr<ID2D1Layer> layer;
+		if (FAILED(pRT->CreateLayer(nullptr, layer.GetAddressOf())) || !layer) {
+			state.pathClipLayerStack.emplace_back();
+			return;
+		}
+
+		D2D1_LAYER_PARAMETERS layerParams = D2D1::LayerParameters(
+			D2D1::InfiniteRect(),
+			pImpl->d2dGeometry.Get(),
+			D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
+			D2D1::IdentityMatrix(),
+			1.0f,
+			nullptr,
+			D2D1_LAYER_OPTIONS_NONE);
+		pRT->PushLayer(layerParams, layer.Get());
+
+		state.pathClipLayerStack.push_back(std::move(layer));
+	}
+
+	void CRenderEngine::PopPathClip(CPaintRenderContext& renderContext)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext)) {
+			return;
+		}
+		D2DRenderState& state = GetD2DRenderState();
+		if (state.pathClipLayerStack.empty()) {
+			return;
+		}
+		ComPtr<ID2D1Layer> top = std::move(state.pathClipLayerStack.back());
+		state.pathClipLayerStack.pop_back();
+		if (!top) {
+			// 占位项：之前 PushPathClip 失败，对应不需要 PopLayer
+			return;
+		}
+
+		// 与 PushPathClip 对称：绕过 D2DDrawScope，避免 PopActiveClips
+		// 跨过栈顶 Layer 而触发 D2D LIFO 违规
+		HDC hNativeDC = renderContext.GetDC();
+		if (state.batchDepth == 0 || state.batchNativeDC != hNativeDC) {
+			return;
+		}
+		if (!ResumeDirect2DBatch(state) || !state.dcRenderTarget) {
+			return;
+		}
+		state.dcRenderTarget->PopLayer();
+	}
+
+	// ----------------- PushTransform / PopTransform -------------------
+	void CRenderEngine::PushTransform(CPaintRenderContext& renderContext, const CRenderEngine::Matrix2D& m)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext)) {
+			return;
+		}
+		D2DDrawScope drawScope(renderContext, renderContext.GetPaintRect());
+		if (!drawScope) {
+			return;
+		}
+
+		ID2D1RenderTarget* pRT = drawScope.Get();
+		D2D1_MATRIX_3X2_F prev;
+		pRT->GetTransform(&prev);
+
+		const D2D1_MATRIX_3X2_F mNew = ToD2DMatrix3x2(m);
+		// 复合：先应用 m 再应用 prev（业务期望"在当前坐标系上叠加 m"）
+		const D2D1_MATRIX_3X2_F composed = mNew * prev;
+		pRT->SetTransform(composed);
+
+		GetD2DRenderState().transformStack.push_back(prev);
+	}
+
+	void CRenderEngine::PopTransform(CPaintRenderContext& renderContext)
+	{
+		if (!CanUseDirect2DRenderContext(renderContext)) {
+			return;
+		}
+		D2DRenderState& state = GetD2DRenderState();
+		if (state.transformStack.empty()) {
+			return;
+		}
+		const D2D1_MATRIX_3X2_F prev = state.transformStack.back();
+		state.transformStack.pop_back();
+
+		D2DDrawScope drawScope(renderContext, renderContext.GetPaintRect());
+		if (!drawScope) {
+			return;
+		}
+		drawScope.Get()->SetTransform(prev);
 	}
 
 } // namespace DuiLib

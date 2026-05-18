@@ -435,12 +435,14 @@ namespace FYUI
 		 * @return 返回对应的几何结果
 		 */
 		SIZE GetBorderRound() const;
+		RECT GetBorderRoundRect() const;
 		/**
 		 * @brief 设置边框圆角
 		 * @details 用于设置边框圆角。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param cxyRound [in] cxy圆角参数
 		 */
 		void SetBorderRound(SIZE cxyRound);
+		void SetBorderRound(RECT rcRound);
 		/**
 		 * @brief 绘制图像
 		 * @details 用于绘制图像。具体行为由当前对象状态以及传入参数共同决定。
@@ -1471,6 +1473,7 @@ namespace FYUI
 		int m_nTooltipWidth;
 		WORD m_wCursor;
 		SIZE m_cxyBorderRound;
+		RECT m_rcBorderRound;
 		RECT m_rcPaint;
 		RECT m_rcBorderSize;
 		HINSTANCE m_instance;

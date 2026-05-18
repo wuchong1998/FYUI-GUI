@@ -716,6 +716,54 @@ namespace FYUI
 		void SetLayeredImage(std::wstring_view image);
 
 		/**
+		 * @brief 获取 Layered 窗口 UpdateLayeredWindow 节流间隔
+		 * @return UINT 相邻两次 UpdateLayeredWindow 的最小间隔（毫秒），0 表示关闭节流
+		 */
+		UINT GetLayeredPresentMinIntervalMs() const { return m_nLayeredPresentMinIntervalMs; }
+		/**
+		 * @brief 设置 Layered 窗口 UpdateLayeredWindow 节流间隔
+		 * @details 仅对 bktrans="true" 的 layered 窗口生效。设为 0 关闭节流；推荐 6~12（约 80~166 fps 上限）。
+		 *          节流期间未提交的 dirty 矩形会被累积，待间隔满足后通过 timer 触发一次合并提交。
+		 * @param nIntervalMs [in] 间隔毫秒数
+		 */
+		void SetLayeredPresentMinIntervalMs(UINT nIntervalMs);
+
+		/**
+		 * @brief 获取透明窗口呈现模式（用户配置值，可能为 Auto）
+		 * @return LayeredPresentMode 用户配置的呈现模式
+		 */
+		LayeredPresentMode GetLayeredPresentMode() const { return m_emLayeredPresentMode; }
+		/**
+		 * @brief 设置透明窗口呈现模式
+		 * @details Auto 会在运行期根据系统版本（Win8+ 用 DComp、Win7 用 GdiThrottled）解析为具体模式。
+		 *          可在 XML 上通过 `bktrans_mode="auto|gdi|dcomp"` 配置。
+		 * @param mode [in] 呈现模式
+		 */
+		void SetLayeredPresentMode(LayeredPresentMode mode);
+		/**
+		 * @brief 获取已解析的透明窗口呈现模式（绝不返回 Auto）
+		 * @details 当用户配置为 Auto 时，按系统版本与平台能力解析为 GdiThrottled 或 DComp。
+		 * @return LayeredPresentMode 已解析的具体模式
+		 */
+		LayeredPresentMode GetActiveLayeredPresentMode() const;
+
+		/**
+		 * @brief 获取 Tooltip 气泡视觉模式
+		 * @details 控制由 #UseToolTipWnd 启用的自绘 Tooltip 窗口的整体风格：
+		 *          白底黑字（含黑色外阴影）或黑底白字。默认 BlcakBubbles。
+		 * @return ToolTipMode 当前气泡模式
+		 */
+		ToolTipMode GetToolTipMode() const;
+		/**
+		 * @brief 设置 Tooltip 气泡视觉模式
+		 * @details 同 GetToolTipMode；可在 XML 上通过 `tool_tip_mode="white_bubbles"`
+		 *          / `tool_tip_mode="blcak_bubbles"` 配置，或在运行期调用本 API 修改。
+		 *          新模式只影响下一次显示的 tooltip。
+		 * @param mode [in] 目标气泡模式
+		 */
+		void SetToolTipMode(ToolTipMode mode);
+
+		/**
 		 * @brief 获取阴影
 		 * @details 用于获取阴影。具体行为由当前对象状态以及传入参数共同决定。
 		 * @return CShadowUI* 返回结果对象指针，失败时返回 nullptr
@@ -2278,6 +2326,12 @@ namespace FYUI
 		 */
 		bool PresentLayeredSurface(CPaintRenderContext& targetContext, const TPaintFrameState& paintFrame);
 		/**
+		 * @brief 立即把累积的 layered 脏矩形刷给 UpdateLayeredWindow
+		 * @details 由 layered present 节流 timer（kLayeredPresentFlushTimerID）触发；
+		 *          会通过 InvalidateRect 让累积区重新走标准 paint 流程，避免重复维护 offscreen 状态。
+		 */
+		void FlushPendingLayeredPresent();
+		/**
 		 * @brief 执行 PresentWindowSurface 操作
 		 * @details 用于执行 PresentWindowSurface 操作。具体行为由当前对象状态以及传入参数共同决定。
 		 * @param targetContext [in,out] 目标上下文参数
@@ -2365,8 +2419,22 @@ namespace FYUI
 		bool m_bLayered;
 		RECT m_rcLayeredInset;
 		bool m_bLayeredChanged;
+		ToolTipMode m_emToolTipMode;
 		RECT m_rcLayeredUpdate;
 		TDrawInfo m_diLayered ;
+
+		// Layered 窗口（bktrans=true）UpdateLayeredWindow 节流：
+		//  - m_nLayeredPresentMinIntervalMs：相邻两次 UpdateLayeredWindow 的最小间隔（毫秒），0 关闭节流；默认 8（≈120fps 上限）
+		//  - m_nLastLayeredPresentQpc：上次 UpdateLayeredWindow 完成的 QPC 计数
+		//  - m_rcPendingLayeredDirty：因节流被推迟的累积 dirty 矩形（客户区坐标）
+		//  - m_bHasPendingLayeredDirty：是否有挂起的延迟 Present
+		UINT m_nLayeredPresentMinIntervalMs;
+		LONGLONG m_nLastLayeredPresentQpc;
+		RECT m_rcPendingLayeredDirty;
+		bool m_bHasPendingLayeredDirty;
+
+		// 透明窗口呈现模式（用户配置原值，Auto 不在此处解析；GetActiveLayeredPresentMode 才解析为具体模式）
+		LayeredPresentMode m_emLayeredPresentMode;
 
 		bool m_bMouseTracking;
 		bool m_bMouseCapture;

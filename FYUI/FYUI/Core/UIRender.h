@@ -6,6 +6,9 @@
 
 #include "UIDefine.h"
 #include "Render/UIRenderContext.h"
+#include "Render/UIRenderPath.h"
+
+#include <d2d1.h>
 
 namespace FYUI {
 
@@ -336,6 +339,41 @@ namespace FYUI {
 		 */
 		static void DrawImage(CPaintRenderContext& renderContext, HBITMAP hBitmap, const RECT& rc, const RECT& rcBmpPart,
 			const RECT& rcCorners, bool bAlpha, UINT uFade = 255, bool hole = false, bool xtiled = false, bool ytiled = false);
+
+		/**
+		 * @brief 将 Win32 HBITMAP 转换为 Direct2D 位图资源
+		 * @details 该接口使用 FYUI 当前的 Direct2D RenderTarget 和 WIC 工厂，把 HBITMAP 转换为可由
+		 * `DrawImage(CPaintRenderContext&, ID2D1Bitmap*, ...)` 直接绘制的 ID2D1Bitmap。接口可在工作线程
+		 * 中调用，但调用线程需要自行完成 COM 初始化，例如 `CoInitializeEx(nullptr, COINIT_MULTITHREADED)`。
+		 *
+		 * 需要注意：ID2D1Bitmap 是 RenderTarget 相关资源，不是普通跨设备的 CPU 图片对象。如果 FYUI 的 D2D
+		 * RenderTarget 因 `D2DERR_RECREATE_TARGET` 等原因被重建，业务侧缓存的 ID2D1Bitmap 也应重新创建。
+		 * 原始 HBITMAP 只需保证在本函数返回前有效；创建成功后，ID2D1Bitmap 不再依赖 HBITMAP 生命周期。
+		 *
+		 * @param hBitmap [in] 源 HBITMAP，不能为空
+		 * @param bAlpha [in] 是否按 Alpha 通道导入；true 表示保留 Alpha，false 表示忽略 Alpha
+		 * @param ppBitmap [out] 返回创建好的 ID2D1Bitmap；调用方负责 Release，推荐使用 Microsoft::WRL::ComPtr
+		 * @return HRESULT 返回 S_OK 表示创建成功，失败时返回对应错误码
+		 */
+		static HRESULT CreateD2DBitmapFromHBITMAP(HBITMAP hBitmap, bool bAlpha, ID2D1Bitmap** ppBitmap);
+
+		/**
+		 * @brief 直接绘制 Direct2D 位图资源
+		 * @details 将已经创建好的 ID2D1Bitmap 绘制到目标区域。适合业务在工作线程提前完成 HBITMAP →
+		 * ID2D1Bitmap 转换后，在 UI 线程的控件绘制流程中直接复用该位图，避免每帧重复从 HBITMAP 转换。
+		 * 若 prcBmpPart 为 nullptr，则默认使用整张位图作为源区域。
+		 *
+		 * @param renderContext [in,out] 当前绘制上下文，只应在 UI 绘制流程中使用
+		 * @param pBitmap [in] 待绘制的 ID2D1Bitmap，不能为空
+		 * @param rc [in] 目标绘制区域
+		 * @param prcBmpPart [in] 可选源区域，传 nullptr 表示绘制整张位图
+		 * @param uFade [in] 透明度，0 表示完全透明，255 表示不透明
+		 * @return bool 绘制成功或无需绘制返回 true，参数无效或 D2D 不可用返回 false
+		 */
+		static bool DrawImage(CPaintRenderContext& renderContext, ID2D1Bitmap* pBitmap, const RECT& rc,
+			const RECT* prcBmpPart = nullptr, UINT uFade = 255);
+		static bool DrawImage(CPaintRenderContext& renderContext, ID2D1Bitmap* pBitmap, const RECT& rc,
+			const RECT& rcBmpPart, UINT uFade = 255);
 		/**
 		 * @brief 绘制已加载图像
 		 * @details 将 `LoadImage` 或 `LoadImageFromMemory` 返回的图像对象绘制到目标区域。默认使用整张图像作为源区域，
@@ -431,7 +469,7 @@ namespace FYUI {
 		 * @param color [in] 颜色参数
 		 */
 		static void DrawColor(CPaintRenderContext& renderContext, const RECT& rc, DWORD color);
-		static void DrawColor(CPaintRenderContext& renderContext, const RectF& rc, DWORD color);
+		static void DrawColor(CPaintRenderContext& renderContext, const RECTF& rc, DWORD color);
 		/**
 		 * @brief 绘制圆角颜色
 		 * @details 用于绘制圆角颜色。具体行为由当前对象状态以及传入参数共同决定。
@@ -442,7 +480,7 @@ namespace FYUI {
 		 * @param color [in] 颜色参数
 		 */
 		static void DrawRoundColor(CPaintRenderContext& renderContext, const RECT& rc, int radiusX, int radiusY, DWORD color);
-		static void DrawRoundColor(CPaintRenderContext& renderContext, const RectF& rc, float radiusX, float radiusY, DWORD color);
+		static void DrawRoundColor(CPaintRenderContext& renderContext, const RECTF& rc, float radiusX, float radiusY, DWORD color);
 		/**
 		 * @brief 绘制控件阴影
 		 * @details 在指定矩形外侧绘制一圈渐隐阴影，适合控件背景绘制前调用。阴影宽度会按当前 PaintManager 的 DPI 自动缩放。
@@ -466,7 +504,7 @@ namespace FYUI {
 		 * @param nSteps [in] Steps数值
 		 */
 		static void DrawGradient(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps);
-		static void DrawGradient(CPaintRenderContext& renderContext, const RectF& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps);
+		static void DrawGradient(CPaintRenderContext& renderContext, const RECTF& rc, DWORD dwFirst, DWORD dwSecond, bool bVertical, int nSteps);
 		/**
 		 * @brief 绘制行
 		 * @details 用于绘制行。具体行为由当前对象状态以及传入参数共同决定。
@@ -478,7 +516,7 @@ namespace FYUI {
 		 * 其它 `PS_*` 标志当前不会单独生效，最终按最接近的虚线样式或实线处理。
 		 */
 		static void DrawLine(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor,int nStyle = PS_SOLID);
-		static void DrawLine(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		static void DrawLine(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制矩形
 		 * @details 用于绘制矩形。具体行为由当前对象状态以及传入参数共同决定。
@@ -489,7 +527,7 @@ namespace FYUI {
 		 * @param nStyle [in] 边框样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`。
 		 */
 		static void DrawRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor,int nStyle = PS_SOLID);
-		static void DrawRect(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		static void DrawRect(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制圆角矩形
 		 * @details 用于绘制圆角矩形。具体行为由当前对象状态以及传入参数共同决定。
@@ -503,7 +541,7 @@ namespace FYUI {
 		 */
 		static void DrawRoundRect(CPaintRenderContext& renderContext, const RECT& rc, int nSize, int radiusX,
 									int radiusY, DWORD dwPenColor,int nStyle = PS_SOLID);
-		static void DrawRoundRect(CPaintRenderContext& renderContext, const RectF& rc, float nSize, float radiusX,
+		static void DrawRoundRect(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, float radiusX,
 			float radiusY, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制部分边的圆角矩形边框
@@ -530,7 +568,7 @@ namespace FYUI {
 		 * @param nStyle [in] 线条样式，可使用 `PS_SOLID`、`PS_DASH`、`PS_DOT`、`PS_DASHDOT`、`PS_DASHDOTDOT`
 		 */
 		static void DrawEllipse(CPaintRenderContext& renderContext, const RECT& rc, int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
-		static void DrawEllipse(CPaintRenderContext& renderContext, const RectF& rc, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		static void DrawEllipse(CPaintRenderContext& renderContext, const RECTF& rc, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 填充椭圆
 		 * @details 按目标矩形外接椭圆进行纯色填充，适合绘制徽标圆点、选中状态、圆形按钮底色等场景。
@@ -539,7 +577,7 @@ namespace FYUI {
 		 * @param dwFillColor [in] 填充颜色
 		 */
 		static void FillEllipse(CPaintRenderContext& renderContext, const RECT& rc, DWORD dwFillColor);
-		static void FillEllipse(CPaintRenderContext& renderContext, const RectF& rc, DWORD dwFillColor);
+		static void FillEllipse(CPaintRenderContext& renderContext, const RECTF& rc, DWORD dwFillColor);
 		/**
 		 * @brief 绘制圆弧
 		 * @details 按椭圆外接矩形与角度范围绘制圆弧，常用于进度环、仪表盘、加载动画和趋势刻度等场景。
@@ -554,7 +592,7 @@ namespace FYUI {
 		 */
 		static void DrawArc(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle,
 			int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
-		static void DrawArc(CPaintRenderContext& renderContext, const RectF& rc, float fStartAngle, float fSweepAngle,
+		static void DrawArc(CPaintRenderContext& renderContext, const RECTF& rc, float fStartAngle, float fSweepAngle,
 			float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制贝塞尔曲线
@@ -571,8 +609,8 @@ namespace FYUI {
 		static void DrawBezier(CPaintRenderContext& renderContext, const POINT& ptStart, const POINT& ptControl1,
 			const POINT& ptControl2, const POINT& ptEnd, int nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		
-		static void DrawBezier(CPaintRenderContext& renderContext, const PointF& ptStart, const PointF& ptControl1,
-			const PointF& ptControl2, const PointF& ptEnd, float fSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+		static void DrawBezier(CPaintRenderContext& renderContext, const POINTF& ptStart, const POINTF& ptControl1,
+			const POINTF& ptControl2, const POINTF& ptEnd, float fSize, DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制折线
 		 * @details 按给定点序列顺次连线但不自动闭合，适合折线图、分隔折角、路径轨迹等 GUI 场景。
@@ -585,7 +623,7 @@ namespace FYUI {
 		 */
 		static void DrawPolyline(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, int nSize,
 			DWORD dwPenColor, int nStyle = PS_SOLID);
-		static void DrawPolyline(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, float fSize,
+		static void DrawPolyline(CPaintRenderContext& renderContext, const POINTF* pPoints, int nCount, float fSize,
 			DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 绘制多边形边框
@@ -599,7 +637,7 @@ namespace FYUI {
 		 */
 		static void DrawPolygon(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, int nSize,
 			DWORD dwPenColor, int nStyle = PS_SOLID);
-		static void DrawPolygon(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, float fSize,
+		static void DrawPolygon(CPaintRenderContext& renderContext, const POINTF* pPoints, int nCount, float fSize,
 			DWORD dwPenColor, int nStyle = PS_SOLID);
 		/**
 		 * @brief 填充多边形
@@ -611,7 +649,7 @@ namespace FYUI {
 		 */
 		static void FillPolygon(CPaintRenderContext& renderContext, const POINT* pPoints, int nCount, DWORD dwFillColor);
 		
-		static void FillPolygon(CPaintRenderContext& renderContext, const PointF* pPoints, int nCount, DWORD dwFillColor);
+		static void FillPolygon(CPaintRenderContext& renderContext, const POINTF* pPoints, int nCount, DWORD dwFillColor);
 		/**
 		 * @brief 填充扇形（饼图区域）
 		 * @details 按椭圆外接矩形与角度范围填充扇形区域，适合绘制饼图、仪表盘扇区等场景。
@@ -623,7 +661,7 @@ namespace FYUI {
 		 * @param dwFillColor [in] 填充颜色
 		 */
 		static void FillPie(CPaintRenderContext& renderContext, const RECT& rc, float fStartAngle, float fSweepAngle, DWORD dwFillColor);
-		static void FillPie(CPaintRenderContext& renderContext, const RectF& rc, float fStartAngle, float fSweepAngle, DWORD dwFillColor);
+		static void FillPie(CPaintRenderContext& renderContext, const RECTF& rc, float fStartAngle, float fSweepAngle, DWORD dwFillColor);
 
 		// ----------------------------------------------------------------
 		// (6) 文本绘制与度量
@@ -783,6 +821,73 @@ namespace FYUI {
 		 * @return HBITMAP 返回 执行 GenerateBitmap 操作 的结果
 		 */
 		static HBITMAP GenerateBitmap(CPaintManagerUI* pManager, CControlUI* pControl, RECT rc, DWORD dwFilterColor = 0);
+
+		// ================================================================
+		// (9) 自由路径 —— 与 CRenderPath 配合（详见 Render/UIRenderPath.h）
+		// 用于替代 Gdiplus::GraphicsPath 的"直线/弧/贝塞尔混合"用法。
+		// 当前阶段（2026-05-18 Step A）：签名落地，实现为桩，待 Step C 启用 D2D。
+		// ================================================================
+		/**
+		 * @brief 描边任意路径
+		 * @param renderContext [in,out] 绘制上下文
+		 * @param path          [in]     已经 End() 完成的路径对象
+		 * @param nSize         [in]     线宽（像素）
+		 * @param dwPenColor    [in]     线条颜色 0xAARRGGBB
+		 * @param nStyle        [in]     线型，PS_SOLID / PS_DASH / PS_DOT 等，默认 PS_SOLID
+		 */
+		static void StrokePath(CPaintRenderContext& renderContext,
+			const CRenderPath& path, float nSize, DWORD dwPenColor, int nStyle = PS_SOLID);
+
+		/**
+		 * @brief 用偶数填充规则填充路径
+		 */
+		static void FillPath(CPaintRenderContext& renderContext,
+			const CRenderPath& path, DWORD dwFillColor);
+
+		/**
+		 * @brief 把路径压入裁剪栈（内部使用 D2D Layer）
+		 * @note 必须配对调用 PopPathClip，否则后续绘制会出现错误裁剪
+		 */
+		static void PushPathClip(CPaintRenderContext& renderContext, const CRenderPath& path);
+
+		/**
+		 * @brief 弹出最近一次 PushPathClip 推入的路径裁剪
+		 */
+		static void PopPathClip(CPaintRenderContext& renderContext);
+
+		// ================================================================
+		// (10) 仿射变换栈
+		// 用于替代 Gdiplus::Graphics::SetTransform 的"先 Push 再 Pop"模式。
+		// 推入后，后续所有 DrawXxx 都会受 m 影响，直到对应 PopTransform。
+		// 当前阶段（2026-05-18 Step A）：签名落地，PushTransform/PopTransform
+		// 暂为桩，Matrix2D 工厂与算子已可用，待 Step D 启用 D2D SetTransform。
+		// ================================================================
+		struct Matrix2D
+		{
+			float m11 = 1.0f, m12 = 0.0f;
+			float m21 = 0.0f, m22 = 1.0f;
+			float dx  = 0.0f, dy  = 0.0f;
+
+			static Matrix2D Identity();
+			static Matrix2D Translation(float dx, float dy);
+			static Matrix2D Scale(float sx, float sy, POINTF center = POINTF{ 0.0f, 0.0f });
+			static Matrix2D Rotation(float angleDeg, POINTF center = POINTF{ 0.0f, 0.0f });
+			static Matrix2D Skew(float angleX, float angleY, POINTF center = POINTF{ 0.0f, 0.0f });
+
+			Matrix2D operator*(const Matrix2D& rhs) const;
+			bool Invert(Matrix2D& out) const;
+			POINTF Transform(POINTF pt) const;
+		};
+
+		/**
+		 * @brief 把 m 复合到当前变换之上并入栈（保留旧变换以便后续 Pop）
+		 */
+		static void PushTransform(CPaintRenderContext& renderContext, const Matrix2D& m);
+
+		/**
+		 * @brief 弹出最近一次 PushTransform 推入的变换
+		 */
+		static void PopTransform(CPaintRenderContext& renderContext);
 	};
 
 } // namespace DuiLib

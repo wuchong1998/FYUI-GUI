@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Window caption="0,0,0,40" size="100,100" bktrans="true">
+
+	<VerticalLayout  mouse="false" >
+		<HorizontalLayout name="tab_layout"  mouse="false">
+			<HorizontalLayout  mouse="false" >
+				<Label name="tootip_left_text" width="35" height="45" align="center" font="1"  textcolor="0xffffffff" bkimage="file='tooltip\tootltip.svg' corner='7,7,7,7' "  mouse="false" wordbreak ="true" textpadding="5,0,5,0" />
+				<Label name="tooltip_left" width="7" height="16"   bkimage="tooltip\tooltip_left.svg"  mouse="false"   />
+			</HorizontalLayout>
+			
+			<VerticalLayout  mouse="false">
+				<Label name="tooltip_top_text" width="35" height="45" align="center" font="1"  textcolor="0xffffffff" bkimage="file='tooltip\tootltip.svg' corner='7,7,7,7' "  mouse="false" />
+				<Label name="tooltip_top" width="16" height="7"  bkimage="tooltip\tooltip_top.svg"  mouse="false" wordbreak ="true" textpadding="5,0,5,0" />
+			</VerticalLayout>
+			
+			<HorizontalLayout  mouse="false">
+				<Label name="tooltip_right" width="7" height="16"   bkimage="tooltip\tooltip_right.svg"  mouse="false" />
+				<Label name="tooltip_right_text" width="35" height="45" align="center" font="1"  textcolor="0xffffffff" bkimage="file='tooltip\tootltip.svg' corner='7,7,7,7' "   mouse="false" wordbreak ="true" textpadding="5,0,5,0" />
+			</HorizontalLayout>
+			
+			<VerticalLayout  mouse="false">
+				<Label name="tooltip_bottom" width="16" height="7"   bkimage="tooltip\tooltip_bottom.svg"  mouse="false" />
+				<Label name="tooltip_bottom_text" width="35" height="45" align="center" font="1"  textcolor="0xffffffff" bkimage="file='tooltip\tootltip.svg' corner='7,7,7,7' "  mouse="false" wordbreak ="true" textpadding="5,0,5,0" />
+			</VerticalLayout>
+		</HorizontalLayout>
+		
+		
+	</VerticalLayout>
+		
+</Window>

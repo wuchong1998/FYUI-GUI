@@ -47,6 +47,12 @@ namespace FYUI
 		DuiSig_vn,      // void (TNotifyUI)
 	};
 
+	enum ToolTipMode
+	{
+		WhiteBubbles, //白色汽泡
+		BlcakBubbles //黑色汽泡
+	};
+
 	enum ToolTipType
 	{
 		Tool_Left =0, 
@@ -55,7 +61,6 @@ namespace FYUI
 		Tool_Bottom
 	};
 
-	// 鏍稿績鎺т欢
 	class CControlUI;
 
 	// Structure for notifications to the outside world
@@ -75,6 +80,7 @@ namespace FYUI
 		std::wstring		strText;		
 		RECT			rcPos;			
 		ToolTipType		emToolTipType;	
+		ToolTipMode		emToolTipMode;  // 气泡视觉模式（白底/黑底），由 PaintManager::GetToolTipMode 决定
 		SIZE			szTooltipGap;	
 		int				nMaxWidth;	
 		int				nDpi;			
@@ -86,6 +92,7 @@ namespace FYUI
 		 */
 		TooltipInfo()
 			: emToolTipType(Tool_Left)
+			, emToolTipMode(BlcakBubbles)
 			, nMaxWidth(0)
 			, nDpi(0)
 		{
@@ -103,6 +110,7 @@ namespace FYUI
 			: strText(other.strText)
 			, rcPos(other.rcPos)
 			, emToolTipType(other.emToolTipType)
+			, emToolTipMode(other.emToolTipMode)
 			, szTooltipGap(other.szTooltipGap)
 			, nMaxWidth(other.nMaxWidth)
 			, nDpi(other.nDpi)
@@ -123,6 +131,7 @@ namespace FYUI
 				strText = other.strText;
 				rcPos = other.rcPos;
 				emToolTipType = other.emToolTipType;
+				emToolTipMode = other.emToolTipMode;
 				szTooltipGap = other.szTooltipGap;
 				nMaxWidth = other.nMaxWidth;
 				nDpi = other.nDpi;
@@ -151,7 +160,7 @@ namespace FYUI
 		void (CNotifyPump::*pfn_Notify_vn)(TNotifyUI&);
 	};
 
-	struct RectF
+	struct RECTF
 	{
 		float left;
 		float top;
@@ -159,10 +168,10 @@ namespace FYUI
 		float bottom;
 	};
 
-	struct PointF
+	struct POINTF
 	{
-		float x;
-		float y;
+		float X;
+		float Y;
 	};
 
 	

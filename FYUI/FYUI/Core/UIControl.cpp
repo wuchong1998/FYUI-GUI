@@ -59,6 +59,78 @@ namespace FYUI
 			return round.cx > 0 || round.cy > 0;
 		}
 
+		bool HasBorderRoundRect(const RECT& round)
+		{
+			return round.left > 0 || round.top > 0 || round.right > 0 || round.bottom > 0;
+		}
+
+		RECT NormalizeBorderRoundRect(const RECT& rcItem, RECT round)
+		{
+			const int width = rcItem.right - rcItem.left;
+			const int height = rcItem.bottom - rcItem.top;
+			const int maxRadius = (std::max)(0, (std::min)(width, height) / 2);
+			auto normalize = [&](LONG value) -> LONG {
+				if (value <= 0) {
+					return 0;
+				}
+				return (std::min<LONG>)(value, maxRadius);
+			};
+			round.left = normalize(round.left);
+			round.top = normalize(round.top);
+			round.right = normalize(round.right);
+			round.bottom = normalize(round.bottom);
+			return round;
+		}
+
+		CRenderPath BuildBorderRoundRectPath(const RECT& rcItem, RECT round)
+		{
+			round = NormalizeBorderRoundRect(rcItem, round);
+
+			const float left = static_cast<float>(rcItem.left);
+			const float top = static_cast<float>(rcItem.top);
+			const float right = static_cast<float>(rcItem.right);
+			const float bottom = static_cast<float>(rcItem.bottom);
+			const float radiusTL = static_cast<float>(round.left);
+			const float radiusTR = static_cast<float>(round.top);
+			const float radiusBR = static_cast<float>(round.right);
+			const float radiusBL = static_cast<float>(round.bottom);
+
+			CRenderPath path;
+			path.Begin();
+			path.MoveTo(FYUI::POINTF{ left + radiusTL, top });
+			path.LineTo(FYUI::POINTF{ right - radiusTR, top });
+			if (radiusTR > 0.0f) {
+				path.ArcTo(FYUI::POINTF{ right, top + radiusTR }, SIZE{ static_cast<LONG>(radiusTR), static_cast<LONG>(radiusTR) }, 0.0f, false, true);
+			}
+			else {
+				path.LineTo(FYUI::POINTF{ right, top });
+			}
+			path.LineTo(FYUI::POINTF{ right, bottom - radiusBR });
+			if (radiusBR > 0.0f) {
+				path.ArcTo(FYUI::POINTF{ right - radiusBR, bottom }, SIZE{ static_cast<LONG>(radiusBR), static_cast<LONG>(radiusBR) }, 0.0f, false, true);
+			}
+			else {
+				path.LineTo(FYUI::POINTF{ right, bottom });
+			}
+			path.LineTo(FYUI::POINTF{ left + radiusBL, bottom });
+			if (radiusBL > 0.0f) {
+				path.ArcTo(FYUI::POINTF{ left, bottom - radiusBL }, SIZE{ static_cast<LONG>(radiusBL), static_cast<LONG>(radiusBL) }, 0.0f, false, true);
+			}
+			else {
+				path.LineTo(FYUI::POINTF{ left, bottom });
+			}
+			path.LineTo(FYUI::POINTF{ left, top + radiusTL });
+			if (radiusTL > 0.0f) {
+				path.ArcTo(FYUI::POINTF{ left + radiusTL, top }, SIZE{ static_cast<LONG>(radiusTL), static_cast<LONG>(radiusTL) }, 0.0f, false, true);
+			}
+			else {
+				path.LineTo(FYUI::POINTF{ left, top });
+			}
+			path.Close();
+			path.End();
+			return path;
+		}
+
 		bool RectIntersects(const RECT& lhs, const RECT& rhs)
 		{
 			RECT rc = { 0 };
@@ -78,6 +150,28 @@ namespace FYUI
 				{ rcItem.right - rx, rcItem.top, rcItem.right, rcItem.top + ry },
 				{ rcItem.left, rcItem.bottom - ry, rcItem.left + rx, rcItem.bottom },
 				{ rcItem.right - rx, rcItem.bottom - ry, rcItem.right, rcItem.bottom }
+			};
+
+			for (const RECT& corner : corners) {
+				if (RectIntersects(rcPaint, corner)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool PaintRectTouchesBorderRoundRectCorner(const RECT& rcPaint, const RECT& rcItem, RECT round)
+		{
+			if (!HasBorderRoundRect(round)) {
+				return false;
+			}
+
+			round = NormalizeBorderRoundRect(rcItem, round);
+			const RECT corners[] = {
+				{ rcItem.left, rcItem.top, rcItem.left + round.left, rcItem.top + round.left },
+				{ rcItem.right - round.top, rcItem.top, rcItem.right, rcItem.top + round.top },
+				{ rcItem.right - round.right, rcItem.bottom - round.right, rcItem.right, rcItem.bottom },
+				{ rcItem.left, rcItem.bottom - round.bottom, rcItem.left + round.bottom, rcItem.bottom }
 			};
 
 			for (const RECT& corner : corners) {
@@ -121,10 +215,31 @@ namespace FYUI
 			CRenderEngine::DrawColor(renderContext, rc, color);
 		}
 
+		void DrawBorderRoundRectAwareColor(CPaintRenderContext& renderContext, const RECT& rc, RECT round, DWORD color)
+		{
+			if (HasBorderRoundRect(round)) {
+				CRenderPath path = BuildBorderRoundRectPath(rc, round);
+				CRenderEngine::FillPath(renderContext, path, color);
+				return;
+			}
+			CRenderEngine::DrawColor(renderContext, rc, color);
+		}
+
 		void DrawRoundedAwareSolidColorForPaint(CPaintRenderContext& renderContext, const RECT& rcItem, const RECT& rcPaint, SIZE round, DWORD color)
 		{
 			if (HasRoundCorner(round) && PaintRectTouchesRoundCorner(rcPaint, rcItem, round)) {
 				CRenderEngine::DrawRoundColor(renderContext, rcItem, round.cx, round.cy, color);
+				return;
+			}
+
+			CRenderEngine::DrawColor(renderContext, rcPaint, color);
+		}
+
+		void DrawBorderRoundRectAwareSolidColorForPaint(CPaintRenderContext& renderContext, const RECT& rcItem, const RECT& rcPaint, RECT round, DWORD color)
+		{
+			if (HasBorderRoundRect(round) && PaintRectTouchesBorderRoundRectCorner(rcPaint, rcItem, round)) {
+				CRenderPath path = BuildBorderRoundRectPath(rcItem, round);
+				CRenderEngine::FillPath(renderContext, path, color);
 				return;
 			}
 
@@ -292,6 +407,7 @@ namespace FYUI
 		::ZeroMemory(&m_rcItem, sizeof(RECT));
 		::ZeroMemory(&m_rcPaint, sizeof(RECT));
 		::ZeroMemory(&m_rcBorderSize,sizeof(RECT));
+		::ZeroMemory(&m_rcBorderRound, sizeof(RECT));
 		::ZeroMemory(&m_rcPaddingScaled, sizeof(RECT)); // 鉁?鍒濆鍖栫紦瀛?
 		m_piFloatPercent.left = m_piFloatPercent.top = m_piFloatPercent.right = m_piFloatPercent.bottom = 0.0f;
 	}
@@ -755,9 +871,22 @@ namespace FYUI
 		return cxyBorderRound;
 	}
 
+	RECT CControlUI::GetBorderRoundRect() const
+	{
+		RECT rcBorderRound = m_rcBorderRound;
+		if (m_pManager != NULL) m_pManager->ScaleRect(&rcBorderRound);
+		return rcBorderRound;
+	}
+
 	void CControlUI::SetBorderRound(SIZE cxyRound)
 	{
 		m_cxyBorderRound = cxyRound;
+		Invalidate();
+	}
+
+	void CControlUI::SetBorderRound(RECT rcRound)
+	{
+		m_rcBorderRound = rcRound;
 		Invalidate();
 	}
 
@@ -1588,6 +1717,7 @@ namespace FYUI
 		SetBorderSize(pControl->m_rcBorderSize);
 		SetBorderSize(pControl->m_nBorderSize);
 		SetBorderRound(pControl->m_cxyBorderRound);
+		SetBorderRound(pControl->m_rcBorderRound);
 		SetBorderStyle(pControl->m_nBorderStyle);
 
 
@@ -1979,6 +2109,12 @@ namespace FYUI
 				SetBorderRound(round);
 			}
 		}
+		else if (IsAttributeName(name, L"borderroundrect")) {
+			RECT round = { 0 };
+			if (StringUtil::TryParseRect(pstrValueView, round)) {
+				SetBorderRound(round);
+			}
+		}
 		else if (IsAttributeName(name, L"bkimage")) SetBkImage(pstrValueView);
 		else if (IsAttributeName(name, L"foreimage")) SetForeImage(pstrValueView);
 		else if (IsAttributeName(name, L"width")) {
@@ -2145,6 +2281,7 @@ namespace FYUI
 	bool CControlUI::DoPaint(CPaintRenderContext& renderContext, CControlUI* pStopControl)
 	{
 		SIZE cxyBorderRound = GetBorderRound();
+		RECT rcBorderRound = GetBorderRoundRect();
 		RECT rcBorderSize = GetBorderRectSize();
 		(void)rcBorderSize;
 
@@ -2152,7 +2289,21 @@ namespace FYUI
 			CRenderEngine::DrawShadow(renderContext, m_rcItem, cxyBorderRound.cx, cxyBorderRound.cy, m_dwShadowColor, m_nShadowWidth);
 		}
 
-		if( cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0 ) {
+		if (HasBorderRoundRect(rcBorderRound)) {
+			PaintBkColor(renderContext);
+			{
+				CRenderPath roundPath = BuildBorderRoundRectPath(m_rcItem, rcBorderRound);
+				CRenderEngine::PushPathClip(renderContext, roundPath);
+				PaintBkImage(renderContext);
+				PaintStatusImage(renderContext);
+				PaintForeColor(renderContext);
+				PaintForeImage(renderContext);
+				PaintText(renderContext);
+				CRenderEngine::PopPathClip(renderContext);
+			}
+			PaintBorder(renderContext);
+		}
+		else if( cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0 ) {
 			PaintBkColor(renderContext);
 			{
 				CRenderClip roundClip;
@@ -2226,17 +2377,28 @@ namespace FYUI
 		_InvokePaintCallback(PaintStageBkColor, false, renderContext);
 		PaintAfterScope _afterGuard(this, PaintStageBkColor, renderContext);
 		SIZE cxyBorderRound = GetBorderRound();
+		RECT rcBorderRound = GetBorderRoundRect();
+		const bool hasBorderRoundRect = HasBorderRoundRect(rcBorderRound);
 		if (IsEnabled() == false)
 		{
 			if (m_dwDisableBkColor != 0)
 			{
+				if (hasBorderRoundRect) {
+					DrawBorderRoundRectAwareSolidColorForPaint(renderContext, m_rcItem, m_rcPaint, rcBorderRound, GetAdjustColor(m_dwDisableBkColor));
+					return;
+				}
 				DrawRoundedAwareSolidColorForPaint(renderContext, m_rcItem, m_rcPaint, cxyBorderRound, GetAdjustColor(m_dwDisableBkColor));
 				return;
 			}
 		}
 		if (IsFocused() && GetFocusBKColor() != 0)
 		{
-			DrawRoundedAwareSolidColorForPaint(renderContext, m_rcItem, m_rcPaint, cxyBorderRound, GetAdjustColor(GetFocusBKColor()));
+			if (hasBorderRoundRect) {
+				DrawBorderRoundRectAwareSolidColorForPaint(renderContext, m_rcItem, m_rcPaint, rcBorderRound, GetAdjustColor(GetFocusBKColor()));
+			}
+			else {
+				DrawRoundedAwareSolidColorForPaint(renderContext, m_rcItem, m_rcPaint, cxyBorderRound, GetAdjustColor(GetFocusBKColor()));
+			}
 		}
 		else
 		{
@@ -2246,7 +2408,14 @@ namespace FYUI
 				if (m_dwBackColor2 != 0)
 				{
 					CRenderClip roundClip;
-					if (HasRoundCorner(cxyBorderRound)) {
+					bool pushedBorderRoundRectClip = false;
+					CRenderPath borderRoundPath;
+					if (hasBorderRoundRect) {
+						borderRoundPath = BuildBorderRoundRectPath(m_rcItem, rcBorderRound);
+						CRenderEngine::PushPathClip(renderContext, borderRoundPath);
+						pushedBorderRoundRectClip = true;
+					}
+					else if (HasRoundCorner(cxyBorderRound)) {
 						CRenderClip::GenerateRoundClip(renderContext, m_rcPaint, m_rcItem, cxyBorderRound.cx, cxyBorderRound.cy, roundClip);
 					}
 					if (m_dwBackColor3 != 0)
@@ -2262,11 +2431,28 @@ namespace FYUI
 					{
 						CRenderEngine::DrawGradient(renderContext, m_rcItem, GetAdjustColor(m_dwBackColor), GetAdjustColor(m_dwBackColor2), bVer, 16);
 					}
+					if (pushedBorderRoundRectClip) {
+						CRenderEngine::PopPathClip(renderContext);
+					}
 				}
 				else if (m_dwBackColor >= 0xFF000000 && m_rcPaint.right - m_rcPaint.left != 0)
-					DrawRoundedAwareSolidColorForPaint(renderContext, m_rcItem, m_rcPaint, cxyBorderRound, GetAdjustColor(m_dwBackColor));
+				{
+					if (hasBorderRoundRect) {
+						DrawBorderRoundRectAwareSolidColorForPaint(renderContext, m_rcItem, m_rcPaint, rcBorderRound, GetAdjustColor(m_dwBackColor));
+					}
+					else {
+						DrawRoundedAwareSolidColorForPaint(renderContext, m_rcItem, m_rcPaint, cxyBorderRound, GetAdjustColor(m_dwBackColor));
+					}
+				}
 				else
-					DrawRoundedAwareColor(renderContext, m_rcItem, cxyBorderRound, GetAdjustColor(m_dwBackColor));
+				{
+					if (hasBorderRoundRect) {
+						DrawBorderRoundRectAwareColor(renderContext, m_rcItem, rcBorderRound, GetAdjustColor(m_dwBackColor));
+					}
+					else {
+						DrawRoundedAwareColor(renderContext, m_rcItem, cxyBorderRound, GetAdjustColor(m_dwBackColor));
+					}
+				}
 			}
 		}
 	}
@@ -2314,6 +2500,7 @@ namespace FYUI
 		PaintAfterScope _afterGuard(this, PaintStageBorder, renderContext);
 		int nBorderSize = GetBorderSize();
 		SIZE cxyBorderRound = GetBorderRound();
+		RECT rcBorderRound = GetBorderRoundRect();
 		RECT rcBorderSize = GetBorderRectSize();
 		int nBorderBand = nBorderSize;
 		if (rcBorderSize.left > nBorderBand) nBorderBand = rcBorderSize.left;
@@ -2330,8 +2517,16 @@ namespace FYUI
 			}
 			const DWORD adj = GetAdjustColor(dwColor);
 			const bool hasPerSideBorder = rcBorderSize.left > 0 || rcBorderSize.top > 0 || rcBorderSize.right > 0 || rcBorderSize.bottom > 0;
+			const bool hasBorderRoundRect = HasBorderRoundRect(rcBorderRound);
 			const bool hasRoundCorner = cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0;
-			if (hasPerSideBorder && hasRoundCorner) {
+			if (hasBorderRoundRect) {
+				const int strokeSize = nBorderSize > 0 ? nBorderSize : nBorderBand;
+				if (strokeSize > 0) {
+					CRenderPath borderPath = BuildBorderRoundRectPath(m_rcItem, rcBorderRound);
+					CRenderEngine::StrokePath(renderContext, borderPath, static_cast<float>(strokeSize), adj, m_nBorderStyle);
+				}
+			}
+			else if (hasPerSideBorder && hasRoundCorner) {
 				CRenderEngine::DrawPartialRoundBorder(renderContext, m_rcItem, rcBorderSize, cxyBorderRound.cx, cxyBorderRound.cy, adj, m_nBorderStyle);
 			}
 			else if (nBorderSize > 0 && hasRoundCorner) {
@@ -2385,8 +2580,19 @@ namespace FYUI
 				return;
 			}
 			const bool hasPerSideBorder = rcBorderSize.left > 0 || rcBorderSize.top > 0 || rcBorderSize.right > 0 || rcBorderSize.bottom > 0;
+			const bool hasBorderRoundRect = HasBorderRoundRect(rcBorderRound);
 			const bool hasRoundCorner = cxyBorderRound.cx > 0 || cxyBorderRound.cy > 0;
-			if (hasPerSideBorder && hasRoundCorner) {
+			if (hasBorderRoundRect) {
+				const DWORD borderColor = (IsFocused() && m_dwFocusBorderColor != 0)
+					? GetAdjustColor(m_dwFocusBorderColor)
+					: GetAdjustColor(m_dwBorderColor);
+				const int strokeSize = nBorderSize > 0 ? nBorderSize : nBorderBand;
+				if (strokeSize > 0) {
+					CRenderPath borderPath = BuildBorderRoundRectPath(m_rcItem, rcBorderRound);
+					CRenderEngine::StrokePath(renderContext, borderPath, static_cast<float>(strokeSize), borderColor, m_nBorderStyle);
+				}
+			}
+			else if (hasPerSideBorder && hasRoundCorner) {
 				const DWORD borderColor = (IsFocused() && m_dwFocusBorderColor != 0)
 					? GetAdjustColor(m_dwFocusBorderColor)
 					: GetAdjustColor(m_dwBorderColor);

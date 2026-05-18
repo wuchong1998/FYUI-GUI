@@ -187,26 +187,12 @@ namespace FYUI
 			return false;
 		}
 
-		return ::BitBlt(
-			hTargetNativeDC,
-			rcDest.left,
-			rcDest.top,
-			rcDest.right - rcDest.left,
-			rcDest.bottom - rcDest.top,
-			hSurfaceNativeDC,
-			ptSource.x,
-			ptSource.y,
-			rop) != FALSE;
+		return ::BitBlt(hTargetNativeDC,rcDest.left,rcDest.top,rcDest.right - rcDest.left,rcDest.bottom - rcDest.top,
+			hSurfaceNativeDC,ptSource.x,ptSource.y,rop) != FALSE;
 	}
 
-	bool UpdateLayeredWindowFromRenderSurfaceInternal(
-		const CPaintRenderSurface& surface,
-		HWND hWnd,
-		CPaintRenderContext& targetContext,
-		const POINT& ptDst,
-		const SIZE& size,
-		BYTE alpha,
-		const RECT* pDirtyRect)
+	bool UpdateLayeredWindowFromRenderSurfaceInternal(const CPaintRenderSurface& surface,HWND hWnd,
+		CPaintRenderContext& targetContext,const POINT& ptDst,const SIZE& size,BYTE alpha,const RECT* pDirtyRect)
 	{
 		HDC hSurfaceNativeDC = CPaintRenderSurfaceInternalAccess::GetNativeDC(surface);
 		if (hSurfaceNativeDC == NULL || hWnd == NULL) {
@@ -239,17 +225,10 @@ namespace FYUI
 				return s_updateLayeredWindowIndirect(hWnd, &info) != FALSE;
 			}
 		}
-
-		return ::UpdateLayeredWindow(
-			hWnd,
-			presentWindowDC.GetNativeDC(),
-			&ptDstCopy,
-			&sizeCopy,
-			hSurfaceNativeDC,
-			&ptSrc,
-			0,
-			&blendPixelFunction,
-			ULW_ALPHA) != FALSE;
+	
+		return ::UpdateLayeredWindow(hWnd,presentWindowDC.GetNativeDC(),&ptDstCopy,
+			&sizeCopy,hSurfaceNativeDC,&ptSrc,0,&blendPixelFunction,ULW_ALPHA) != FALSE;
+		
 	}
 
 	bool CPaintRenderSurface::ClearTransparent()
@@ -270,16 +249,8 @@ namespace FYUI
 		POINT ptSrc = { 0, 0 };
 		SIZE size = { m_state->cx, m_state->cy };
 		BLENDFUNCTION blendPixelFunction = { AC_SRC_OVER, 0, alpha, AC_SRC_ALPHA };
-		return ::UpdateLayeredWindow(
-			hWnd,
-			NULL,
-			const_cast<POINT*>(&ptDst),
-			&size,
-			m_state->hNativeDC,
-			&ptSrc,
-			0,
-			&blendPixelFunction,
-			ULW_ALPHA) != FALSE;
+		return ::UpdateLayeredWindow(hWnd,NULL,const_cast<POINT*>(&ptDst),&size,m_state->hNativeDC,&ptSrc,
+			0, &blendPixelFunction, ULW_ALPHA) != FALSE;
 	}
 
 	CPaintRenderContext CPaintRenderSurface::CreateRenderContext(

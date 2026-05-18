@@ -103,14 +103,27 @@ namespace FYUI
 			constexpr DWORD kDwmWindowCornerPreference = 33;
 			constexpr DWORD kDwmCornerDoNotRound = 1;
 			constexpr DWORD kDwmCornerRound = 2;
-			const DWORD preference = (roundCorner.cx > 0 && roundCorner.cy > 0)
-				? kDwmCornerRound
-				: kDwmCornerDoNotRound;
+			const bool bWantRound = (roundCorner.cx > 0 && roundCorner.cy > 0);
+			const DWORD preference = bWantRound ? kDwmCornerRound : kDwmCornerDoNotRound;
 			const HRESULT hr = setWindowAttribute(
 				hWnd,
 				kDwmWindowCornerPreference,
 				&preference,
 				sizeof(preference));
+
+			// Win11(22000+) 会对所有顶级窗口绘制 1px DWM 系统边框，
+			// 默认颜色 #B4B4B4 在圆角下表现为一条灰线。
+			// 圆角启用时关闭这条边；非圆角时写回默认值，避免状态残留。
+			constexpr DWORD kDwmBorderColor = 34; // DWMWA_BORDER_COLOR
+			constexpr COLORREF kDwmColorNone = 0xFFFFFFFE;     // DWMWA_COLOR_NONE
+			constexpr COLORREF kDwmColorDefault = 0xFFFFFFFF;  // DWMWA_COLOR_DEFAULT
+			const COLORREF borderColor = bWantRound ? kDwmColorNone : kDwmColorDefault;
+			setWindowAttribute(
+				hWnd,
+				kDwmBorderColor,
+				&borderColor,
+				sizeof(borderColor));
+
 			::FreeLibrary(hDwmApi);
 			return SUCCEEDED(hr);
 		}

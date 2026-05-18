@@ -67,6 +67,18 @@ public:
 	 * @param szTooltipGap [in] TooltipGap尺寸参数
 	 * @param nMaxWidth [in] 最大宽度数值
 	 */
-	void SetTooltipInfo(const std::wstring &strText, RECT rcPos, ToolTipType emToolTipType, SIZE szTooltipGap,int nMaxWidth);
+	void SetTooltipInfo(const std::wstring &strText, RECT rcPos, ToolTipType emToolTipType, SIZE szTooltipGap, int nMaxWidth,
+		ToolTipMode emToolTipMode = BlcakBubbles);
 
+private:
+	/**
+	 * @brief 绘制 tooltip 气泡背景（圆角矩形 + 三角箭头）
+	 * @details 注册到 tooltip_text Label 的 PaintStageBkColor before 回调中，
+	 *          完整复现原 tooltip.xml + 4 张 svg 的视觉效果，并根据 m_emToolTipMode
+	 *          切换"黑底白字"或"白底黑字 + 黑色外阴影"两种风格。
+	 */
+	void DrawTooltipBubble(CControlUI* sender, CPaintRenderContext& ctx);
+
+	ToolTipType m_emToolTipType = Tool_Bottom;
+	ToolTipMode m_emToolTipMode = BlcakBubbles;
 };

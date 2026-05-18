@@ -14,6 +14,7 @@
 #include "CustomPaint/CurveWaveUI.h"
 #include "CustomPaint/PieGaugeUI.h"
 #include "CustomPaint/MemoryImageUI.h"
+#include "CustomPaint/PathArtUI.h"
 
 namespace
 {
@@ -701,6 +702,7 @@ namespace FYTestApp
         if (pstrClass == L"CurveWave")     return new CCurveWaveUI();
         if (pstrClass == L"PieGauge")      return new CPieGaugeUI();
         if (pstrClass == L"MemoryImage")   return new CMemoryImageUI();
+        if (pstrClass == L"PathArt")       return new CPathArtUI();
         return WindowImplBase::CreateControl(pstrClass);
     }
 }

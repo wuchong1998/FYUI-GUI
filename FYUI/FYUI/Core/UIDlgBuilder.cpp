@@ -459,6 +459,24 @@ namespace FYUI
 						else if( EqualsNoCase(pstrName, L"layered") || EqualsNoCase(pstrName, L"bktrans")) {
 							pManager->SetLayered(EqualsNoCase(pstrValue, L"true"));
 						}
+						else if( EqualsNoCase(pstrName, L"bktrans_min_interval_ms") || EqualsNoCase(pstrName, L"layered_present_min_interval_ms")) {
+							const int nInterval = ParseInt(pstrValue);
+							if (nInterval >= 0) {
+								pManager->SetLayeredPresentMinIntervalMs(static_cast<UINT>(nInterval));
+							}
+						}
+						else if( EqualsNoCase(pstrName, L"bktrans_mode") || EqualsNoCase(pstrName, L"layered_present_mode")) {
+							// auto / gdi / dcomp，三选一；其余值视为 auto
+							if (EqualsNoCase(pstrValue, L"gdi") || EqualsNoCase(pstrValue, L"throttled") || EqualsNoCase(pstrValue, L"gdi_throttled")) {
+								pManager->SetLayeredPresentMode(LayeredPresentModeGdiThrottled);
+							}
+							else if (EqualsNoCase(pstrValue, L"dcomp") || EqualsNoCase(pstrValue, L"directcomposition")) {
+								pManager->SetLayeredPresentMode(LayeredPresentModeDComp);
+							}
+							else {
+								pManager->SetLayeredPresentMode(LayeredPresentModeAuto);
+							}
+						}
 						else if( EqualsNoCase(pstrName, L"layeredimage") ) {
 							pManager->SetLayered(true);
 							pManager->SetLayeredImage(pstrValue);
@@ -502,6 +520,9 @@ namespace FYUI
 						else if( EqualsNoCase(pstrName, L"shadowcorner") ) {
 							pManager->GetShadow()->SetShadowCorner(ParseRect(pstrValue));
 						}
+						else if( EqualsNoCase(pstrName, L"shadowcornerradius") ) {
+							pManager->GetShadow()->SetCornerRadius(ParseInt(pstrValue));
+						}
 						else if( EqualsNoCase(pstrName, L"shadowimage") ) {
 							pManager->GetShadow()->SetImage(std::wstring(pstrValue));
 						}
@@ -523,7 +544,16 @@ namespace FYUI
 						}
 						else if( EqualsNoCase(pstrName, L"tooltiphovertime") ) {
 							pManager->SetHoverTime(ParseInt(pstrValue));
-						} 
+						}
+						else if( EqualsNoCase(pstrName, L"tool_tip_mode") ) {
+							// 值为 white_bubbles / blcak_bubbles，默认 blcak_bubbles
+							if (EqualsNoCase(pstrValue, L"white_bubbles")) {
+								pManager->SetToolTipMode(WhiteBubbles);
+							}
+							else {
+								pManager->SetToolTipMode(BlcakBubbles);
+							}
+						}
 					}
 				}
 			}

@@ -264,7 +264,10 @@
     <ClInclude Include="Core\Render\UIRenderClipStackInternal.h">
       <Filter>头文件\Core\Render</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Render\UIRenderSurface.h">
+    <ClInclude Include="Core\Render\UIRenderPath.h">
+      <Filter>头文件\Core\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderPathInternal.h">
       <Filter>头文件\Core\Render</Filter>
     </ClInclude>
     <ClInclude Include="Core\Render\UIRenderSurfaceInternal.h">
@@ -302,6 +305,9 @@
     </ClInclude>
     <ClInclude Include="Control\UIGifAnim.h">
       <Filter>头文件\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Render\UIRenderSurface.h">
+      <Filter>头文件\Core\Render</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -465,6 +471,9 @@
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>
     <ClCompile Include="Core\Render\UIRenderClip.cpp">
+      <Filter>源文件\Core\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Render\UIRenderPath.cpp">
       <Filter>源文件\Core\Render</Filter>
     </ClCompile>
     <ClCompile Include="Core\Render\UIRenderContext.cpp">

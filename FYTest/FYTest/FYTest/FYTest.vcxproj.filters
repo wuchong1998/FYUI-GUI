@@ -54,6 +54,9 @@
     <ClInclude Include="CustomPaint\MemoryImageUI.h">
       <Filter>CustomPaint</Filter>
     </ClInclude>
+    <ClInclude Include="CustomPaint\PathArtUI.h">
+      <Filter>CustomPaint</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FYTest.cpp">
@@ -81,6 +84,9 @@
       <Filter>CustomPaint</Filter>
     </ClCompile>
     <ClCompile Include="CustomPaint\MemoryImageUI.cpp">
+      <Filter>CustomPaint</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomPaint\PathArtUI.cpp">
       <Filter>CustomPaint</Filter>
     </ClCompile>
   </ItemGroup>
